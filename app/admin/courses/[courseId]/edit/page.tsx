@@ -155,7 +155,7 @@ export default function EditCoursePage() {
               className={`w-full px-4 py-3 rounded-lg border ${
                 errors.title ? 'border-red-300' : 'border-gray-300'
               } focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-              placeholder="Например: Мастер бровист PRO"
+              placeholder="Например: Профессиональный курс PRO"
             />
             {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
           </div>

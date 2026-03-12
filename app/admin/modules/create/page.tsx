@@ -148,7 +148,7 @@ export default function CreateModulePage() {
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Например: "Модуль 1: Натуральные брови" или "Основы работы"
+              Например: "Модуль 1: Основы работы" или "Введение в курс"
             </p>
           </div>
 

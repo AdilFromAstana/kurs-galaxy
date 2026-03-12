@@ -46,9 +46,9 @@ export default function WelcomePage() {
 
         {/* Subtitle */}
         <p className="text-lg md:text-xl lg:text-2xl text-dark-600 mb-8 md:mb-12 max-w-2xl">
-          Профессиональное обучение для мастеров ногтевого сервиса
+          Профессиональное онлайн-обучение
           <br className="hidden md:block" />
-          <span className="text-primary-600 font-semibold"> с онлайн-курсами</span>
+          <span className="text-primary-600 font-semibold">для специалистов beauty-индустрии</span>
         </p>
 
         {/* Features */}

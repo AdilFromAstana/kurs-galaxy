@@ -5,8 +5,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin', 'cyrillic'] });
 
 export const metadata: Metadata = {
-  title: 'Brow Master Pro - Профессиональный курс бровиста',
-  description: 'Станьте профессиональным мастером по бровям с нашим онлайн-курсом',
+  title: 'KursGalaxy.kz - Профессиональные онлайн-курсы',
+  description: 'Получите доступ к качественным онлайн-курсам и станьте профессионалом в своей области',
   viewport: 'width=device-width, initial-scale=1, maximum-scale=1',
   themeColor: '#ec4899',
 };
