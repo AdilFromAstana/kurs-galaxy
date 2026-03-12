@@ -15,12 +15,36 @@ export const useAuth = () => {
   }, []);
 
   const login = (email: string, password: string): boolean => {
-    // Простая имитация - в реальности здесь была бы проверка
+    // MVP: Простая имитация входа с демо-данными
+    const demoEmail = 'user@example.com';
+    const demoPassword = 'password123';
+    
+    console.log('Попытка входа:', { email, password });
+    console.log('Сравнение:', { 
+      emailMatch: email === demoEmail, 
+      passwordMatch: password === demoPassword 
+    });
+    
+    // Проверяем демо-данные
+    if (email === demoEmail && password === demoPassword) {
+      // Создаем демо-пользователя
+      const demoUser: NailUser = {
+        email: demoEmail,
+        name: 'Демо Пользователь',
+        password: demoPassword
+      };
+      saveUser(demoUser);
+      setUserState(demoUser);
+      return true;
+    }
+    
+    // Проверяем существующего пользователя
     const storedUser = getUser();
     if (storedUser && storedUser.email === email) {
       setUserState(storedUser);
       return true;
     }
+    
     return false;
   };
 

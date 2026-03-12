@@ -54,6 +54,17 @@ export default function LoginPage() {
             Войдите в свой аккаунт
           </p>
 
+          {/* Demo Credentials */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-800">
+              <strong>Демо доступ:</strong>
+              <br />
+              Email: user@example.com
+              <br />
+              Пароль: password123
+            </p>
+          </div>
+
           {/* Error Message */}
           {error && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 animate-slide-up">

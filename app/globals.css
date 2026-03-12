@@ -96,16 +96,17 @@
   .modal-overlay {
     @apply fixed inset-0 bg-black/50 backdrop-blur-sm;
     @apply flex items-center justify-center;
-    @apply z-50 p-4;
+    @apply z-[60] p-4;
     @apply animate-fade-in;
   }
 
   .modal-content {
     @apply bg-white rounded-2xl md:rounded-3xl;
-    @apply p-6 md:p-8;
+    @apply p-4 md:p-6 lg:p-8;
     @apply w-full max-w-lg;
     @apply animate-scale-in;
-    @apply max-h-[90vh] overflow-y-auto;
+    @apply max-h-[85vh] md:max-h-[90vh] overflow-y-auto;
+    @apply overscroll-contain;
   }
 
   /* Progress Bar */
