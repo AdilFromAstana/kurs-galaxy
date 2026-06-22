@@ -2,16 +2,55 @@
 
 import { BookOpen, Plus, Layers, Video, DollarSign, Edit, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { coursesData } from '@/lib/courseData';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import { confirmToast } from '@/lib/toastConfirm';
+
+type AdminCourse = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  published: boolean;
+  modules: { id: string; lessons: { id: string }[] }[];
+  pricingPlans: { id: string; price: number; currency: string }[];
+  creator?: { id: string; name: string; email: string } | null;
+};
 
 export default function CoursesListPage() {
-  const [courses, setCourses] = useState(coursesData);
+  const [courses, setCourses] = useState<AdminCourse[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleDeleteCourse = (courseId: string) => {
-    if (confirm('Вы уверены, что хотите удалить этот курс? Все модули и уроки будут удалены.')) {
-      // TODO: Реализовать удаление через localStorage
-      console.log('Удаление курса:', courseId);
+  const refresh = async () => {
+    setLoading(true);
+    const res = await fetch('/api/admin/courses', { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      setCourses(data.courses ?? []);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  const handleDeleteCourse = async (courseId: string) => {
+    const ok = await confirmToast({
+      message: 'Удалить курс? Все модули и уроки тоже удалятся. Действие необратимо.',
+      confirmText: 'Удалить',
+      destructive: true,
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/admin/courses/${courseId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (res.ok) {
+      setCourses((prev) => prev.filter((c) => c.id !== courseId));
+      toast.success('Курс удалён');
+    } else {
+      toast.error('Не удалось удалить курс');
     }
   };
 
@@ -91,6 +130,12 @@ export default function CoursesListPage() {
         </div>
       </div>
 
+      {loading && (
+        <div className="bg-white rounded-xl p-8 text-center border border-gray-100 text-gray-500">
+          Загрузка...
+        </div>
+      )}
+
       {/* Список курсов */}
       <div className="space-y-4">
         {courses.map((course) => {
@@ -113,7 +158,19 @@ export default function CoursesListPage() {
 
                 {/* Информация о курсе */}
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h2>
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <h2 className="text-xl font-bold text-gray-900">{course.title}</h2>
+                    {!course.published && (
+                      <span className="text-xs font-bold px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">
+                        Черновик
+                      </span>
+                    )}
+                    {course.creator && (
+                      <span className="text-xs font-medium px-2 py-0.5 bg-primary-50 text-primary-700 rounded-full">
+                        Автор: {course.creator.name}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-gray-600 mb-4 line-clamp-2">{course.description}</p>
 
                   {/* Метрики */}

@@ -1,26 +1,49 @@
-'use client';
+"use client";
 
-import { BookOpen, ArrowLeft, Save } from 'lucide-react';
-import Link from 'next/link';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ACCESS_PERIOD_OPTIONS } from '@/lib/pricing';
-import type { AccessPeriodType } from '@/types';
+import { BookOpen, ArrowLeft, Save } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { ACCESS_PERIOD_OPTIONS } from "@/lib/pricing";
+import type { AccessPeriodType } from "@/types";
+
+const PERIOD_TO_ENUM: Record<AccessPeriodType, string> = {
+  '1month': 'ONE_MONTH',
+  '2months': 'TWO_MONTHS',
+  '3months': 'THREE_MONTHS',
+  '6months': 'SIX_MONTHS',
+  '12months': 'TWELVE_MONTHS',
+  unlimited: 'UNLIMITED',
+};
+
+function slugify(s: string) {
+  return s
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .slice(0, 60) || `course-${Date.now()}`;
+}
 
 export default function CreateCoursePage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    price: '',
-    currency: 'KZT',
-    accessPeriod: '1month' as AccessPeriodType,  // По умолчанию 1 месяц
+    title: "",
+    description: "",
+    price: "",
+    currency: "KZT",
+    accessPeriod: "1month" as AccessPeriodType, // По умолчанию 1 месяц
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -38,21 +61,21 @@ export default function CreateCoursePage() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = 'Название обязательно';
+      newErrors.title = "Название обязательно";
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Описание обязательно';
+      newErrors.description = "Описание обязательно";
     }
 
     if (!formData.price) {
-      newErrors.price = 'Цена обязательна';
+      newErrors.price = "Цена обязательна";
     } else if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      newErrors.price = 'Цена должна быть положительным числом';
+      newErrors.price = "Цена должна быть положительным числом";
     }
 
     if (!formData.currency) {
-      newErrors.currency = 'Валюта обязательна';
+      newErrors.currency = "Валюта обязательна";
     }
 
     setErrors(newErrors);
@@ -69,36 +92,54 @@ export default function CreateCoursePage() {
     setIsSubmitting(true);
 
     try {
-      // Получить информацию о выбранном периоде
-      const periodOption = ACCESS_PERIOD_OPTIONS.find(opt => opt.value === formData.accessPeriod);
-      
-      // Создание нового курса
-      const newCourse = {
-        id: `course-${Date.now()}`,
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        price: Number(formData.price),
-        currency: formData.currency,
-        accessPeriod: formData.accessPeriod,  // Сохраняем выбранный период
-        modules: [],
-      };
+      const periodOption = ACCESS_PERIOD_OPTIONS.find(
+        (opt) => opt.value === formData.accessPeriod,
+      );
 
-      // TODO: Сохранить в localStorage
-      console.log('Создание нового курса:', newCourse);
-      console.log('Период доступа:', periodOption?.label);
+      const createRes = await fetch('/api/admin/courses', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: slugify(formData.title),
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+        }),
+      });
+      const createData = await createRes.json().catch(() => ({}));
+      if (!createRes.ok) {
+        setErrors({ title: createData.error ?? 'Не удалось создать курс' });
+        return;
+      }
 
-      // Перенаправление на страницу курса
-      router.push(`/admin/courses/${newCourse.id}`);
+      const courseId = createData.course.id as string;
+
+      // Сразу добавляем стартовый тариф из формы
+      await fetch(`/api/admin/courses/${courseId}/pricing`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: periodOption?.label ?? 'Базовый тариф',
+          accessPeriod: PERIOD_TO_ENUM[formData.accessPeriod],
+          price: Number(formData.price),
+          currency: formData.currency,
+          isActive: true,
+        }),
+      });
+
+      toast.success('Курс создан');
+      router.push(`/admin/courses/${courseId}`);
     } catch (error) {
       console.error('Ошибка создания курса:', error);
-      alert('Ошибка при создании курса');
+      toast.error('Ошибка при создании курса');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-4xl">
+    <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
@@ -121,11 +162,16 @@ export default function CreateCoursePage() {
       {/* Форма создания */}
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6">
-          <h2 className="text-lg font-bold text-gray-900">Основная информация</h2>
+          <h2 className="text-lg font-bold text-gray-900">
+            Основная информация
+          </h2>
 
           {/* Название */}
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Название курса <span className="text-red-500">*</span>
             </label>
             <input
@@ -135,16 +181,21 @@ export default function CreateCoursePage() {
               value={formData.title}
               onChange={handleChange}
               className={`w-full px-4 py-3 rounded-lg border ${
-                errors.title ? 'border-red-300' : 'border-gray-300'
+                errors.title ? "border-red-300" : "border-gray-300"
               } focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
               placeholder="Например: Профессиональный курс PRO"
             />
-            {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+            {errors.title && (
+              <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+            )}
           </div>
 
           {/* Описание */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Описание курса <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -154,7 +205,7 @@ export default function CreateCoursePage() {
               onChange={handleChange}
               rows={4}
               className={`w-full px-4 py-3 rounded-lg border ${
-                errors.description ? 'border-red-300' : 'border-gray-300'
+                errors.description ? "border-red-300" : "border-gray-300"
               } focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none`}
               placeholder="Опишите, что студенты узнают и чему научатся..."
             />
@@ -165,7 +216,10 @@ export default function CreateCoursePage() {
 
           {/* Период доступа */}
           <div>
-            <label htmlFor="accessPeriod" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="accessPeriod"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Период доступа <span className="text-red-500">*</span>
             </label>
             <select
@@ -182,7 +236,8 @@ export default function CreateCoursePage() {
               ))}
             </select>
             <p className="text-xs text-gray-500 mt-1">
-              Выберите, на какой срок студенты получат доступ к курсу после покупки
+              Выберите, на какой срок студенты получат доступ к курсу после
+              покупки
             </p>
           </div>
 
@@ -190,7 +245,10 @@ export default function CreateCoursePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Цена */}
             <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="price"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Цена <span className="text-red-500">*</span>
               </label>
               <input
@@ -202,16 +260,21 @@ export default function CreateCoursePage() {
                 min="0"
                 step="1"
                 className={`w-full px-4 py-3 rounded-lg border ${
-                  errors.price ? 'border-red-300' : 'border-gray-300'
+                  errors.price ? "border-red-300" : "border-gray-300"
                 } focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
                 placeholder="18000"
               />
-              {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price}</p>}
+              {errors.price && (
+                <p className="mt-1 text-sm text-red-600">{errors.price}</p>
+              )}
             </div>
 
             {/* Валюта */}
             <div>
-              <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="currency"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Валюта <span className="text-red-500">*</span>
               </label>
               <select
@@ -220,7 +283,7 @@ export default function CreateCoursePage() {
                 value={formData.currency}
                 onChange={handleChange}
                 className={`w-full px-4 py-3 rounded-lg border ${
-                  errors.currency ? 'border-red-300' : 'border-gray-300'
+                  errors.currency ? "border-red-300" : "border-gray-300"
                 } focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
               >
                 <option value="KZT">KZT (Тенге)</option>
@@ -228,7 +291,9 @@ export default function CreateCoursePage() {
                 <option value="USD">USD (Доллар)</option>
                 <option value="EUR">EUR (Евро)</option>
               </select>
-              {errors.currency && <p className="mt-1 text-sm text-red-600">{errors.currency}</p>}
+              {errors.currency && (
+                <p className="mt-1 text-sm text-red-600">{errors.currency}</p>
+              )}
             </div>
           </div>
         </div>
@@ -243,7 +308,9 @@ export default function CreateCoursePage() {
               <h3 className="font-bold text-gray-900 mb-2">Что дальше?</h3>
               <ul className="text-sm text-gray-700 space-y-1">
                 <li>• После создания курса вы сможете добавить модули</li>
-                <li>• В каждый модуль можно добавить уроки с видео и материалами</li>
+                <li>
+                  • В каждый модуль можно добавить уроки с видео и материалами
+                </li>
                 <li>• Курс автоматически появится в каталоге</li>
               </ul>
             </div>
@@ -264,7 +331,7 @@ export default function CreateCoursePage() {
             className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="w-5 h-5" />
-            {isSubmitting ? 'Создание...' : 'Создать курс'}
+            {isSubmitting ? "Создание..." : "Создать курс"}
           </button>
         </div>
       </form>

@@ -1,30 +1,34 @@
-'use client';
+"use client";
 
-import { useState, FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Award, ArrowLeft } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useState, FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Award, ArrowLeft, AlertCircle } from "lucide-react";
+import { useSession } from "@/components/providers/SessionProvider";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { register } = useAuth();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-  });
+  const { register } = useSession();
+  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    register(formData);
-    router.push('/dashboard');
+    setError("");
+    setSubmitting(true);
+    const r = await register(formData.name, formData.email, formData.password);
+    setSubmitting(false);
+    if (r.ok) {
+      router.push("/dashboard");
+    } else {
+      setError(r.error);
+    }
   };
 
   return (
     <div className="min-h-screen page-wrapper flex flex-col items-center justify-center">
       <div className="w-full max-w-md">
-        {/* Back Button */}
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-dark-600 hover:text-dark-900 mb-6 md:mb-8"
@@ -33,27 +37,28 @@ export default function RegisterPage() {
           <span>Назад</span>
         </Link>
 
-        {/* Card */}
         <div className="card animate-scale-in">
-          {/* Logo */}
           <div className="flex justify-center mb-6">
             <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center shadow-lg shadow-primary-500/30">
               <Award className="w-9 h-9 text-white" />
             </div>
           </div>
 
-          {/* Title */}
           <h1 className="text-center mb-2">Регистрация</h1>
           <p className="text-center text-dark-600 mb-6 md:mb-8">
             Создайте аккаунт, чтобы начать обучение
           </p>
 
-          {/* Form */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 animate-slide-up">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
             <div>
-              <label htmlFor="name" className="label">
-                Ваше имя
-              </label>
+              <label htmlFor="name" className="label">Ваше имя</label>
               <input
                 id="name"
                 type="text"
@@ -66,9 +71,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="email" className="label">
-                Email
-              </label>
+              <label htmlFor="email" className="label">Email</label>
               <input
                 id="email"
                 type="email"
@@ -81,9 +84,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="label">
-                Пароль
-              </label>
+              <label htmlFor="password" className="label">Пароль</label>
               <input
                 id="password"
                 type="password"
@@ -96,15 +97,21 @@ export default function RegisterPage() {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary w-full mt-6">
-              Зарегистрироваться
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn btn-primary w-full mt-6 disabled:opacity-50"
+            >
+              {submitting ? "Регистрируем..." : "Зарегистрироваться"}
             </button>
           </form>
 
-          {/* Login Link */}
           <div className="mt-6 text-center text-sm md:text-base">
             <span className="text-dark-600">Уже есть аккаунт? </span>
-            <Link href="/auth/login" className="text-primary-600 font-semibold hover:text-primary-700">
+            <Link
+              href="/auth/login"
+              className="text-primary-600 font-semibold hover:text-primary-700"
+            >
               Войти
             </Link>
           </div>

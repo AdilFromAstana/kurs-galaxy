@@ -2,23 +2,67 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, CheckCircle2, Lock, TrendingUp, Layers, Video, DollarSign, Star } from 'lucide-react';
+import {
+  BookOpen,
+  CheckCircle2,
+  Lock,
+  Play,
+  Layers,
+  Video,
+  Star,
+  TrendingUp,
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProgress } from '@/hooks/useProgress';
 import { usePurchase } from '@/hooks/usePurchase';
-import { getAllCourses } from '@/lib/courseData';
+import { useCourses } from '@/components/providers/CoursesProvider';
 import Header from '@/components/layout/Header';
+import SiteFooter from '@/components/layout/SiteFooter';
 import PurchaseModal from '@/components/modals/PurchaseModal';
+
+// Палитра обложек (4 варианта в pink/rose тональности)
+const COVER_GRADIENTS = [
+  'from-pink-500 via-rose-500 to-orange-400',
+  'from-rose-500 via-pink-500 to-fuchsia-500',
+  'from-fuchsia-500 via-purple-500 to-pink-600',
+  'from-purple-500 via-rose-500 to-pink-500',
+];
+
+function pluralModule(n: number) {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 14) return 'модулей';
+  if (mod10 === 1) return 'модуль';
+  if (mod10 >= 2 && mod10 <= 4) return 'модуля';
+  return 'модулей';
+}
+
+function pluralLesson(n: number) {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod100 >= 11 && mod100 <= 14) return 'уроков';
+  if (mod10 === 1) return 'урок';
+  if (mod10 >= 2 && mod10 <= 4) return 'урока';
+  return 'уроков';
+}
 
 export default function CoursesPage() {
   const { isAuthenticated } = useAuth();
-  const courses = getAllCourses();
+  const { courses } = useCourses();
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
+  // Только курсы с реальным контентом (фильтрует тестовый мусор без модулей)
+  const visibleCourses = courses.filter((c) => c.modules.length > 0);
+
+  const totalLessons = visibleCourses.reduce(
+    (sum, c) =>
+      sum + c.modules.reduce((s, m) => s + m.lessons.length, 0),
+    0,
+  );
+
   const handlePurchaseClick = (courseId: string) => {
     if (!isAuthenticated) {
-      // Redirect to register with course info
       window.location.href = `/auth/register?course=${courseId}`;
       return;
     }
@@ -28,7 +72,7 @@ export default function CoursesPage() {
 
   const handlePurchaseSuccess = () => {
     setShowPurchaseModal(false);
-    window.location.reload();
+    // Состояние покупки обновится автоматически через session.refresh внутри модалки
   };
 
   return (
@@ -36,18 +80,43 @@ export default function CoursesPage() {
       <Header />
       <main className="min-h-screen page-wrapper">
         <div className="container-custom max-w-7xl">
-          {/* Page Title */}
-          <div className="mb-6 md:mb-8 animate-fade-in">
-            <h1 className="mb-2">Каталог курсов</h1>
-            <p className="text-lg md:text-xl text-dark-600">
-              Выберите курс для профессионального роста
-            </p>
+          {/* Page Hero */}
+          <div className="mb-8 md:mb-10 lg:mb-14 animate-fade-in">
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 lg:gap-8">
+              <div>
+                <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-dark-900 mb-3 md:mb-4">
+                  Каталог курсов
+                </h1>
+                <p className="text-base md:text-lg lg:text-xl text-dark-600 max-w-2xl">
+                  Выберите курс для профессионального роста в beauty-индустрии
+                </p>
+              </div>
+
+              {visibleCourses.length > 0 && (
+                <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm md:text-base">
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl shadow-sm border border-gray-100">
+                    <BookOpen className="w-4 h-4 md:w-5 md:h-5 text-primary-600" />
+                    <span className="font-semibold text-dark-900">
+                      {visibleCourses.length}
+                    </span>
+                    <span className="text-dark-500">курсов</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl shadow-sm border border-gray-100">
+                    <Video className="w-4 h-4 md:w-5 md:h-5 text-primary-600" />
+                    <span className="font-semibold text-dark-900">
+                      {totalLessons}
+                    </span>
+                    <span className="text-dark-500">уроков</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Courses Grid */}
-          {courses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {courses.map((course, index) => (
+          {visibleCourses.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-6 lg:gap-7">
+              {visibleCourses.map((course, index) => (
                 <CourseCard
                   key={course.id}
                   course={course}
@@ -58,14 +127,19 @@ export default function CoursesPage() {
               ))}
             </div>
           ) : (
-            <div className="card text-center py-16">
+            <div className="bg-white rounded-2xl p-12 md:p-16 text-center border-2 border-dashed border-gray-200">
               <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-dark-900 mb-2">Нет доступных курсов</h2>
-              <p className="text-dark-600">Курсы появятся здесь, когда они будут добавлены</p>
+              <h2 className="text-xl md:text-2xl font-bold text-dark-900 mb-2">
+                Курсов пока нет
+              </h2>
+              <p className="text-dark-600">
+                Скоро здесь появятся новые курсы
+              </p>
             </div>
           )}
         </div>
       </main>
+      <SiteFooter />
 
       {/* Purchase Modal */}
       {selectedCourseId && (
@@ -80,7 +154,6 @@ export default function CoursesPage() {
   );
 }
 
-// Компонент карточки курса
 interface CourseCardProps {
   course: any;
   index: number;
@@ -88,180 +161,221 @@ interface CourseCardProps {
   onPurchaseClick: (courseId: string) => void;
 }
 
-function CourseCard({ course, index, isAuthenticated, onPurchaseClick }: CourseCardProps) {
+function CourseCard({
+  course,
+  index,
+  isAuthenticated,
+  onPurchaseClick,
+}: CourseCardProps) {
   const { getProgressPercentage } = useProgress(course.id);
   const { isPurchased } = usePurchase(course.id);
-  
+
   const progress = getProgressPercentage();
   const totalModules = course.modules.length;
   const totalLessons = course.modules.reduce(
     (sum: number, module: any) => sum + module.lessons.length,
-    0
+    0,
   );
   const freeLessonsCount = course.modules.reduce(
-    (sum: number, module: any) => sum + module.lessons.filter((l: any) => l.isFree).length,
-    0
+    (sum: number, module: any) =>
+      sum + module.lessons.filter((l: any) => l.isFree).length,
+    0,
   );
 
-  // Вычисляем минимальную цену из тарифных планов
-  const minPrice = course.pricingPlans && course.pricingPlans.length > 0
-    ? Math.min(...course.pricingPlans.filter((p: any) => p.isActive).map((p: any) => p.price))
-    : null;
+  const activePlans = (course.pricingPlans ?? []).filter((p: any) => p.isActive);
+  const minPrice =
+    activePlans.length > 0
+      ? Math.min(...activePlans.map((p: any) => p.price))
+      : null;
+  const currency = activePlans[0]?.currency ?? '₸';
 
-  // Получаем валюту (предполагаем что все планы в одной валюте)
-  const currency = course.pricingPlans && course.pricingPlans.length > 0
-    ? course.pricingPlans[0].currency
-    : '₸';
+  // Детерминированный градиент по id курса (для визуального разнообразия)
+  const gradientIdx =
+    course.id
+      .split('')
+      .reduce((sum: number, ch: string) => sum + ch.charCodeAt(0), 0) %
+    COVER_GRADIENTS.length;
+  const coverGradient = COVER_GRADIENTS[gradientIdx];
 
-  // Количество активных тарифных планов
-  const activePlansCount = course.pricingPlans
-    ? course.pricingPlans.filter((p: any) => p.isActive).length
-    : 0;
+  // Инициал курса для обложки
+  const initial = (course.title || '?').trim().charAt(0).toUpperCase();
+
+  // CTA logic — одна кнопка
+  const hasProgress = isAuthenticated && progress > 0;
+  const ctaLabel = isPurchased
+    ? hasProgress
+      ? 'Продолжить'
+      : 'Начать курс'
+    : !isAuthenticated
+      ? 'Купить'
+      : hasProgress
+        ? 'Купить полный доступ'
+        : 'Купить';
+
+  const ctaIsLink = isPurchased;
+  const ctaHref = isPurchased ? `/course/${course.id}` : '#';
+
+  const handleCtaClick = (e: React.MouseEvent) => {
+    if (isPurchased) return; // Link сам обработает
+    e.preventDefault();
+    e.stopPropagation();
+    onPurchaseClick(course.id);
+  };
+
+  // Бейдж статуса в углу обложки
+  let statusBadge: React.ReactNode = null;
+  if (isPurchased) {
+    statusBadge = (
+      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 backdrop-blur-sm text-green-700 rounded-full text-xs font-bold shadow-sm">
+        <CheckCircle2 className="w-3.5 h-3.5" />
+        Доступ
+      </div>
+    );
+  } else if (hasProgress) {
+    statusBadge = (
+      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 backdrop-blur-sm text-primary-700 rounded-full text-xs font-bold shadow-sm">
+        <TrendingUp className="w-3.5 h-3.5" />В процессе
+      </div>
+    );
+  } else if (freeLessonsCount > 0) {
+    statusBadge = (
+      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 backdrop-blur-sm text-emerald-700 rounded-full text-xs font-bold shadow-sm">
+        <Star className="w-3.5 h-3.5 fill-emerald-700" />
+        Бесплатные уроки
+      </div>
+    );
+  } else if (!isAuthenticated) {
+    statusBadge = (
+      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 backdrop-blur-sm text-dark-700 rounded-full text-xs font-bold shadow-sm">
+        <Lock className="w-3.5 h-3.5" />
+        Доступ после покупки
+      </div>
+    );
+  }
 
   return (
-    <div 
-      className="card card-hover animate-slide-up group flex flex-col"
-      style={{ animationDelay: `${index * 0.1}s` }}
+    <article
+      className="group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-primary-200 transition-all overflow-hidden flex flex-col h-full animate-slide-up"
+      style={{ animationDelay: `${Math.min(index, 8) * 0.05}s` }}
     >
-      {/* Course Icon/Image */}
-      <div className="w-full h-48 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center mb-5 group-hover:from-primary-200 group-hover:to-primary-300 transition-all">
-        <BookOpen className="w-20 h-20 text-primary-600" />
-      </div>
-
-      {/* Course Info */}
-      <Link href={`/course/${course.id}`} className="flex-1 flex flex-col">
-        <h2 className="text-xl font-bold text-dark-900 mb-2 group-hover:text-primary-600 transition-colors">
-          {course.title}
-        </h2>
-        <p className="text-sm text-dark-600 mb-4 line-clamp-2">
-          {course.description}
-        </p>
-
-        {/* Stats */}
-        <div className="flex items-center gap-4 mb-4 text-sm text-dark-500">
-          <div className="flex items-center gap-1.5">
-            <Layers className="w-4 h-4" />
-            <span>{totalModules} модулей</span>
+      {/* Обложка */}
+      <Link href={`/course/${course.id}`} className="block">
+        <div
+          className={`relative h-44 md:h-48 bg-gradient-to-br ${coverGradient} overflow-hidden`}
+        >
+          {/* Декоративный фон-паттерн */}
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/40 blur-3xl" />
+            <div className="absolute -bottom-12 -left-8 w-48 h-48 rounded-full bg-white/30 blur-3xl" />
           </div>
-          <div className="flex items-center gap-1.5">
-            <Video className="w-4 h-4" />
-            <span>{totalLessons} уроков</span>
-          </div>
-        </div>
 
-        {/* Free Lessons Badge */}
-        {freeLessonsCount > 0 && (
-          <div className="mb-4">
-            <span className="badge bg-green-50 text-green-700 flex items-center gap-2 w-fit">
-              <Star className="w-3 h-3" />
-              {freeLessonsCount} бесплатных {freeLessonsCount === 1 ? 'урок' : 'уроков'}
+          {/* Большой инициал */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-7xl md:text-8xl font-black text-white/90 drop-shadow-lg group-hover:scale-110 transition-transform duration-300">
+              {initial}
             </span>
           </div>
-        )}
 
-        {/* Progress (for authenticated users) */}
-        {isAuthenticated && progress > 0 && (
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-dark-600">Прогресс</span>
-              <span className="text-sm font-semibold text-primary-600">
-                {progress}%
-              </span>
-            </div>
-            <div className="progress-bar">
-              <div 
-                className="progress-fill" 
+          {/* Иконка в углу */}
+          <div className="absolute bottom-3 right-3 w-9 h-9 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+            <BookOpen className="w-5 h-5 text-white" strokeWidth={2.5} />
+          </div>
+
+          {/* Status badge */}
+          {statusBadge && (
+            <div className="absolute top-3 left-3">{statusBadge}</div>
+          )}
+
+          {/* Прогресс-полоска снизу обложки */}
+          {hasProgress && (
+            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/20">
+              <div
+                className="h-full bg-white shadow-sm transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
-          </div>
-        )}
-      </Link>
-
-      {/* Price Section */}
-      {minPrice && !isPurchased && (
-        <div className="mt-auto pt-4 border-t border-gray-200 mb-4">
-          <div className="flex items-baseline justify-between mb-2">
-            <span className="text-sm text-dark-600">От</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-primary-600">
-                {minPrice.toLocaleString()}
-              </span>
-              <span className="text-sm text-dark-500">{currency}</span>
-            </div>
-          </div>
-          {activePlansCount > 1 && (
-            <span className="text-xs text-dark-500">
-              {activePlansCount} {activePlansCount === 1 ? 'тариф' : activePlansCount < 5 ? 'тарифа' : 'тарифов'}
-            </span>
           )}
         </div>
-      )}
+      </Link>
 
-      {/* Status Badge & Action Button */}
-      <div className="mt-auto flex flex-col gap-3">
-        {isAuthenticated && isPurchased ? (
-          <>
-            <span className="badge bg-primary-100 text-primary-700 flex items-center gap-2 justify-center">
-              <CheckCircle2 className="w-4 h-4" />
-              Полный доступ
-            </span>
-            <Link
-              href={`/course/${course.id}`}
-              className="btn btn-primary w-full text-center"
-            >
-              {progress > 0 ? 'Продолжить обучение' : 'Начать обучение'}
-            </Link>
-          </>
-        ) : isAuthenticated && progress > 0 ? (
-          <>
-            <span className="badge bg-blue-100 text-blue-700 flex items-center gap-2 justify-center">
-              <TrendingUp className="w-4 h-4" />
-              В процессе
-            </span>
-            <button
-              onClick={() => onPurchaseClick(course.id)}
-              className="btn btn-primary w-full"
-            >
-              <DollarSign className="w-4 h-4 mr-2" />
-              Купить полный доступ
-            </button>
-          </>
-        ) : (
-          <>
-            {!isAuthenticated ? (
-              <span className="badge bg-gray-100 text-gray-600 flex items-center gap-2 justify-center">
-                <Lock className="w-4 h-4" />
-                Требуется регистрация
-              </span>
-            ) : (
-              <span className="badge bg-gray-100 text-gray-600 flex items-center gap-2 justify-center">
-                <Lock className="w-4 h-4" />
-                Доступны бесплатные уроки
-              </span>
-            )}
-            <button
-              onClick={() => onPurchaseClick(course.id)}
-              className="btn btn-primary w-full"
-            >
-              {!isAuthenticated ? 'Начать обучение' : (
-                <>
-                  <DollarSign className="w-4 h-4 mr-2" />
-                  Купить курс
-                </>
-              )}
-            </button>
-          </>
-        )}
-        
-        {/* Details Link */}
-        <Link
-          href={`/course/${course.id}`}
-          className="btn btn-secondary w-full text-center"
-        >
-          Подробнее о курсе
+      {/* Контент карточки */}
+      <div className="flex-1 flex flex-col p-5">
+        {/* Title + description (кликабельны) */}
+        <Link href={`/course/${course.id}`} className="block flex-1">
+          <h3 className="text-lg lg:text-xl font-bold text-dark-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
+            {course.title}
+          </h3>
+          <p className="text-sm text-dark-600 mb-4 line-clamp-3">
+            {course.description}
+          </p>
         </Link>
+
+        {/* Stats — одной строкой с разделителем */}
+        <div className="flex items-center gap-2 text-xs md:text-sm text-dark-500 mb-4">
+          <div className="flex items-center gap-1.5">
+            <Layers className="w-4 h-4" />
+            <span>
+              {totalModules} {pluralModule(totalModules)}
+            </span>
+          </div>
+          <span className="text-dark-300">·</span>
+          <div className="flex items-center gap-1.5">
+            <Video className="w-4 h-4" />
+            <span>
+              {totalLessons} {pluralLesson(totalLessons)}
+            </span>
+          </div>
+        </div>
+
+        {/* Прогресс — текстом, тонко */}
+        {hasProgress && !isPurchased && (
+          <div className="mb-4 text-xs text-primary-700 font-semibold">
+            Пройдено {progress}% — продолжите обучение
+          </div>
+        )}
+
+        {/* Footer: цена + CTA */}
+        <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between gap-3">
+          {isPurchased ? (
+            <div className="flex items-center gap-2 text-green-700 font-semibold text-sm">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Полный доступ</span>
+            </div>
+          ) : minPrice !== null ? (
+            <div className="flex flex-col">
+              <span className="text-[11px] text-dark-500 uppercase tracking-wide font-medium">
+                От
+              </span>
+              <span className="text-xl lg:text-2xl font-bold text-dark-900 leading-tight">
+                {minPrice.toLocaleString()}
+                <span className="text-sm font-medium text-dark-500 ml-1">
+                  {currency}
+                </span>
+              </span>
+            </div>
+          ) : (
+            <span className="text-sm text-dark-500">Цена не указана</span>
+          )}
+
+          {ctaIsLink ? (
+            <Link
+              href={ctaHref}
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-sm font-semibold rounded-xl transition-colors whitespace-nowrap"
+            >
+              <Play className="w-4 h-4" />
+              {ctaLabel}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={handleCtaClick}
+              className="inline-flex items-center justify-center px-4 py-2.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-sm font-semibold rounded-xl transition-colors whitespace-nowrap"
+            >
+              {ctaLabel}
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+    </article>
   );
 }

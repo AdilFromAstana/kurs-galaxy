@@ -1,88 +1,109 @@
 'use server';
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import type { AdminSession, AdminUser } from '@/types/admin';
+import { prisma } from '@/lib/db';
+import { hashPassword, verifyPassword } from '@/lib/auth/password';
+import {
+  createUserSession,
+  createAdminSession,
+  clearUserSession,
+  clearAdminSession,
+  getUserSession,
+  getAdminSession,
+} from '@/lib/auth/session';
 
-const SESSION_COOKIE = 'nail_admin_session';
-const COOKIE_MAX_AGE = 60 * 60 * 24; // 24 часа
+// ===== Студенты =====
 
-// Простое хранилище для демо (в продакшене использовать БД)
-// В будущем можно заменить на getAdmins() из adminAuth.ts
-const getStoredAdmins = (): Map<string, AdminUser> => {
-  return new Map([
-    ['admin@nailacademy.com', {
-      id: '1',
-      email: 'admin@nailacademy.com',
-      password: btoa('admin123'), // В продакшене bcrypt
-      name: 'Главный Администратор',
-      role: 'admin',
-      createdAt: new Date().toISOString()
-    }]
-  ]);
-};
+export async function registerUserAction(formData: FormData) {
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
+  const password = String(formData.get('password') ?? '');
+  const name = String(formData.get('name') ?? '').trim();
 
-export async function loginAction(formData: FormData) {
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-  
-  if (!email || !password) {
-    // В продакшене можно использовать useFormState для отображения ошибок
-    throw new Error('Email и пароль обязательны');
+  if (!email || !password || !name) {
+    throw new Error('Все поля обязательны');
   }
-  
-  const admins = getStoredAdmins();
-  const admin = admins.get(email);
-  
-  if (!admin || btoa(password) !== admin.password) {
-    throw new Error('Неверный email или пароль');
+  if (password.length < 6) {
+    throw new Error('Пароль должен быть не короче 6 символов');
   }
-  
-  const session: AdminSession = {
-    id: admin.id,
-    email: admin.email,
-    name: admin.name,
-    role: admin.role,
-    expiresAt: Date.now() + COOKIE_MAX_AGE * 1000
-  };
-  
-  // Устанавливаем безопасную cookie
-  cookies().set({
-    name: SESSION_COOKIE,
-    value: JSON.stringify(session),
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: COOKIE_MAX_AGE,
-    path: '/'
+
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    throw new Error('Пользователь с таким email уже существует');
+  }
+
+  const passwordHash = await hashPassword(password);
+  const user = await prisma.user.create({
+    data: { email, name, passwordHash },
   });
-  
+
+  await createUserSession({ userId: user.id, email: user.email, name: user.name });
+  redirect('/dashboard');
+}
+
+export async function loginUserAction(formData: FormData) {
+  const email = String(formData.get('email') ?? '').trim().toLowerCase();
+  const password = String(formData.get('password') ?? '');
+
+  if (!email || !password) throw new Error('Введите email и пароль');
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw new Error('Неверный email или пароль');
+
+  const ok = await verifyPassword(password, user.passwordHash);
+  if (!ok) throw new Error('Неверный email или пароль');
+
+  await createUserSession({ userId: user.id, email: user.email, name: user.name });
+  redirect('/dashboard');
+}
+
+export async function logoutUserAction() {
+  await clearUserSession();
+  redirect('/');
+}
+
+export async function meAction() {
+  return getUserSession();
+}
+
+// ===== Админы =====
+
+export async function loginAdminAction(formData: FormData) {
+  try {
+    const email = String(formData.get('email') ?? '').trim().toLowerCase();
+    const password = String(formData.get('password') ?? '');
+
+    if (!email || !password) throw new Error('Введите email и пароль');
+
+    const admin = await prisma.admin.findUnique({ where: { email } });
+    if (!admin) throw new Error('Неверный email или пароль');
+
+    const ok = await verifyPassword(password, admin.passwordHash);
+    if (!ok) throw new Error('Неверный email или пароль');
+
+    await createAdminSession({
+      id: admin.id,
+      email: admin.email,
+      name: admin.name,
+      role: admin.role,
+    });
+  } catch (e: any) {
+    if (e?.digest?.startsWith?.('NEXT_REDIRECT')) throw e;
+    console.error('[loginAdminAction] error:', e?.message ?? e);
+    throw e;
+  }
   redirect('/admin');
 }
 
-export async function logoutAction() {
-  cookies().delete(SESSION_COOKIE);
+export async function logoutAdminAction() {
+  await clearAdminSession();
   redirect('/admin/login');
 }
 
-export async function getSession(): Promise<AdminSession | null> {
-  const sessionCookie = cookies().get(SESSION_COOKIE);
-  
-  if (!sessionCookie) {
-    return null;
-  }
-  
-  try {
-    const session = JSON.parse(sessionCookie.value) as AdminSession;
-    
-    // Проверка срока действия
-    if (session.expiresAt < Date.now()) {
-      cookies().delete(SESSION_COOKIE);
-      return null;
-    }
-    
-    return session;
-  } catch {
-    return null;
-  }
+export async function getAdminSessionAction() {
+  return getAdminSession();
 }
+
+// ===== Совместимость со старой Server Action из app/admin/login/page.tsx =====
+export const loginAction = loginAdminAction;
+export const logoutAction = logoutAdminAction;
+export const getSession = getAdminSession;

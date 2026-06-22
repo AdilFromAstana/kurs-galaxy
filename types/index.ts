@@ -7,7 +7,7 @@ export interface NailUser {
 export interface Material {
   title: string;
   url: string;
-  type: 'pdf' | 'link' | 'product';
+  type: 'pdf' | 'link' | 'product' | 'PDF' | 'LINK' | 'PRODUCT';
 }
 
 export interface Lesson {
@@ -18,7 +18,7 @@ export interface Lesson {
   videoUrl: string;
   content: string;
   materials: Material[];
-  moduleId: string;
+  moduleId?: string;
   order?: number;
 }
 

@@ -2,70 +2,99 @@
 
 import { DollarSign, Plus, Edit, Trash2, ArrowLeft, Check, X } from 'lucide-react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { getCourseById } from '@/lib/courseData';
-import { getCoursePricingPlans, deletePricingPlan, savePricingPlan } from '@/lib/pricing';
-import type { PricingPlan } from '@/types';
+import toast from 'react-hot-toast';
+import { confirmToast } from '@/lib/toastConfirm';
+
+const ACCESS_LABEL: Record<string, string> = {
+  ONE_MONTH: '1 месяц',
+  TWO_MONTHS: '2 месяца',
+  THREE_MONTHS: '3 месяца',
+  SIX_MONTHS: '6 месяцев',
+  TWELVE_MONTHS: '12 месяцев',
+  UNLIMITED: 'Бессрочный',
+};
+
+type PlanDTO = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  isActive: boolean;
+  isRecommended: boolean;
+  accessPeriod: string;
+  order: number;
+};
+
+type CourseLite = { id: string; slug: string; title: string };
 
 export default function CoursePricingPage() {
   const params = useParams();
-  const router = useRouter();
   const courseId = params.courseId as string;
-  const course = getCourseById(courseId);
-  
-  const [plans, setPlans] = useState<PricingPlan[]>([]);
+
+  const [course, setCourse] = useState<CourseLite | null>(null);
+  const [plans, setPlans] = useState<PlanDTO[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   useEffect(() => {
-    const loadPlans = () => {
-      try {
-        // Сначала пытаемся загрузить из localStorage
-        const storedPlans = getCoursePricingPlans(courseId);
-        
-        if (storedPlans.length > 0) {
-          setPlans(storedPlans.sort((a, b) => a.order - b.order));
-        } else {
-          // Если в localStorage нет, используем дефолтные из courseData
-          const currentCourse = getCourseById(courseId);
-          if (currentCourse?.pricingPlans) {
-            setPlans(currentCourse.pricingPlans.sort((a, b) => a.order - b.order));
-          }
-        }
-      } catch (error) {
-        console.error('Ошибка загрузки тарифов:', error);
-      } finally {
-        setIsLoading(false);
+    let cancel = false;
+    (async () => {
+      const [courseRes, plansRes] = await Promise.all([
+        fetch(`/api/admin/courses/${courseId}`, { credentials: 'include' }),
+        fetch(`/api/admin/courses/${courseId}/pricing`, { credentials: 'include' }),
+      ]);
+      if (cancel) return;
+      if (courseRes.ok) {
+        const cd = await courseRes.json();
+        setCourse({ id: cd.course.id, slug: cd.course.slug, title: cd.course.title });
       }
+      if (plansRes.ok) {
+        const pd = await plansRes.json();
+        setPlans((pd.pricingPlans ?? []).sort((a: PlanDTO, b: PlanDTO) => a.order - b.order));
+      }
+      setIsLoading(false);
+    })();
+    return () => {
+      cancel = true;
     };
-    
-    loadPlans();
   }, [courseId]);
-  
-  const handleToggleActive = (plan: PricingPlan) => {
-    try {
-      const updated = { ...plan, isActive: !plan.isActive, updatedAt: new Date() };
-      savePricingPlan(updated);
-      setPlans(plans.map(p => p.id === plan.id ? updated : p));
-    } catch (error) {
-      console.error('Ошибка обновления тарифа:', error);
-      alert('Ошибка при обновлении тарифа');
+
+  const handleToggleActive = async (plan: PlanDTO) => {
+    const res = await fetch(`/api/admin/pricing/${plan.id}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isActive: !plan.isActive }),
+    });
+    if (!res.ok) {
+      toast.error('Ошибка при обновлении тарифа');
+      return;
     }
+    setPlans(plans.map((p) => (p.id === plan.id ? { ...p, isActive: !plan.isActive } : p)));
   };
-  
-  const handleDelete = (planId: string, planName: string) => {
-    if (confirm(`Удалить тарифный план "${planName}"? Это действие нельзя отменить.`)) {
-      try {
-        deletePricingPlan(courseId, planId);
-        setPlans(plans.filter(p => p.id !== planId));
-      } catch (error) {
-        console.error('Ошибка удаления тарифа:', error);
-        alert('Ошибка при удалении тарифа');
-      }
+
+  const handleDelete = async (planId: string, planName: string) => {
+    const ok = await confirmToast({
+      message: `Удалить тарифный план «${planName}»?`,
+      confirmText: 'Удалить',
+      destructive: true,
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/admin/pricing/${planId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      toast.error('Ошибка при удалении тарифа');
+      return;
     }
+    setPlans(plans.filter((p) => p.id !== planId));
+    toast.success('Тариф удалён');
   };
-  
-  if (!course) {
+
+  if (!isLoading && !course) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <DollarSign className="w-16 h-16 text-gray-400 mb-4" />
@@ -82,7 +111,7 @@ export default function CoursePricingPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-4xl">
+    <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <Link
@@ -96,7 +125,7 @@ export default function CoursePricingPage() {
             <DollarSign className="w-8 h-8 text-primary-600" />
             Управление тарифами
           </h1>
-          <p className="text-gray-600 mt-1 text-sm md:text-base">{course.title}</p>
+          <p className="text-gray-600 mt-1 text-sm md:text-base">{course?.title ?? ''}</p>
         </div>
         <Link
           href={`/admin/courses/${courseId}/pricing/create`}
@@ -140,7 +169,7 @@ export default function CoursePricingPage() {
                       {plan.price.toLocaleString()} {plan.currency}
                     </p>
                     <p className="text-sm text-gray-600 mb-2">
-                      Доступ: {plan.accessPeriod.label}
+                      Доступ: {ACCESS_LABEL[plan.accessPeriod] ?? plan.accessPeriod}
                     </p>
                     {plan.description && (
                       <p className="text-sm text-gray-500">{plan.description}</p>

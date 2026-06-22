@@ -4,19 +4,45 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Save, Trash2, DollarSign } from 'lucide-react';
 import Link from 'next/link';
-import { getCourseById } from '@/lib/courseData';
-import { getCoursePricingPlans, savePricingPlan, deletePricingPlan } from '@/lib/pricing';
+import toast from 'react-hot-toast';
+import { confirmToast } from '@/lib/toastConfirm';
 import { ACCESS_PERIOD_OPTIONS } from '@/lib/pricing';
-import type { PricingPlan, AccessPeriodType } from '@/types';
+import type { AccessPeriodType } from '@/types';
+
+const PERIOD_TO_ENUM: Record<AccessPeriodType, string> = {
+  '1month': 'ONE_MONTH',
+  '2months': 'TWO_MONTHS',
+  '3months': 'THREE_MONTHS',
+  '6months': 'SIX_MONTHS',
+  '12months': 'TWELVE_MONTHS',
+  unlimited: 'UNLIMITED',
+};
+
+const ENUM_TO_PERIOD: Record<string, AccessPeriodType> = Object.fromEntries(
+  Object.entries(PERIOD_TO_ENUM).map(([k, v]) => [v, k as AccessPeriodType])
+);
+
+type PlanDTO = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  isActive: boolean;
+  isRecommended: boolean;
+  accessPeriod: string;
+};
+
+type CourseLite = { id: string; slug: string; title: string };
 
 export default function EditPricingPlanPage() {
   const router = useRouter();
   const params = useParams();
   const courseId = params.courseId as string;
   const planId = params.planId as string;
-  const course = getCourseById(courseId);
-  
-  const [plan, setPlan] = useState<PricingPlan | null>(null);
+
+  const [course, setCourse] = useState<CourseLite | null>(null);
+  const [plan, setPlan] = useState<PlanDTO | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -32,31 +58,39 @@ export default function EditPricingPlanPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadPlan = () => {
+    let cancel = false;
+    (async () => {
       try {
-        const plans = getCoursePricingPlans(courseId);
-        const foundPlan = plans.find(p => p.id === planId);
-        
-        if (foundPlan) {
-          setPlan(foundPlan);
+        const [courseRes, planRes] = await Promise.all([
+          fetch(`/api/admin/courses/${courseId}`, { credentials: 'include' }),
+          fetch(`/api/admin/pricing/${planId}`, { credentials: 'include' }),
+        ]);
+        if (cancel) return;
+        if (courseRes.ok) {
+          const cd = await courseRes.json();
+          setCourse({ id: cd.course.id, slug: cd.course.slug, title: cd.course.title });
+        }
+        if (planRes.ok) {
+          const pd = await planRes.json();
+          const p = pd.plan as PlanDTO;
+          setPlan(p);
           setFormData({
-            name: foundPlan.name,
-            description: foundPlan.description || '',
-            accessPeriod: foundPlan.accessPeriod.type,
-            price: foundPlan.price.toString(),
-            currency: foundPlan.currency,
-            isActive: foundPlan.isActive,
-            isRecommended: foundPlan.isRecommended
+            name: p.name,
+            description: p.description ?? '',
+            accessPeriod: (ENUM_TO_PERIOD[p.accessPeriod] ?? '1month') as AccessPeriodType,
+            price: String(p.price),
+            currency: p.currency,
+            isActive: p.isActive,
+            isRecommended: p.isRecommended,
           });
         }
-      } catch (error) {
-        console.error('Ошибка загрузки тарифа:', error);
       } finally {
         setIsLoading(false);
       }
+    })();
+    return () => {
+      cancel = true;
     };
-    
-    loadPlan();
   }, [courseId, planId]);
 
   if (!course) {
@@ -143,54 +177,57 @@ export default function EditPricingPlanPage() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validate()) return;
-    
+    if (!validate() || !plan) return;
     setIsSubmitting(true);
-    
+
     try {
-      const updatedPlan: PricingPlan = {
-        ...plan,
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        accessPeriod: {
-          type: formData.accessPeriod,
-          days: ACCESS_PERIOD_OPTIONS.find(o => o.value === formData.accessPeriod)?.value === 'unlimited' 
-            ? null 
-            : parseInt(ACCESS_PERIOD_OPTIONS.find(o => o.value === formData.accessPeriod)?.label.match(/\d+/)?.[0] || '0') * 30,
-          label: ACCESS_PERIOD_OPTIONS.find(o => o.value === formData.accessPeriod)?.label.split(' (')[0] || ''
-        },
-        price: Number(formData.price),
-        currency: formData.currency,
-        isActive: formData.isActive,
-        isRecommended: formData.isRecommended,
-        updatedAt: new Date()
-      };
-      
-      savePricingPlan(updatedPlan);
+      const res = await fetch(`/api/admin/pricing/${plan.id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          description: formData.description.trim() || null,
+          accessPeriod: PERIOD_TO_ENUM[formData.accessPeriod],
+          price: Number(formData.price),
+          currency: formData.currency,
+          isActive: formData.isActive,
+          isRecommended: formData.isRecommended,
+        }),
+      });
+      if (!res.ok) {
+        toast.error('Ошибка при обновлении тарифа');
+        return;
+      }
+      toast.success('Тариф обновлён');
       router.push(`/admin/courses/${courseId}/pricing`);
-    } catch (error) {
-      console.error('Ошибка обновления тарифа:', error);
-      alert('Ошибка при обновлении тарифа');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDelete = () => {
-    if (confirm(`Удалить тарифный план "${plan.name}"? Это действие нельзя отменить.`)) {
-      try {
-        deletePricingPlan(courseId, planId);
-        router.push(`/admin/courses/${courseId}/pricing`);
-      } catch (error) {
-        console.error('Ошибка удаления тарифа:', error);
-        alert('Ошибка при удалении тарифа');
-      }
+  const handleDelete = async () => {
+    if (!plan) return;
+    const ok = await confirmToast({
+      message: `Удалить тарифный план «${plan.name}»?`,
+      confirmText: 'Удалить',
+      destructive: true,
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/admin/pricing/${plan.id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (res.ok) {
+      toast.success('Тариф удалён');
+      router.push(`/admin/courses/${courseId}/pricing`);
+    } else {
+      toast.error('Ошибка при удалении тарифа');
     }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-4xl">
+    <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <Link

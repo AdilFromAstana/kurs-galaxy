@@ -1,72 +1,59 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Save, Layers, FileText, BookOpen } from 'lucide-react';
-import Link from 'next/link';
-import { getCourseById, coursesData } from '@/lib/courseData';
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, Save, Layers, FileText, BookOpen } from "lucide-react";
+import Link from "next/link";
+import toast from "react-hot-toast";
+
+type CourseLite = { id: string; slug: string; title: string; modules: Array<{ id: string }> };
 
 export default function CreateModulePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const courseId = searchParams.get('courseId');
-  
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const courseId = searchParams.get("courseId");
+
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [course, setCourse] = useState(courseId ? getCourseById(courseId) : null);
+  const [course, setCourse] = useState<CourseLite | null>(null);
 
   useEffect(() => {
-    if (courseId) {
-      const foundCourse = getCourseById(courseId);
-      setCourse(foundCourse);
-    }
+    if (!courseId) return;
+    let cancel = false;
+    (async () => {
+      const res = await fetch(`/api/admin/courses/${courseId}`, { credentials: 'include' });
+      if (!cancel && res.ok) {
+        const data = await res.json();
+        setCourse(data.course);
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
   }, [courseId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!courseId) return;
     setIsLoading(true);
 
     try {
-      if (!courseId) {
-        alert('Ошибка: не указан ID курса');
-        setIsLoading(false);
+      const res = await fetch(`/api/admin/courses/${courseId}/modules`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.error ?? 'Не удалось создать модуль');
         return;
       }
-
-      if (!course) {
-        alert('Ошибка: курс не найден');
-        setIsLoading(false);
-        return;
-      }
-
-      // Создать новый модуль
-      const newModule = {
-        id: `m${Date.now()}`,
-        title,
-        description,
-        lessons: [],
-        order: course.modules.length
-      };
-
-      // Добавить модуль в конкретный курс
-      const updatedModules = [...course.modules, newModule];
-
-      const updatedCourse = {
-        ...course,
-        modules: updatedModules
-      };
-
-      // TODO: Обновить в localStorage все курсы
-      console.log('Создание модуля для курса:', courseId, newModule);
-
-      // Показать уведомление
-      alert('✅ Модуль успешно создан!');
-
-      // Перейти к редактированию модуля
-      router.push(`/admin/modules/${newModule.id}/edit?courseId=${courseId}`);
+      toast.success('Модуль создан');
+      router.push(`/admin/courses/${courseId}`);
     } catch (error) {
-      alert('Ошибка при создании модуля');
+      toast.error('Ошибка при создании модуля');
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -78,8 +65,12 @@ export default function CreateModulePage() {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <BookOpen className="w-16 h-16 text-gray-400 mb-4" />
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Курс не найден</h2>
-        <p className="text-gray-600 mb-6">Курс с ID "{courseId}" не существует</p>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Курс не найден
+        </h2>
+        <p className="text-gray-600 mb-6">
+          Курс с ID "{courseId}" не существует
+        </p>
         <Link
           href="/admin/courses"
           className="px-6 py-3 bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 rounded-lg font-medium"
@@ -90,7 +81,7 @@ export default function CreateModulePage() {
     );
   }
 
-  const backLink = courseId ? `/admin/courses/${courseId}` : '/admin/courses';
+  const backLink = courseId ? `/admin/courses/${courseId}` : "/admin/courses";
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in pb-24 md:pb-8">
@@ -101,14 +92,16 @@ export default function CreateModulePage() {
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
-          {course ? `Назад к курсу: ${course.title}` : 'Назад к курсам'}
+          {course ? `Назад к курсу: ${course.title}` : "Назад к курсам"}
         </Link>
 
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
           Создание модуля
         </h1>
         <p className="text-gray-600 mt-1 text-sm md:text-base">
-          {course ? `Добавить новый модуль в курс "${course.title}"` : 'Добавить новый модуль'}
+          {course
+            ? `Добавить новый модуль в курс "${course.title}"`
+            : "Добавить новый модуль"}
         </p>
       </div>
 
@@ -117,7 +110,9 @@ export default function CreateModulePage() {
         <div className="bg-primary-50 rounded-xl p-4 border border-primary-100">
           <div className="flex items-center gap-2 text-sm text-gray-700">
             <BookOpen className="w-4 h-4 text-primary-600" />
-            <span className="font-semibold text-primary-900">{course.title}</span>
+            <span className="font-semibold text-primary-900">
+              {course.title}
+            </span>
             <span className="text-gray-400">→</span>
             <Layers className="w-4 h-4 text-gray-600" />
             <span>Новый модуль</span>
@@ -182,7 +177,7 @@ export default function CreateModulePage() {
               <p className="text-sm text-blue-700">
                 {course
                   ? `Новый модуль будет добавлен в конец списка (позиция ${course.modules.length + 1}). Вы сможете изменить порядок на странице редактирования курса.`
-                  : 'Новый модуль будет добавлен в конец списка. Вы сможете изменить порядок позже.'}
+                  : "Новый модуль будет добавлен в конец списка. Вы сможете изменить порядок позже."}
               </p>
             </div>
           </div>
@@ -196,7 +191,7 @@ export default function CreateModulePage() {
             className="w-full flex items-center justify-center gap-2 px-6 py-4 text-base font-semibold text-white bg-primary-600 hover:bg-primary-700 active:bg-primary-800 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation"
           >
             <Save className="w-5 h-5" />
-            {isLoading ? 'Создание...' : 'Создать модуль'}
+            {isLoading ? "Создание..." : "Создать модуль"}
           </button>
         </div>
       </form>
@@ -205,7 +200,8 @@ export default function CreateModulePage() {
       <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
         <h3 className="font-semibold text-gray-900 mb-2">💡 Что дальше?</h3>
         <p className="text-sm text-gray-600">
-          После создания модуля вы сможете добавить в него уроки на странице редактирования модуля.
+          После создания модуля вы сможете добавить в него уроки на странице
+          редактирования модуля.
         </p>
       </div>
     </div>

@@ -1,10 +1,19 @@
-'use client';
+"use client";
 
-import { X, LogOut, LayoutDashboard, BookOpen, Users, Settings } from 'lucide-react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { logoutAction } from '@/lib/auth/actions';
-import type { AdminSession } from '@/types/admin';
+import {
+  X,
+  LogOut,
+  LayoutDashboard,
+  BookOpen,
+  Users,
+  Award,
+  Globe,
+  Settings,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { logoutAction } from "@/lib/auth/actions";
+import type { AdminSession } from "@/types/admin";
 
 interface Props {
   session: AdminSession;
@@ -13,20 +22,22 @@ interface Props {
 }
 
 const menuItems = [
-  { href: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/admin/courses', icon: BookOpen, label: 'Курсы' },
-  { href: '/admin/students', icon: Users, label: 'Студенты' },
-  { href: '/admin/settings', icon: Settings, label: 'Настройки' },
+  { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/admin/courses", icon: BookOpen, label: "Курсы" },
+  { href: "/admin/students", icon: Users, label: "Студенты" },
+  { href: "/admin/certificate", icon: Award, label: "Сертификат" },
+  { href: "/admin/site", icon: Globe, label: "Сайт" },
+  { href: "/admin/settings", icon: Settings, label: "Настройки" },
 ];
 
 export function MobileSidebar({ session, isOpen, onClose }: Props) {
   const pathname = usePathname();
-  
+
   const handleLogout = async () => {
     onClose();
     await logoutAction();
   };
-  
+
   return (
     <>
       {/* Overlay */}
@@ -36,11 +47,11 @@ export function MobileSidebar({ session, isOpen, onClose }: Props) {
           onClick={onClose}
         />
       )}
-      
+
       {/* Drawer */}
       <div
         className={`fixed top-0 left-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 transform transition-transform duration-300 md:hidden ${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex flex-col h-full">
@@ -60,14 +71,16 @@ export function MobileSidebar({ session, isOpen, onClose }: Props) {
               <X className="w-6 h-6" />
             </button>
           </div>
-          
+
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto p-4">
             <div className="space-y-1">
               {menuItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
-                
+                const isActive =
+                  pathname === item.href ||
+                  (item.href !== "/admin" && pathname.startsWith(item.href));
+
                 return (
                   <Link
                     key={item.href}
@@ -75,8 +88,8 @@ export function MobileSidebar({ session, isOpen, onClose }: Props) {
                     onClick={onClose}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all touch-manipulation ${
                       isActive
-                        ? 'bg-primary-50 text-primary-700 font-medium'
-                        : 'text-gray-600 active:bg-gray-50'
+                        ? "bg-primary-50 text-primary-700 font-medium"
+                        : "text-gray-600 active:bg-gray-50"
                     }`}
                   >
                     <Icon className="w-5 h-5 flex-shrink-0" />
@@ -86,7 +99,7 @@ export function MobileSidebar({ session, isOpen, onClose }: Props) {
               })}
             </div>
           </nav>
-          
+
           {/* Profile & Logout */}
           <div className="p-4 border-t border-gray-200">
             <div className="flex items-center gap-3 mb-3 px-2">
@@ -104,7 +117,7 @@ export function MobileSidebar({ session, isOpen, onClose }: Props) {
                 </p>
               </div>
             </div>
-            
+
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-3 text-red-600 active:bg-red-50 rounded-lg transition-colors touch-manipulation"

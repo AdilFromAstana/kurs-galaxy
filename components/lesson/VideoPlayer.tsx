@@ -1,38 +1,71 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getVideoTime, setVideoTime } from '@/lib/storage';
+import { useAuth } from '@/hooks/useAuth';
 
 interface VideoPlayerProps {
   lessonId: string;
-  videoUrl: string;
+  /** Оставлен для обратной совместимости — реально не используется,
+   *  плеер всегда ходит через защищённый эндпоинт. */
+  videoUrl?: string;
 }
 
-export default function VideoPlayer({ lessonId, videoUrl }: VideoPlayerProps) {
+export default function VideoPlayer({ lessonId }: VideoPlayerProps) {
+  // Видео отдаётся защищённым стрим-эндпоинтом с проверкой авторизации.
+  // Внешние URL (если такие были сохранены) сервер прозрачно редиректит.
+  const streamSrc = `/api/lessons/${lessonId}/video`;
+
+  const { isAuthenticated } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [speed, setSpeed] = useState(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
 
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
   useEffect(() => {
-    const savedTime = getVideoTime(lessonId);
-    if (savedTime && videoRef.current) {
-      videoRef.current.currentTime = savedTime;
-    }
-  }, [lessonId]);
+    // Гостям video-position не сохраняется — пропускаем загрузку
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/video-position?lessonId=${encodeURIComponent(lessonId)}`, {
+          credentials: 'include',
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && videoRef.current && data.time) {
+          videoRef.current.currentTime = data.time;
+        }
+      } catch {
+        /* ignore */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [lessonId, isAuthenticated]);
+
+  const persistTime = (time: number) => {
+    if (!isAuthenticated) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      fetch('/api/video-position', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lessonId, time }),
+      }).catch(() => {});
+    }, 1500);
+  };
 
   const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setVideoTime(lessonId, videoRef.current.currentTime);
-    }
+    if (videoRef.current) persistTime(videoRef.current.currentTime);
   };
 
   const handleSpeedChange = (newSpeed: number) => {
     setSpeed(newSpeed);
-    if (videoRef.current) {
-      videoRef.current.playbackRate = newSpeed;
-    }
+    if (videoRef.current) videoRef.current.playbackRate = newSpeed;
     setShowSpeedMenu(false);
   };
 
@@ -41,15 +74,14 @@ export default function VideoPlayer({ lessonId, videoUrl }: VideoPlayerProps) {
       <div className="relative w-full aspect-video bg-black rounded-lg md:rounded-2xl overflow-hidden shadow-2xl">
         <video
           ref={videoRef}
-          src={videoUrl}
+          src={streamSrc}
           controls
           controlsList="nodownload"
           className="w-full h-full"
           onTimeUpdate={handleTimeUpdate}
           playsInline
         />
-        
-        {/* Custom Speed Controls */}
+
         <div className="absolute bottom-14 md:bottom-16 right-2 md:right-4 z-10">
           <div className="relative">
             <button
@@ -58,17 +90,16 @@ export default function VideoPlayer({ lessonId, videoUrl }: VideoPlayerProps) {
             >
               {speed}x
             </button>
-            
+
             {showSpeedMenu && (
               <div className="absolute bottom-full right-0 mb-2 bg-black/90 rounded-lg overflow-hidden backdrop-blur-sm animate-scale-in">
                 {speeds.map((s) => (
                   <button
                     key={s}
                     onClick={() => handleSpeedChange(s)}
-                    className={`
-                      block w-full px-4 py-2 text-sm md:text-base text-left transition-colors touch-target
-                      ${speed === s ? 'bg-primary-500 text-white' : 'text-white hover:bg-white/10'}
-                    `}
+                    className={`block w-full px-4 py-2 text-sm md:text-base text-left transition-colors touch-target ${
+                      speed === s ? 'bg-primary-500 text-white' : 'text-white hover:bg-white/10'
+                    }`}
                   >
                     {s}x {s === 1 && '(Обычная)'}
                   </button>
@@ -79,7 +110,6 @@ export default function VideoPlayer({ lessonId, videoUrl }: VideoPlayerProps) {
         </div>
       </div>
 
-      {/* Video Tips - Mobile */}
       <div className="mt-2 text-xs md:text-sm text-dark-500 text-center">
         💡 Видео сохраняет позицию автоматически
       </div>

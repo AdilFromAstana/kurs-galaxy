@@ -1,70 +1,47 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import {
-  getProgress,
-  addToProgress as addProgress,
-  setLastLesson,
-  getLastLesson,
-  getAllProgress
-} from '@/lib/storage';
-import { getAllLessons } from '@/lib/courseData';
+import { useSession } from '@/components/providers/SessionProvider';
+import { useCourses } from '@/components/providers/CoursesProvider';
 
 export const useProgress = (courseId: string = 'brow-master-pro') => {
-  const [progress, setProgressState] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const session = useSession();
+  const { getAllLessons } = useCourses();
 
-  useEffect(() => {
-    const currentProgress = getProgress(courseId);
-    setProgressState(currentProgress);
-    setIsLoading(false);
-  }, [courseId]);
+  const progress = session.getProgressForCourse(courseId);
 
-  const addLesson = (lessonId: string, cId?: string): void => {
-    const targetCourseId = cId || courseId;
-    addProgress(lessonId, targetCourseId);
-    setProgressState(getProgress(targetCourseId));
-    setLastLesson(lessonId, targetCourseId);
+  const addLesson = (lessonId: string, _cId?: string) => {
+    return session.markCompleted(lessonId);
   };
 
-  const getLastLessonId = (cId?: string): string | null => {
-    const targetCourseId = cId || courseId;
-    return getLastLesson(targetCourseId);
-  };
+  const getLastLessonId = (cId?: string) => session.getLastLesson(cId ?? courseId);
 
   const getProgressPercentage = (cId?: string): number => {
-    const targetCourseId = cId || courseId;
+    const targetCourseId = cId ?? courseId;
     const totalLessons = getAllLessons(targetCourseId).length;
     if (totalLessons === 0) return 0;
-    const courseProgress = getProgress(targetCourseId);
+    const courseProgress = session.getProgressForCourse(targetCourseId);
     return Math.round((courseProgress.length / totalLessons) * 100);
   };
 
   const isLessonCompleted = (lessonId: string, cId?: string): boolean => {
-    const targetCourseId = cId || courseId;
-    const courseProgress = getProgress(targetCourseId);
-    return courseProgress.includes(lessonId);
+    const targetCourseId = cId ?? courseId;
+    return session.getProgressForCourse(targetCourseId).includes(lessonId);
   };
 
-  const getCompletedCount = (cId?: string): number => {
-    const targetCourseId = cId || courseId;
-    return getProgress(targetCourseId).length;
-  };
+  const getCompletedCount = (cId?: string): number =>
+    session.getProgressForCourse(cId ?? courseId).length;
 
-  const getTotalCount = (cId?: string): number => {
-    const targetCourseId = cId || courseId;
-    return getAllLessons(targetCourseId).length;
-  };
+  const getTotalCount = (cId?: string): number => getAllLessons(cId ?? courseId).length;
 
   const isFullyCompleted = (cId?: string): boolean => {
-    const targetCourseId = cId || courseId;
-    return getProgress(targetCourseId).length === getAllLessons(targetCourseId).length;
+    const targetCourseId = cId ?? courseId;
+    return (
+      session.getProgressForCourse(targetCourseId).length === getAllLessons(targetCourseId).length
+    );
   };
 
-  // Получить общий прогресс по всем курсам
   const getOverallProgress = (): number => {
-    const allProgress = getAllProgress();
-    const totalCompleted = Object.values(allProgress).flat().length;
+    const totalCompleted = session.progress.length;
     const totalLessons = getAllLessons().length;
     if (totalLessons === 0) return 0;
     return Math.round((totalCompleted / totalLessons) * 100);
@@ -72,7 +49,7 @@ export const useProgress = (courseId: string = 'brow-master-pro') => {
 
   return {
     progress,
-    isLoading,
+    isLoading: session.isLoading,
     addLesson,
     getProgressPercentage,
     isLessonCompleted,

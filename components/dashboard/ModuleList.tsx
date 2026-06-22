@@ -1,16 +1,17 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Lock, Unlock, CheckCircle2, PlayCircle, Clock } from 'lucide-react';
-import { getCourseById } from '@/lib/courseData';
-import { useProgress } from '@/hooks/useProgress';
-import { usePurchase } from '@/hooks/usePurchase';
+import Link from "next/link";
+import { Lock, Unlock, CheckCircle2, PlayCircle, Clock } from "lucide-react";
+import { useCourses } from "@/components/providers/CoursesProvider";
+import { useProgress } from "@/hooks/useProgress";
+import { usePurchase } from "@/hooks/usePurchase";
 
 interface ModuleListProps {
   courseId: string;
 }
 
 export default function ModuleList({ courseId }: ModuleListProps) {
+  const { getCourseById } = useCourses();
   const course = getCourseById(courseId);
   const { isLessonCompleted } = useProgress(courseId);
   const { hasAccess } = usePurchase(courseId);
@@ -26,7 +27,11 @@ export default function ModuleList({ courseId }: ModuleListProps) {
   return (
     <div className="space-y-6 md:space-y-8">
       {course.modules.map((module, moduleIndex) => (
-        <div key={module.id} className="card animate-slide-up" style={{ animationDelay: `${moduleIndex * 0.1}s` }}>
+        <div
+          key={module.id}
+          className="card animate-slide-up"
+          style={{ animationDelay: `${moduleIndex * 0.1}s` }}
+        >
           {/* Module Header */}
           <div className="mb-4 md:mb-6">
             <h2 className="text-xl md:text-2xl font-bold text-dark-900 mb-2">
@@ -42,13 +47,13 @@ export default function ModuleList({ courseId }: ModuleListProps) {
             {module.lessons.map((lesson, lessonIndex) => {
               const completed = isLessonCompleted(lesson.id);
               const accessible = hasAccess(lesson.isFree);
-              
+
               const lessonContent = (
                 <div
                   className={`
                     flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-xl transition-all
-                    ${accessible ? 'hover:bg-gray-50 cursor-pointer active:scale-98' : 'opacity-60 cursor-not-allowed'}
-                    ${completed ? 'bg-primary-50' : 'bg-white border border-gray-200'}
+                    ${accessible ? "hover:bg-gray-50 cursor-pointer active:scale-98" : "opacity-60 cursor-not-allowed"}
+                    ${completed ? "bg-primary-50" : "bg-white border border-gray-200"}
                   `}
                 >
                   {/* Status Icon */}
@@ -78,19 +83,15 @@ export default function ModuleList({ courseId }: ModuleListProps) {
                         <Clock className="w-3 h-3 md:w-4 md:h-4" />
                         <span>{lesson.duration}</span>
                       </div>
-                      
+
                       {lesson.isFree && (
-                        <span className="badge badge-free">
-                          Бесплатно
-                        </span>
+                        <span className="badge badge-free">Бесплатно</span>
                       )}
-                      
+
                       {completed && (
-                        <span className="badge badge-completed">
-                          Завершено
-                        </span>
+                        <span className="badge badge-completed">Завершено</span>
                       )}
-                      
+
                       {!accessible && (
                         <span className="badge badge-locked">
                           Заблокировано
@@ -125,9 +126,7 @@ export default function ModuleList({ courseId }: ModuleListProps) {
                   {lessonContent}
                 </Link>
               ) : (
-                <div key={lesson.id}>
-                  {lessonContent}
-                </div>
+                <div key={lesson.id}>{lessonContent}</div>
               );
             })}
           </div>

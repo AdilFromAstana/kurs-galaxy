@@ -22,7 +22,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
+# env-файлы — оба под игнором (содержат секреты)
+.env
+.env.dev
+.env.prod
 .env*.local
 
 # vercel
@@ -31,3 +34,15 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# user uploads (видео уроков и т.п. хранятся вне git и вне публичной папки)
+/uploads/
+
+# админские публичные ассеты сертификата (логотип, подпись)
+/public/certificate-assets/
+/backups/

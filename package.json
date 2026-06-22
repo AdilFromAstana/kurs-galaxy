@@ -6,20 +6,46 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts",
+    "docker:up": "docker compose --env-file .env.dev up -d --build",
+    "docker:down": "docker compose --env-file .env.dev down",
+    "docker:logs": "docker compose --env-file .env.dev logs -f app",
+    "docker:reset": "docker compose --env-file .env.dev down -v && docker compose --env-file .env.dev up -d --build",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:install": "playwright install chromium"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@pdf-lib/fontkit": "^1.1.1",
+    "@prisma/client": "^5.22.0",
+    "@types/qrcode": "^1.5.6",
     "bcryptjs": "^3.0.3",
     "lucide-react": "^0.344.0",
     "next": "^14.2.0",
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "react-hook-form": "^7.71.2"
+    "react-hook-form": "^7.71.2",
+    "react-hot-toast": "^2.6.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "resend": "^6.12.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@tailwindcss/typography": "^0.5.19",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/react": "^18",
@@ -28,7 +54,9 @@
     "eslint": "^8",
     "eslint-config-next": "^14.2.0",
     "postcss": "^8",
+    "prisma": "^5.22.0",
     "tailwindcss": "^3.4.0",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

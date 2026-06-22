@@ -5,7 +5,7 @@ export interface AdminUser {
   email: string;
   name: string;
   password: string; // Хешированный
-  role: 'admin' | 'teacher';
+  role: 'ADMIN' | 'TEACHER';
   createdAt: string;
 }
 
@@ -13,8 +13,9 @@ export interface AdminSession {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'teacher';
+  role: 'ADMIN' | 'TEACHER';
   expiresAt: number;
+  kind?: 'admin';
 }
 
 export interface AdminCredentials {

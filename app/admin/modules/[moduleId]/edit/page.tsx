@@ -2,59 +2,100 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Trash2 } from 'lucide-react';
 import Link from 'next/link';
-import { courseData } from '@/lib/courseData';
-import type { Module } from '@/types';
+import toast from 'react-hot-toast';
+import { confirmToast } from '@/lib/toastConfirm';
+
+type ModuleDTO = {
+  id: string;
+  title: string;
+  description: string;
+  courseId: string;
+  lessons: Array<{ id: string; title: string; duration: string }>;
+};
 
 export default function EditModulePage() {
   const params = useParams();
   const router = useRouter();
-  const [module, setModule] = useState<Module | null>(null);
+  const moduleId = params.moduleId as string;
+
+  const [module, setModule] = useState<ModuleDTO | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const foundModule = courseData.modules.find(m => m.id === params.moduleId);
-    if (foundModule) {
-      setModule(foundModule);
-      setTitle(foundModule.title);
-      setDescription(foundModule.description);
-    }
-  }, [params.moduleId]);
-  
+    let cancel = false;
+    (async () => {
+      const res = await fetch(`/api/admin/modules/${moduleId}`, { credentials: 'include' });
+      if (!cancel) {
+        if (res.ok) {
+          const data = await res.json();
+          setModule(data.module);
+          setTitle(data.module.title);
+          setDescription(data.module.description);
+        }
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [moduleId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!module) return;
     setIsLoading(true);
-    
+
     try {
-      // Обновить модуль в courseData
-      const updatedModules = courseData.modules.map(m => 
-        m.id === params.moduleId
-          ? { ...m, title, description }
-          : m
-      );
-      
-      const updatedCourseData = {
-        ...courseData,
-        modules: updatedModules
-      };
-      
-      localStorage.setItem('nail_course_data', JSON.stringify(updatedCourseData));
-      
-      // Показать уведомление
-      alert('✅ Модуль успешно обновлён!');
-      
-      // Вернуться к курсу (по умолчанию первый курс)
-      router.push('/admin/courses/brow-master-pro');
-    } catch (error) {
-      alert('Ошибка при сохранении модуля');
+      const res = await fetch(`/api/admin/modules/${module.id}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description }),
+      });
+      if (!res.ok) {
+        toast.error('Не удалось сохранить модуль');
+        return;
+      }
+      toast.success('Модуль сохранён');
+      router.push(`/admin/courses/${module.courseId}`);
     } finally {
       setIsLoading(false);
     }
   };
-  
+
+  const handleDelete = async () => {
+    if (!module) return;
+    const ok = await confirmToast({
+      message: `Удалить модуль «${module.title}»? Все его уроки тоже удалятся.`,
+      confirmText: 'Удалить',
+      destructive: true,
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/admin/modules/${module.id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (res.ok) {
+      toast.success('Модуль удалён');
+      router.push(`/admin/courses/${module.courseId}`);
+    } else {
+      toast.error('Не удалось удалить модуль');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
   if (!module) {
     return (
       <div className="text-center py-12">
@@ -71,7 +112,7 @@ export default function EditModulePage() {
       {/* Header */}
       <div>
         <Link
-          href="/admin/courses/brow-master-pro"
+          href={`/admin/courses/${module.courseId}`}
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -129,6 +170,14 @@ export default function EditModulePage() {
           >
             <Save className="w-5 h-5" />
             {isLoading ? 'Сохранение...' : 'Сохранить изменения'}
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="mt-2 w-full flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-red-600 bg-white border border-red-200 hover:bg-red-50 rounded-lg"
+          >
+            <Trash2 className="w-4 h-4" />
+            Удалить модуль
           </button>
         </div>
       </form>

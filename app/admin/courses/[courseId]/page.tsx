@@ -1,14 +1,97 @@
 'use client';
 
-import { BookOpen, ArrowLeft, Plus, Layers, Video, DollarSign, Edit, Download } from 'lucide-react';
+import {
+  BookOpen,
+  ArrowLeft,
+  Plus,
+  Layers,
+  Video,
+  DollarSign,
+  Edit,
+  Download,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 import Link from 'next/link';
-import { getCourseById } from '@/lib/courseData';
 import { useParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+
+const ACCESS_LABEL: Record<string, string> = {
+  ONE_MONTH: '1 месяц',
+  TWO_MONTHS: '2 месяца',
+  THREE_MONTHS: '3 месяца',
+  SIX_MONTHS: '6 месяцев',
+  TWELVE_MONTHS: '12 месяцев',
+  UNLIMITED: 'Бессрочный',
+};
+
+type AdminCourse = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  published: boolean;
+  pricingPlans: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    price: number;
+    currency: string;
+    isActive: boolean;
+    isRecommended: boolean;
+    accessPeriod: string;
+  }>;
+  modules: Array<{
+    id: string;
+    title: string;
+    description: string;
+    lessons: Array<{ id: string; isFree: boolean }>;
+  }>;
+  creator?: { id: string; name: string; email: string } | null;
+};
 
 export default function CourseDetailPage() {
   const params = useParams();
   const courseId = params.courseId as string;
-  const course = getCourseById(courseId);
+  const [course, setCourse] = useState<AdminCourse | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      const res = await fetch(`/api/admin/courses/${courseId}`, { credentials: 'include' });
+      if (!cancel) {
+        if (res.ok) {
+          const data = await res.json();
+          setCourse(data.course);
+        }
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [courseId]);
+
+  const handleTogglePublish = async () => {
+    if (!course) return;
+    const next = !course.published;
+    const res = await fetch(`/api/admin/courses/${course.id}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ published: next }),
+    });
+    if (!res.ok) {
+      toast.error('Не удалось изменить статус публикации');
+      return;
+    }
+    setCourse((prev) => (prev ? { ...prev, published: next } : prev));
+    toast.success(
+      next ? 'Курс опубликован, виден в каталоге' : 'Курс снят с публикации',
+    );
+  };
 
   const handleExportCourse = () => {
     if (!course) return;
@@ -22,19 +105,27 @@ export default function CourseDetailPage() {
       link.download = `course-${course.id}-${Date.now()}.json`;
       link.click();
       URL.revokeObjectURL(url);
-      alert('✅ Данные курса экспортированы!');
+      toast.success('Данные курса экспортированы');
     } catch (error) {
-      alert('Ошибка при экспорте данных');
+      toast.error('Ошибка при экспорте данных');
       console.error(error);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   if (!course) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <BookOpen className="w-16 h-16 text-gray-400 mb-4" />
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Курс не найден</h2>
-        <p className="text-gray-600 mb-6">Курс с ID "{courseId}" не существует</p>
+        <p className="text-gray-600 mb-6">Курс с ID &quot;{courseId}&quot; не существует</p>
         <Link
           href="/admin/courses"
           className="px-6 py-3 bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 rounded-lg font-medium"
@@ -64,13 +155,48 @@ export default function CourseDetailPage() {
           <ArrowLeft className="w-6 h-6 text-gray-600" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3 flex-wrap">
             <BookOpen className="w-8 h-8 text-primary-600" />
             {course.title}
+            <span
+              className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                course.published
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-amber-100 text-amber-700'
+              }`}
+            >
+              {course.published ? 'Опубликован' : 'Черновик'}
+            </span>
           </h1>
-          <p className="text-gray-600 mt-1 text-sm md:text-base">Управление курсом</p>
+          <p className="text-gray-600 mt-1 text-sm md:text-base">
+            {course.published
+              ? 'Курс виден всем посетителям в каталоге'
+              : 'Курс виден только в админке. Опубликуйте, чтобы он появился в каталоге.'}
+          </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <button
+            onClick={handleTogglePublish}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
+              course.published
+                ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                : 'bg-green-600 text-white hover:bg-green-700 active:bg-green-800'
+            }`}
+          >
+            {course.published ? (
+              <>
+                <EyeOff className="w-4 h-4" />
+                <span className="hidden md:inline">Снять с публикации</span>
+                <span className="md:hidden">Скрыть</span>
+              </>
+            ) : (
+              <>
+                <Eye className="w-4 h-4" />
+                <span className="hidden md:inline">Опубликовать</span>
+                <span className="md:hidden">Публиковать</span>
+              </>
+            )}
+          </button>
           <Link
             href={`/admin/courses/${course.id}/edit`}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100 rounded-lg font-medium"
@@ -96,6 +222,13 @@ export default function CourseDetailPage() {
           </div>
           <div className="flex-1">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">{course.title}</h2>
+            {course.creator && (
+              <p className="text-sm text-gray-600 mb-2">
+                <span className="font-semibold">Автор:</span>{' '}
+                <span className="text-primary-700 font-medium">{course.creator.name}</span>
+                <span className="text-gray-500"> · {course.creator.email}</span>
+              </p>
+            )}
             <p className="text-gray-700 mb-4">{course.description}</p>
             <div className="flex items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg">
@@ -195,7 +328,7 @@ export default function CourseDetailPage() {
                   {plan.price.toLocaleString()} {plan.currency}
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
-                  Доступ: {plan.accessPeriod.label}
+                  Доступ: {ACCESS_LABEL[plan.accessPeriod] ?? plan.accessPeriod}
                 </p>
                 {plan.description && (
                   <p className="text-sm text-gray-500 mb-3">{plan.description}</p>

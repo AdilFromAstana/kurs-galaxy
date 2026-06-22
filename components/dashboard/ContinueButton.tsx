@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Play, CheckCircle2 } from 'lucide-react';
 import { useProgress } from '@/hooks/useProgress';
-import { getAllLessons } from '@/lib/courseData';
+import { useCourses } from '@/components/providers/CoursesProvider';
 
 interface ContinueButtonProps {
   courseId: string;
@@ -11,6 +11,7 @@ interface ContinueButtonProps {
 
 export default function ContinueButton({ courseId }: ContinueButtonProps) {
   const { progress, isFullyCompleted, getLastLessonId } = useProgress(courseId);
+  const { getAllLessons } = useCourses();
   
   if (isFullyCompleted()) {
     return (

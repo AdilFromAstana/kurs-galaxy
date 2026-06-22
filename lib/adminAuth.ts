@@ -36,7 +36,7 @@ export const createAdmin = (email: string, password: string, name: string): Admi
     email,
     password: hashedPassword,
     name,
-    role: 'admin',
+    role: 'ADMIN',
     createdAt: new Date().toISOString()
   };
   

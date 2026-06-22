@@ -1,0 +1,50 @@
+# Прод-стек. На сервере: docker compose -f compose.prod.yml up -d
+# Образ заливается локально через `docker save | ssh ... docker load`.
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: nail-academy-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - nail_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    image: ${APP_IMAGE:-nail-academy-pro:latest}
+    container_name: nail-academy-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL}
+      SESSION_SECRET: ${SESSION_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_NAME: ${ADMIN_NAME}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM: ${RESEND_FROM:-}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      DB_HOST: db
+      DB_PORT: 5432
+    ports:
+      - "39010:3000"
+    volumes:
+      - nail_uploads:/app/uploads
+      - nail_cert_assets:/app/public/certificate-assets
+
+volumes:
+  nail_db_data:
+  nail_uploads:
+  nail_cert_assets:

@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { ArrowLeft, ArrowRight, Lock } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { Lesson } from '@/types';
+import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
+type NavLesson = { id: string; title: string; isFree: boolean };
 
 interface LessonMobileNavProps {
-  previousLesson: Lesson | null;
-  nextLesson: Lesson | null;
+  previousLesson: NavLesson | null;
+  nextLesson: NavLesson | null;
   currentLessonId: string;
   hasAccess: (isFree: boolean) => boolean;
   onLocked: () => void;
@@ -19,7 +19,7 @@ export default function LessonMobileNav({
   currentLessonId,
   hasAccess,
   onLocked,
-  onCompleteLesson
+  onCompleteLesson,
 }: LessonMobileNavProps) {
   const router = useRouter();
 
@@ -31,17 +31,17 @@ export default function LessonMobileNav({
 
   const handleNext = () => {
     if (!nextLesson) return;
-    
+
     if (!hasAccess(nextLesson.isFree)) {
       onLocked();
       return;
     }
-    
+
     // Отмечаем текущий урок как пройденный при переходе к следующему
     if (onCompleteLesson) {
       onCompleteLesson();
     }
-    
+
     router.push(`/lesson/${nextLesson.id}`);
   };
 
@@ -54,8 +54,8 @@ export default function LessonMobileNav({
           disabled={!previousLesson}
           className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold transition-all ${
             previousLesson
-              ? 'bg-gray-100 text-dark-900 hover:bg-gray-200 active:scale-95'
-              : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+              ? "bg-gray-100 text-dark-900 hover:bg-gray-200 active:scale-95"
+              : "bg-gray-50 text-gray-400 cursor-not-allowed"
           }`}
         >
           <ArrowLeft className="w-5 h-5" />
@@ -68,8 +68,8 @@ export default function LessonMobileNav({
           disabled={!nextLesson}
           className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold transition-all ${
             nextLesson
-              ? 'bg-primary-500 text-white hover:bg-primary-600 active:scale-95'
-              : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+              ? "bg-primary-500 text-white hover:bg-primary-600 active:scale-95"
+              : "bg-gray-50 text-gray-400 cursor-not-allowed"
           }`}
         >
           <span>След.</span>

@@ -1,0 +1,63 @@
+# Multi-stage прод-образ.
+# Локально: docker buildx build --platform linux/amd64 -f Dockerfile.prod -t nail-academy-pro:latest --load .
+
+FROM node:20-alpine AS deps
+WORKDIR /app
+RUN apk add --no-cache libc6-compat openssl
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+FROM node:20-alpine AS builder
+WORKDIR /app
+RUN apk add --no-cache libc6-compat openssl
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npx prisma generate
+RUN npm run build
+# Компилируем seed.ts в self-contained JS, чтобы на рантайме не нужен tsx/esbuild
+RUN npx esbuild prisma/seed.ts \
+  --bundle --platform=node --target=node20 \
+  --external:@prisma/client --external:.prisma --external:bcryptjs \
+  --outfile=prisma/seed.js
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+RUN apk add --no-cache libc6-compat openssl bash netcat-openbsd
+
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+
+# Standalone-сервер + статика и public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Prisma CLI и схема нужны для миграций; bcryptjs для seed; @prisma/client уже в standalone
+COPY --from=builder --chown=nextjs:nodejs /app/prisma/schema.prisma ./prisma/schema.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma/seed.js ./prisma/seed.js
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/bcryptjs ./node_modules/bcryptjs
+
+# Папки для volumes
+RUN mkdir -p /app/uploads/lessons /app/public/certificate-assets \
+  && chown -R nextjs:nodejs /app/uploads /app/public/certificate-assets
+
+USER nextjs
+EXPOSE 3000
+
+# Inline-entrypoint: ждём postgres → schema push → seed → старт сервера
+ENTRYPOINT ["sh", "-c", "\
+  echo '==> Wait postgres' && \
+  until nc -z ${DB_HOST:-db} ${DB_PORT:-5432}; do sleep 1; done && \
+  echo '==> Apply schema' && \
+  node node_modules/prisma/build/index.js db push --accept-data-loss --skip-generate && \
+  echo '==> Seed' && \
+  node prisma/seed.js || true && \
+  echo '==> Starting server' && \
+  exec node server.js \
+"]
