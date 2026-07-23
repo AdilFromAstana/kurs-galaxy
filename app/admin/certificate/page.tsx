@@ -13,6 +13,7 @@ import {
   Check,
   AlertCircle,
 } from 'lucide-react';
+import { SettingsTabs } from '@/components/admin/SettingsTabs';
 import toast from 'react-hot-toast';
 import { confirmToast } from '@/lib/toastConfirm';
 
@@ -177,6 +178,7 @@ export default function CertificateSettingsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-24 md:pb-8 max-w-7xl">
+      <SettingsTabs />
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>

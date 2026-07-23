@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Check,
 } from 'lucide-react';
+import { SettingsTabs } from '@/components/admin/SettingsTabs';
 import toast from 'react-hot-toast';
 
 type Settings = {
@@ -115,6 +116,7 @@ export default function SiteSettingsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-8 max-w-5xl">
+      <SettingsTabs />
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>

@@ -4,10 +4,12 @@ import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, Mail, AlertCircle } from 'lucide-react';
 
+const IS_DEV = process.env.NODE_ENV !== 'production';
+
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@nailacademy.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState(IS_DEV ? 'admin@nailacademy.com' : '');
+  const [password, setPassword] = useState(IS_DEV ? 'admin123' : '');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -48,15 +50,17 @@ export default function AdminLoginPage() {
         <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 animate-slide-up">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Вход</h2>
 
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-blue-800">
-              <strong>Демо доступ:</strong>
-              <br />
-              Email: admin@nailacademy.com
-              <br />
-              Пароль: admin123
-            </p>
-          </div>
+          {IS_DEV && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-blue-800">
+                <strong>Демо доступ:</strong>
+                <br />
+                Email: admin@nailacademy.com
+                <br />
+                Пароль: admin123
+              </p>
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">

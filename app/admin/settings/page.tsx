@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import { Settings, User, LogOut, Lock, Save, AlertCircle, Mail, Send } from 'lucide-react';
+import { SettingsTabs } from '@/components/admin/SettingsTabs';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { confirmToast } from '@/lib/toastConfirm';
@@ -85,6 +86,7 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-8 max-w-4xl">
+      <SettingsTabs />
       <div>
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
           <Settings className="w-8 h-8 text-primary-600" />
