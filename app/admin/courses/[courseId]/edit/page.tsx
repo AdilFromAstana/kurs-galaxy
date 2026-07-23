@@ -234,10 +234,9 @@ export default function EditCoursePage() {
           </div>
 
           {/* Тарифы */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between gap-3">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <p className="text-sm text-gray-700">
-              Цена и период доступа — в тарифах. Сейчас настроено:{" "}
-              {course?.pricingPlans?.length || 0}
+              Цена и тарифы: настроено {course?.pricingPlans?.length || 0}
             </p>
             <Link
               href={`/admin/courses/${courseId}/pricing`}

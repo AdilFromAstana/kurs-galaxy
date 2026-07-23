@@ -111,9 +111,6 @@ export default function CreateCoursePage() {
             <BookOpen className="w-8 h-8 text-primary-600" />
             Создание курса
           </h1>
-          <p className="text-gray-600 mt-1 text-sm md:text-base">
-            Заполните основную информацию о курсе
-          </p>
         </div>
       </div>
 
@@ -191,17 +188,17 @@ export default function CreateCoursePage() {
         </div>
 
         {/* Кнопки действий */}
-        <div className="flex items-center gap-4 justify-end">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3 sm:justify-end">
           <Link
             href="/admin/courses"
-            className="px-6 py-3 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 active:bg-gray-100 rounded-lg font-medium"
+            className="w-full sm:w-auto text-center px-6 py-3 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 active:bg-gray-100 rounded-lg font-medium"
           >
             Отмена
           </Link>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-3 bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Save className="w-5 h-5" />
             {isSubmitting ? "Создание..." : "Создать курс"}

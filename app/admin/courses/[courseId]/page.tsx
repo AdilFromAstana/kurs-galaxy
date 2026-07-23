@@ -147,34 +147,33 @@ export default function CourseDetailPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href="/admin/courses"
-          className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-6 h-6 text-gray-600" />
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3 flex-wrap">
-            <BookOpen className="w-8 h-8 text-primary-600" />
-            {course.title}
-            <span
-              className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                course.published
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-amber-100 text-amber-700'
-              }`}
-            >
-              {course.published ? 'Опубликован' : 'Черновик'}
-            </span>
-          </h1>
-          <p className="text-gray-600 mt-1 text-sm md:text-base">
-            {course.published
-              ? 'Курс виден всем посетителям в каталоге'
-              : 'Курс виден только в админке. Опубликуйте, чтобы он появился в каталоге.'}
-          </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          <Link
+            href="/admin/courses"
+            className="p-2 -ml-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors flex-shrink-0"
+          >
+            <ArrowLeft className="w-6 h-6 text-gray-600" />
+          </Link>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2 flex-wrap">
+              {course.title}
+              <span
+                className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                  course.published
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-amber-100 text-amber-700'
+                }`}
+              >
+                {course.published ? 'Опубликован' : 'Черновик'}
+              </span>
+            </h1>
+            <p className="text-gray-600 mt-1 text-sm">
+              {course.published ? 'Виден в каталоге' : 'Черновик — виден только в админке'}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={handleTogglePublish}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium ${
