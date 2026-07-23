@@ -15,49 +15,42 @@ export default async function AdminLayout({
     return <>{children}</>;
   }
   
-  // MOBILE FIRST Layout
+  // Единый рендер контента: хром (мобильный/десктопный) прячется по брейкпоинту,
+  // а {children} рендерится один раз.
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* МОБИЛЬНАЯ ВЕРСИЯ (приоритет!) */}
-      <div className="md:hidden">
-        <MobileHeader session={session} />
-        <main className="pb-4">
-          <div className="p-4">
-            {children}
+      {/* Мобильная шапка (сама скрыта на md+) */}
+      <MobileHeader session={session} />
+
+      <div className="max-w-7xl mx-auto px-4 md:px-8 pt-4 md:pt-8 pb-8">
+        {/* Десктопная шапка с навигацией */}
+        <div className="hidden md:flex bg-white rounded-lg shadow-sm px-6 py-4 mb-6 items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <span className="text-lg font-bold text-primary-600 whitespace-nowrap">KursGalaxy.kz</span>
+            <AdminDesktopNav />
           </div>
-        </main>
-        <MobileBottomNav />
-      </div>
-      
-      {/* ДЕСКТОПНАЯ ВЕРСИЯ (пока простая) */}
-      <div className="hidden md:block">
-        <div className="min-h-screen p-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="bg-white rounded-lg shadow-sm px-6 py-4 mb-6 flex items-center justify-between gap-6">
-              <div className="flex items-center gap-6">
-                <span className="text-lg font-bold text-primary-600 whitespace-nowrap">KursGalaxy.kz</span>
-                <AdminDesktopNav />
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-500 whitespace-nowrap">{session.name}</span>
-                <form action={async () => {
-                  'use server';
-                  const { logoutAction } = await import('@/lib/auth/actions');
-                  await logoutAction();
-                }}>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    Выйти
-                  </button>
-                </form>
-              </div>
-            </div>
-            {children}
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500 whitespace-nowrap">{session.name}</span>
+            <form action={async () => {
+              'use server';
+              const { logoutAction } = await import('@/lib/auth/actions');
+              await logoutAction();
+            }}>
+              <button
+                type="submit"
+                className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                Выйти
+              </button>
+            </form>
           </div>
         </div>
+
+        {children}
       </div>
+
+      {/* Нижняя навигация (сама скрыта на md+) */}
+      <MobileBottomNav />
     </div>
   );
 }
