@@ -15,17 +15,23 @@ type Student = {
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [q, setQ] = useState('');
 
   const fetchList = async (query = '') => {
     setLoading(true);
+    setError(false);
     const url = query ? `/api/admin/students?q=${encodeURIComponent(query)}` : '/api/admin/students';
-    const res = await fetch(url, { credentials: 'include' });
-    if (res.ok) {
+    try {
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) throw new Error();
       const data = await res.json();
       setStudents(data.students ?? []);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -71,6 +77,16 @@ export default function StudentsPage() {
       {loading ? (
         <div className="bg-white rounded-xl p-12 text-center text-gray-500 border border-gray-100">
           Загрузка...
+        </div>
+      ) : error ? (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+          <p className="text-red-700 font-medium mb-3">Не удалось загрузить студентов</p>
+          <button
+            onClick={() => fetchList(q)}
+            className="px-4 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-100 rounded-lg text-sm font-medium"
+          >
+            Повторить
+          </button>
         </div>
       ) : students.length === 0 ? (
         <div className="bg-white rounded-xl p-12 text-center border-2 border-dashed border-gray-200">

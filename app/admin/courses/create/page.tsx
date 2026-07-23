@@ -5,17 +5,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-import { ACCESS_PERIOD_OPTIONS } from "@/lib/pricing";
-import type { AccessPeriodType } from "@/types";
-
-const PERIOD_TO_ENUM: Record<AccessPeriodType, string> = {
-  '1month': 'ONE_MONTH',
-  '2months': 'TWO_MONTHS',
-  '3months': 'THREE_MONTHS',
-  '6months': 'SIX_MONTHS',
-  '12months': 'TWELVE_MONTHS',
-  unlimited: 'UNLIMITED',
-};
 
 function slugify(s: string) {
   return s
@@ -33,9 +22,6 @@ export default function CreateCoursePage() {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    price: "",
-    currency: "KZT",
-    accessPeriod: "1month" as AccessPeriodType, // По умолчанию 1 месяц
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,16 +54,6 @@ export default function CreateCoursePage() {
       newErrors.description = "Описание обязательно";
     }
 
-    if (!formData.price) {
-      newErrors.price = "Цена обязательна";
-    } else if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      newErrors.price = "Цена должна быть положительным числом";
-    }
-
-    if (!formData.currency) {
-      newErrors.currency = "Валюта обязательна";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -92,10 +68,6 @@ export default function CreateCoursePage() {
     setIsSubmitting(true);
 
     try {
-      const periodOption = ACCESS_PERIOD_OPTIONS.find(
-        (opt) => opt.value === formData.accessPeriod,
-      );
-
       const createRes = await fetch('/api/admin/courses', {
         method: 'POST',
         credentials: 'include',
@@ -113,20 +85,6 @@ export default function CreateCoursePage() {
       }
 
       const courseId = createData.course.id as string;
-
-      // Сразу добавляем стартовый тариф из формы
-      await fetch(`/api/admin/courses/${courseId}/pricing`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: periodOption?.label ?? 'Базовый тариф',
-          accessPeriod: PERIOD_TO_ENUM[formData.accessPeriod],
-          price: Number(formData.price),
-          currency: formData.currency,
-          isActive: true,
-        }),
-      });
 
       toast.success('Курс создан');
       router.push(`/admin/courses/${courseId}`);
@@ -213,89 +171,6 @@ export default function CreateCoursePage() {
               <p className="mt-1 text-sm text-red-600">{errors.description}</p>
             )}
           </div>
-
-          {/* Период доступа */}
-          <div>
-            <label
-              htmlFor="accessPeriod"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Период доступа <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="accessPeriod"
-              name="accessPeriod"
-              value={formData.accessPeriod}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              {ACCESS_PERIOD_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-500 mt-1">
-              Выберите, на какой срок студенты получат доступ к курсу после
-              покупки
-            </p>
-          </div>
-
-          {/* Цена и валюта */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Цена */}
-            <div>
-              <label
-                htmlFor="price"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Цена <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                id="price"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                min="0"
-                step="1"
-                className={`w-full px-4 py-3 rounded-lg border ${
-                  errors.price ? "border-red-300" : "border-gray-300"
-                } focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-                placeholder="18000"
-              />
-              {errors.price && (
-                <p className="mt-1 text-sm text-red-600">{errors.price}</p>
-              )}
-            </div>
-
-            {/* Валюта */}
-            <div>
-              <label
-                htmlFor="currency"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Валюта <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="currency"
-                name="currency"
-                value={formData.currency}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 rounded-lg border ${
-                  errors.currency ? "border-red-300" : "border-gray-300"
-                } focus:ring-2 focus:ring-primary-500 focus:border-transparent`}
-              >
-                <option value="KZT">KZT (Тенге)</option>
-                <option value="RUB">RUB (Рубль)</option>
-                <option value="USD">USD (Доллар)</option>
-                <option value="EUR">EUR (Евро)</option>
-              </select>
-              {errors.currency && (
-                <p className="mt-1 text-sm text-red-600">{errors.currency}</p>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* Информационная панель */}
@@ -307,11 +182,9 @@ export default function CreateCoursePage() {
             <div>
               <h3 className="font-bold text-gray-900 mb-2">Что дальше?</h3>
               <ul className="text-sm text-gray-700 space-y-1">
-                <li>• После создания курса вы сможете добавить модули</li>
-                <li>
-                  • В каждый модуль можно добавить уроки с видео и материалами
-                </li>
-                <li>• Курс автоматически появится в каталоге</li>
+                <li>• После создания добавьте модули и уроки с видео</li>
+                <li>• Цену и период доступа задайте в разделе «Тарифы» курса</li>
+                <li>• Опубликуйте курс, чтобы он появился в каталоге</li>
               </ul>
             </div>
           </div>

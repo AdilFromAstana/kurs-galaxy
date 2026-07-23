@@ -20,15 +20,21 @@ type AdminCourse = {
 export default function CoursesListPage() {
   const [courses, setCourses] = useState<AdminCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   const refresh = async () => {
     setLoading(true);
-    const res = await fetch('/api/admin/courses', { credentials: 'include' });
-    if (res.ok) {
+    setError(false);
+    try {
+      const res = await fetch('/api/admin/courses', { credentials: 'include' });
+      if (!res.ok) throw new Error();
       const data = await res.json();
       setCourses(data.courses ?? []);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -136,6 +142,18 @@ export default function CoursesListPage() {
         </div>
       )}
 
+      {error && !loading && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+          <p className="text-red-700 font-medium mb-3">Не удалось загрузить курсы</p>
+          <button
+            onClick={refresh}
+            className="px-4 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-100 rounded-lg text-sm font-medium"
+          >
+            Повторить
+          </button>
+        </div>
+      )}
+
       {/* Список курсов */}
       <div className="space-y-4">
         {courses.map((course) => {
@@ -231,7 +249,7 @@ export default function CoursesListPage() {
           );
         })}
 
-        {courses.length === 0 && (
+        {courses.length === 0 && !loading && !error && (
           <div className="bg-white rounded-xl p-12 text-center border-2 border-dashed border-gray-200">
             <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-900 mb-2">Нет курсов</h3>

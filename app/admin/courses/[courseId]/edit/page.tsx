@@ -233,13 +233,18 @@ export default function EditCoursePage() {
             )}
           </div>
 
-          {/* Примечание о тарифах */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          {/* Тарифы */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between gap-3">
             <p className="text-sm text-gray-700">
-              <strong>Примечание:</strong> Управление тарифными планами будет
-              доступно в следующей версии. Текущие тарифные планы:{" "}
+              Цена и период доступа — в тарифах. Сейчас настроено:{" "}
               {course?.pricingPlans?.length || 0}
             </p>
+            <Link
+              href={`/admin/courses/${courseId}/pricing`}
+              className="text-sm font-medium text-primary-600 hover:text-primary-700 whitespace-nowrap"
+            >
+              Управление тарифами →
+            </Link>
           </div>
         </div>
 
