@@ -72,7 +72,7 @@ export const coursesData: Course[] = [{
           title: 'Урок 1. Коммуникация с клиентом',
           duration: '12:30',
           isFree: true,
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+          videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
           content: `
 # Коммуникация с клиентом
 
@@ -126,7 +126,7 @@ export const coursesData: Course[] = [{
           title: 'Урок 2. Анализ исходника, подготовка кожи и волоса',
           duration: '15:20',
           isFree: true,
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+          videoUrl: 'https://media.w3.org/2010/05/bunny/trailer.mp4',
           content: `
 # Анализ исходника и подготовка
 
@@ -184,7 +184,7 @@ export const coursesData: Course[] = [{
           title: 'Урок 3. Построение архитектуры',
           duration: '18:45',
           isFree: false,
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+          videoUrl: 'https://media.w3.org/2010/05/video/movie_300.mp4',
           content: `
 # Построение архитектуры бровей
 
@@ -256,7 +256,7 @@ export const coursesData: Course[] = [{
           title: 'Урок 4. Восковая депиляция',
           duration: '16:30',
           isFree: false,
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+          videoUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_10MB.mp4',
           content: `
 # Восковая депиляция бровей
 
@@ -333,7 +333,7 @@ export const coursesData: Course[] = [{
           title: 'Урок 5. Ламинирование бровей',
           duration: '22:15',
           isFree: false,
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+          videoUrl: 'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_10MB.mp4',
           content: `
 # Ламинирование бровей
 
@@ -411,7 +411,7 @@ export const coursesData: Course[] = [{
           title: 'Урок 6. Натуральное окрашивание',
           duration: '17:40',
           isFree: false,
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+          videoUrl: 'https://test-videos.co.uk/vids/jellyfish/mp4/h264/720/Jellyfish_720_10s_10MB.mp4',
           content: `
 # Натуральное окрашивание бровей
 
@@ -499,7 +499,7 @@ export const coursesData: Course[] = [{
           title: 'Урок 7. Коррекция пинцетом',
           duration: '14:20',
           isFree: false,
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
+          videoUrl: 'https://test-videos.co.uk/vids/sintel/mp4/h264/720/Sintel_720_10s_10MB.mp4',
           content: `
 # Коррекция бровей пинцетом
 
@@ -573,7 +573,7 @@ export const coursesData: Course[] = [{
           title: 'Урок 8. Введение в перманентный макияж',
           duration: '25:10',
           isFree: false,
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+          videoUrl: 'https://media.w3.org/2010/05/sintel/trailer.mp4',
           content: `
 # Введение в перманентный макияж бровей
 
@@ -639,7 +639,7 @@ export const coursesData: Course[] = [{
           title: 'Урок 9. Построение клиентской базы',
           duration: '19:30',
           isFree: false,
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
+          videoUrl: 'https://media.w3.org/2010/05/bunny/trailer.mp4',
           content: `
 # Построение клиентской базы
 
@@ -723,7 +723,7 @@ export const coursesData: Course[] = [{
           title: 'Урок 10. Типичные ошибки и их исправление',
           duration: '21:45',
           isFree: false,
-          videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+          videoUrl: 'https://media.w3.org/2010/05/video/movie_300.mp4',
           content: `
 # Типичные ошибки и их исправление
 
