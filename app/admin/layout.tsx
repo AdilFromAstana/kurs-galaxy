@@ -1,6 +1,7 @@
 import { getSession } from '@/lib/auth/actions';
 import { MobileHeader } from '@/components/admin/MobileHeader';
 import { MobileBottomNav } from '@/components/admin/MobileBottomNav';
+import { AdminDesktopNav } from '@/components/admin/AdminDesktopNav';
 
 export default async function AdminLayout({
   children
@@ -32,18 +33,19 @@ export default async function AdminLayout({
       <div className="hidden md:block">
         <div className="min-h-screen p-8">
           <div className="max-w-7xl mx-auto">
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Админ-панель</h1>
-                  <p className="text-gray-600 mt-1">Добро пожаловать, {session.name}</p>
-                </div>
+            <div className="bg-white rounded-lg shadow-sm px-6 py-4 mb-6 flex items-center justify-between gap-6">
+              <div className="flex items-center gap-6">
+                <span className="text-lg font-bold text-primary-600 whitespace-nowrap">KursGalaxy.kz</span>
+                <AdminDesktopNav />
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-500 whitespace-nowrap">{session.name}</span>
                 <form action={async () => {
                   'use server';
                   const { logoutAction } = await import('@/lib/auth/actions');
                   await logoutAction();
                 }}>
-                  <button 
+                  <button
                     type="submit"
                     className="px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                   >

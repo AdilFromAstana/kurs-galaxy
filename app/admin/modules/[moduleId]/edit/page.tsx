@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Plus } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { confirmToast } from '@/lib/toastConfirm';
@@ -184,10 +184,19 @@ export default function EditModulePage() {
       
       {/* Lessons Section */}
       <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">
-          Уроки модуля ({module.lessons?.length || 0})
-        </h2>
-        
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+          <h2 className="text-lg font-bold text-gray-900">
+            Уроки модуля ({module.lessons?.length || 0})
+          </h2>
+          <Link
+            href={`/admin/lessons/create?courseId=${module.courseId}&moduleId=${module.id}`}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 rounded-lg font-medium text-sm whitespace-nowrap flex-shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            Добавить урок
+          </Link>
+        </div>
+
         {module.lessons && module.lessons.length > 0 ? (
           <div className="space-y-2">
             {module.lessons.map((lesson, index) => (
@@ -213,7 +222,13 @@ export default function EditModulePage() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-600 text-sm">Нет уроков в этом модуле</p>
+          <Link
+            href={`/admin/lessons/create?courseId=${module.courseId}&moduleId=${module.id}`}
+            className="flex flex-col items-center justify-center gap-2 py-8 text-center border-2 border-dashed border-gray-200 rounded-lg text-gray-600 hover:border-primary-300 hover:text-primary-600 transition-colors"
+          >
+            <Plus className="w-6 h-6" />
+            <span className="text-sm font-medium">Добавить первый урок</span>
+          </Link>
         )}
       </div>
     </div>
