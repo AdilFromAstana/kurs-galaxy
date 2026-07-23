@@ -353,11 +353,11 @@ export default function CourseDetailPage() {
 
       {/* Модули курса */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
           <h3 className="text-lg font-bold text-gray-900">Модули курса ({totalModules})</h3>
           <Link
             href={`/admin/modules/create?courseId=${course.id}`}
-            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 rounded-lg font-medium text-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 rounded-lg font-medium text-sm whitespace-nowrap flex-shrink-0"
           >
             <Plus className="w-4 h-4" />
             Создать модуль
