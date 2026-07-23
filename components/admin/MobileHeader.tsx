@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu, Bell, User } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useState } from "react";
 import type { AdminSession } from "@/types/admin";
 import { MobileSidebar } from "./MobileSidebar";
@@ -31,23 +31,8 @@ export function MobileHeader({ session }: Props) {
             KursGalaxy.kz
           </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-1">
-            <button
-              className="p-2 text-gray-600 active:bg-gray-100 rounded-lg relative touch-manipulation"
-              aria-label="Уведомления"
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
-            <button
-              className="p-2 text-gray-600 active:bg-gray-100 rounded-lg touch-manipulation"
-              aria-label="Профиль"
-            >
-              <User className="w-5 h-5" />
-            </button>
-          </div>
+          {/* Спейсер под ширину кнопки-меню, чтобы логотип оставался по центру */}
+          <div className="w-6" aria-hidden="true"></div>
         </div>
       </header>
 

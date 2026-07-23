@@ -22,7 +22,7 @@ interface Props {
 }
 
 const menuItems = [
-  { href: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/admin", icon: LayoutDashboard, label: "Главная" },
   { href: "/admin/courses", icon: BookOpen, label: "Курсы" },
   { href: "/admin/students", icon: Users, label: "Студенты" },
   { href: "/admin/certificate", icon: Award, label: "Сертификат" },

@@ -414,36 +414,6 @@ export default function CourseDetailPage() {
         )}
       </div>
 
-      {/* Быстрые действия */}
-      {totalModules > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link
-            href={`/admin/modules/create?courseId=${course.id}`}
-            className="flex items-center gap-4 p-5 bg-white border-2 border-primary-200 hover:border-primary-300 active:border-primary-400 rounded-xl transition-colors"
-          >
-            <div className="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center">
-              <Plus className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900 mb-1">Создать модуль</h3>
-              <p className="text-sm text-gray-600">Добавить новый раздел в курс</p>
-            </div>
-          </Link>
-
-          <Link
-            href={`/admin/courses/${course.id}/edit`}
-            className="flex items-center gap-4 p-5 bg-white border-2 border-blue-200 hover:border-blue-300 active:border-blue-400 rounded-xl transition-colors"
-          >
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <Edit className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900 mb-1">Редактировать курс</h3>
-              <p className="text-sm text-gray-600">Изменить название, описание, цену</p>
-            </div>
-          </Link>
-        </div>
-      )}
     </div>
   );
 }
