@@ -600,7 +600,7 @@ export default function CreateLessonPage() {
         </div>
 
         {/* Submit Button */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-10 md:static md:border-0 md:p-0">
+        <div className="pt-2">
           <button
             type="submit"
             disabled={isBusy}

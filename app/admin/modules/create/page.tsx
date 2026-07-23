@@ -183,8 +183,8 @@ export default function CreateModulePage() {
           </div>
         </div>
 
-        {/* Submit Button - липкая на мобилке */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-10 md:static md:border-0 md:p-0">
+        {/* Submit Button */}
+        <div className="pt-2">
           <button
             type="submit"
             disabled={isLoading || !courseId}
