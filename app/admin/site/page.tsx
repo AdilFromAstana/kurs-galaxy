@@ -148,14 +148,14 @@ export default function SiteSettingsPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 
       {/* Контакты */}
-      <section className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+      <section className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
         <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
           <Phone className="w-5 h-5 text-primary-600" />
           Контакты для футера и юр-страниц
@@ -204,7 +204,7 @@ export default function SiteSettingsPage() {
       </section>
 
       {/* Юр. лицо */}
-      <section className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+      <section className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
         <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
           <Building className="w-5 h-5 text-blue-600" />
           Реквизиты юр. лица / ИП
@@ -245,7 +245,7 @@ export default function SiteSettingsPage() {
       </section>
 
       {/* Тексты юр-страниц */}
-      <section className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+      <section className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
         <h2 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
           <FileText className="w-5 h-5 text-amber-600" />
           Юридические тексты

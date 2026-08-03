@@ -71,7 +71,7 @@ export default function SideDrawer({ isOpen, onClose }: SideDrawerProps) {
 
       {/* Drawer */}
       <aside
-        className={`fixed top-0 left-0 h-full w-80 max-w-[80vw] bg-white shadow-2xl z-[60] transform transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-full w-80 max-w-[80vw] bg-white z-[60] transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Navigation menu"
@@ -84,7 +84,7 @@ export default function SideDrawer({ isOpen, onClose }: SideDrawerProps) {
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
               onClick={onClose}
             >
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center">
+              <div className="w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center">
                 <Award className="w-6 h-6 text-white" />
               </div>
               <span className="text-lg font-bold text-dark-900">
@@ -139,7 +139,7 @@ export default function SideDrawer({ isOpen, onClose }: SideDrawerProps) {
               <div>
                 {/* User Info с аватаром */}
                 <div className="mb-4 flex items-center gap-3 px-1">
-                  <div className="w-11 h-11 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                  <div className="w-11 h-11 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
                     {initial}
                   </div>
                   <div className="flex-1 min-w-0">

@@ -71,7 +71,7 @@ export default function VideoPlayer({ lessonId }: VideoPlayerProps) {
 
   return (
     <div className="relative w-full">
-      <div className="relative w-full aspect-video bg-black rounded-lg md:rounded-2xl overflow-hidden shadow-2xl">
+      <div className="relative w-full aspect-video bg-black rounded-lg md:rounded-2xl overflow-hidden shadow-soft">
         <video
           ref={videoRef}
           src={streamSrc}

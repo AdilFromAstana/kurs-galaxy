@@ -98,7 +98,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Профиль */}
-      <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
         <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
           <User className="w-5 h-5 text-blue-600" />
           Профиль администратора
@@ -107,7 +107,7 @@ export default function SettingsPage() {
         {loading ? (
           <p className="text-gray-500">Загрузка...</p>
         ) : admin ? (
-          <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+          <div className="bg-gray-50 rounded-xl p-4 space-y-2">
             <div>
               <span className="text-sm text-gray-600">Имя:</span>
               <p className="font-semibold text-gray-900">{admin.name}</p>
@@ -127,7 +127,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Смена пароля */}
-      <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
         <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
           <Lock className="w-5 h-5 text-primary-600" />
           Смена пароля
@@ -214,7 +214,7 @@ export default function SettingsPage() {
       <EmailToolsSection />
 
       {/* Сессия */}
-      <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
         <h2 className="text-lg font-bold text-gray-900 mb-2">Сессия</h2>
         <p className="text-sm text-gray-600 mb-4">
           Выход завершает сеанс администратора. Чтобы вернуться, потребуется
@@ -281,7 +281,7 @@ function EmailToolsSection() {
   };
 
   return (
-    <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+    <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
       <h2 className="text-lg font-bold text-gray-900 mb-2 flex items-center gap-2">
         <Mail className="w-5 h-5 text-blue-600" />
         Email-рассылки
@@ -290,7 +290,7 @@ function EmailToolsSection() {
         Уведомление об истечении доступа отправляется студентам, у которых до
         конца доступа осталось 7 дней или меньше.
       </p>
-      <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between gap-4 flex-wrap">
+      <div className="bg-gray-50 rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap">
         <div>
           <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">
             Сейчас истекает у

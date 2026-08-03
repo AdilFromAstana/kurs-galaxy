@@ -3,8 +3,8 @@ import { Home, Search, ArrowLeft } from 'lucide-react';
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-primary-50 via-white to-primary-100">
-      <div className="max-w-lg w-full bg-white rounded-2xl shadow-xl p-8 md:p-10 text-center border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50">
+      <div className="max-w-lg w-full bg-white rounded-2xl shadow-soft p-8 md:p-10 text-center border border-gray-100">
         {/* Большая 404 */}
         <div className="text-7xl md:text-8xl font-black text-primary-600 leading-none mb-4">
           404
@@ -23,14 +23,14 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold transition-colors"
           >
             <Home className="w-5 h-5" />
             На главную
           </Link>
           <Link
             href="/courses"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-300 text-dark-700 hover:bg-gray-50 rounded-xl font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-300 text-dark-700 hover:bg-gray-50 rounded-lg font-semibold transition-colors"
           >
             <Search className="w-5 h-5" />
             Каталог курсов

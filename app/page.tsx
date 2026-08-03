@@ -47,7 +47,7 @@ export default function WelcomePage() {
     0,
   );
 
-  // Топ-3 курса для превью на главной (с активными тарифами и хотя бы одним модулем)
+  // Топ-3 курса для превью на главной (с активными тарифами и хотя бы одним разделом)
   const previewCourses = courses
     .filter(
       (c) =>
@@ -77,7 +77,7 @@ export default function WelcomePage() {
               {/* Левая колонка: текст + CTA */}
               <div className="text-center lg:text-left">
                 {/* Title */}
-                <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 md:mb-6 bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text text-transparent">
+                <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 md:mb-6 text-primary-600">
                   KursGalaxy.kz
                 </h1>
 
@@ -111,13 +111,9 @@ export default function WelcomePage() {
             {/* Правая колонка: декоративный визуал (на lg+) */}
             <div className="hidden lg:flex items-center justify-center">
               <div className="relative w-full max-w-md aspect-square">
-                {/* Декоративный фон */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-primary-400 rounded-3xl rotate-6 opacity-60" />
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary-100 to-primary-300 rounded-3xl -rotate-3 opacity-80" />
-
                 {/* Карточка-превью */}
-                <div className="relative bg-white rounded-3xl shadow-2xl p-8 h-full flex flex-col justify-center items-center gap-6">
-                  <div className="w-24 h-24 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/30">
+                <div className="relative bg-white rounded-2xl shadow-soft border border-gray-100 p-8 h-full flex flex-col justify-center items-center gap-6">
+                  <div className="w-24 h-24 bg-primary-600 rounded-2xl flex items-center justify-center">
                     <BookOpen className="w-12 h-12 text-white" />
                   </div>
                   <div className="text-center">
@@ -213,7 +209,7 @@ export default function WelcomePage() {
                     className="card card-hover group flex flex-col animate-slide-up"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <div className="w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center mb-4 group-hover:from-primary-200 group-hover:to-primary-300 transition-all">
+                    <div className="w-full h-40 bg-primary-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-100 transition-colors">
                       <BookOpen className="w-16 h-16 text-primary-600" />
                     </div>
 
@@ -227,7 +223,7 @@ export default function WelcomePage() {
                     <div className="flex items-center gap-4 mb-4 text-sm text-dark-500">
                       <div className="flex items-center gap-1.5">
                         <Layers className="w-4 h-4" />
-                        <span>{course.modules.length} мод.</span>
+                        <span>{course.modules.length} разд.</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Video className="w-4 h-4" />

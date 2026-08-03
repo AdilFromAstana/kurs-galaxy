@@ -79,7 +79,7 @@ export default function Header() {
                 href={isAuthenticated ? "/dashboard" : "/"}
                 className="flex items-center gap-2 hover:opacity-80 transition-opacity"
               >
-                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-primary-600 rounded-full flex items-center justify-center">
                   <Award className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 <span className="text-base md:text-lg font-bold text-dark-900">
@@ -137,7 +137,7 @@ export default function Header() {
                     aria-haspopup="menu"
                     aria-expanded={isUserMenuOpen}
                   >
-                    <div className="w-9 h-9 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                    <div className="w-9 h-9 bg-primary-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                       {initial}
                     </div>
                     <span className="text-sm font-medium text-dark-900 max-w-[140px] truncate">
@@ -152,11 +152,11 @@ export default function Header() {
 
                   {isUserMenuOpen && (
                     <div
-                      className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden animate-scale-in z-50"
+                      className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-soft border border-gray-100 overflow-hidden animate-scale-in z-50"
                       role="menu"
                     >
                       {/* User info */}
-                      <div className="px-4 py-3 bg-gradient-to-br from-primary-50 to-primary-100 border-b border-gray-100">
+                      <div className="px-4 py-3 bg-primary-50 border-b border-gray-100">
                         <p className="text-sm font-semibold text-dark-900 truncate">
                           {user?.name}
                         </p>

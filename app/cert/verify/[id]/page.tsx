@@ -28,8 +28,8 @@ export default async function CertificateVerifyPage({ params }: Props) {
 
   if (!cert) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-red-50 via-white to-orange-50">
-        <div className="max-w-lg w-full bg-white rounded-2xl shadow-xl p-8 md:p-10 text-center border border-red-100">
+      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-red-50">
+        <div className="max-w-lg w-full bg-white rounded-2xl shadow-soft p-8 md:p-10 text-center border border-red-100">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <XCircle className="w-12 h-12 text-red-600" />
           </div>
@@ -57,10 +57,10 @@ export default async function CertificateVerifyPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-green-50 via-white to-primary-50">
-      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gray-50">
+      <div className="max-w-2xl w-full bg-white rounded-2xl shadow-soft overflow-hidden border border-gray-100">
         {/* Шапка с подтверждением */}
-        <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-8 md:p-10 text-center text-white">
+        <div className="bg-green-600 p-8 md:p-10 text-center text-white">
           <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-12 h-12 text-white" />
           </div>

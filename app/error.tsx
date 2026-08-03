@@ -16,8 +16,8 @@ export default function Error({ error, reset }: ErrorProps) {
   }, [error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-red-50 via-white to-orange-50">
-      <div className="max-w-lg w-full bg-white rounded-2xl shadow-xl p-8 md:p-10 text-center border border-red-100">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-red-50">
+      <div className="max-w-lg w-full bg-white rounded-2xl shadow-soft p-8 md:p-10 text-center border border-red-100">
         <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <AlertTriangle className="w-12 h-12 text-red-600" />
         </div>
@@ -39,14 +39,14 @@ export default function Error({ error, reset }: ErrorProps) {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={reset}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold transition-colors"
           >
             <RotateCcw className="w-5 h-5" />
             Попробовать снова
           </button>
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-300 text-dark-700 hover:bg-gray-50 rounded-xl font-semibold transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white border border-gray-300 text-dark-700 hover:bg-gray-50 rounded-lg font-semibold transition-colors"
           >
             <Home className="w-5 h-5" />
             На главную

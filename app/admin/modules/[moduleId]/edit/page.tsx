@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Save, Trash2, Plus } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Plus, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { confirmToast } from '@/lib/toastConfirm';
@@ -58,10 +58,10 @@ export default function EditModulePage() {
         body: JSON.stringify({ title, description }),
       });
       if (!res.ok) {
-        toast.error('Не удалось сохранить модуль');
+        toast.error('Не удалось сохранить раздел');
         return;
       }
-      toast.success('Модуль сохранён');
+      toast.success('Раздел сохранён');
       router.push(`/admin/courses/${module.courseId}`);
     } finally {
       setIsLoading(false);
@@ -71,7 +71,7 @@ export default function EditModulePage() {
   const handleDelete = async () => {
     if (!module) return;
     const ok = await confirmToast({
-      message: `Удалить модуль «${module.title}»? Все его уроки тоже удалятся.`,
+      message: `Удалить раздел «${module.title}»? Все его уроки тоже удалятся.`,
       confirmText: 'Удалить',
       destructive: true,
     });
@@ -81,10 +81,10 @@ export default function EditModulePage() {
       credentials: 'include',
     });
     if (res.ok) {
-      toast.success('Модуль удалён');
+      toast.success('Раздел удалён');
       router.push(`/admin/courses/${module.courseId}`);
     } else {
-      toast.error('Не удалось удалить модуль');
+      toast.error('Не удалось удалить раздел');
     }
   };
 
@@ -99,7 +99,7 @@ export default function EditModulePage() {
   if (!module) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">Модуль не найден</p>
+        <p className="text-gray-600">Раздел не найден</p>
         <Link href="/admin/courses" className="btn btn-primary mt-4 inline-flex">
           Назад к курсам
         </Link>
@@ -120,7 +120,7 @@ export default function EditModulePage() {
         </Link>
         
         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-          Редактирование модуля
+          Редактирование раздела
         </h1>
         <p className="text-gray-600 mt-1 text-sm md:text-base">
           ID: {module.id}
@@ -129,18 +129,18 @@ export default function EditModulePage() {
       
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
           {/* Название */}
           <div className="mb-5">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Название модуля *
+              Название раздела *
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-4 py-3 md:py-4 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Модуль 1: Основы..."
+              placeholder="Раздел 1: Основы..."
               required
             />
           </div>
@@ -148,14 +148,14 @@ export default function EditModulePage() {
           {/* Описание */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Описание модуля *
+              Описание раздела *
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-              placeholder="Описание содержания модуля..."
+              placeholder="Описание содержания раздела..."
               required
             />
           </div>
@@ -177,16 +177,16 @@ export default function EditModulePage() {
             className="mt-2 w-full flex items-center justify-center gap-2 px-6 py-3 text-sm font-medium text-red-600 bg-white border border-red-200 hover:bg-red-50 rounded-lg"
           >
             <Trash2 className="w-4 h-4" />
-            Удалить модуль
+            Удалить раздел
           </button>
         </div>
       </form>
       
       {/* Lessons Section */}
-      <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
           <h2 className="text-lg font-bold text-gray-900">
-            Уроки модуля ({module.lessons?.length || 0})
+            Уроки раздела ({module.lessons?.length || 0})
           </h2>
           <Link
             href={`/admin/lessons/create?courseId=${module.courseId}&moduleId=${module.id}`}
@@ -200,9 +200,9 @@ export default function EditModulePage() {
         {module.lessons && module.lessons.length > 0 ? (
           <div className="space-y-2">
             {module.lessons.map((lesson, index) => (
-              <div key={lesson.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm font-bold text-primary-700">{index + 1}</span>
+              <div key={lesson.id} className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-2xl shadow-soft hover:border-gray-200 transition-all">
+                <div className="w-8 h-8 bg-primary-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm font-bold text-primary-600">{index + 1}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate text-sm">{lesson.title}</p>
@@ -212,10 +212,7 @@ export default function EditModulePage() {
                   href={`/admin/lessons/${lesson.id}/edit`}
                   className="px-3 py-2 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 active:bg-blue-100 rounded-lg touch-manipulation font-medium flex items-center gap-1"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-edit">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                  </svg>
+                  <Pencil className="w-4 h-4" />
                   <span className="hidden sm:inline">Изменить</span>
                 </Link>
               </div>
@@ -224,7 +221,7 @@ export default function EditModulePage() {
         ) : (
           <Link
             href={`/admin/lessons/create?courseId=${module.courseId}&moduleId=${module.id}`}
-            className="flex flex-col items-center justify-center gap-2 py-8 text-center border-2 border-dashed border-gray-200 rounded-lg text-gray-600 hover:border-primary-300 hover:text-primary-600 transition-colors"
+            className="flex flex-col items-center justify-center gap-2 py-8 text-center border-2 border-dashed border-gray-200 rounded-2xl text-gray-600 hover:border-primary-300 hover:text-primary-600 transition-colors"
           >
             <Plus className="w-6 h-6" />
             <span className="text-sm font-medium">Добавить первый урок</span>

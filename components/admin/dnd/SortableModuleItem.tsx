@@ -90,7 +90,7 @@ export function SortableModuleItem({ module, onEdit, onDelete }: Props) {
           
           <button
             className="px-4 py-2.5 text-gray-600 bg-gray-50 active:bg-gray-100 rounded-lg touch-manipulation"
-            aria-label="Уроки модуля"
+            aria-label="Уроки раздела"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

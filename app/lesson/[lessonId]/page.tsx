@@ -253,7 +253,7 @@ export default function LessonPage() {
                         href={material.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-3 p-4 border-2 border-gray-200 rounded-xl hover:border-primary-500 hover:bg-primary-50 transition-all group"
+                        className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:border-primary-500 hover:bg-primary-50 transition-all group"
                       >
                         <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center group-hover:bg-primary-500 transition-colors">
                           {material.type === "PDF" ||
@@ -281,7 +281,7 @@ export default function LessonPage() {
               )}
 
               {/* Navigation */}
-              <div className="card bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 animate-slide-up">
+              <div className="card bg-primary-50 border-primary-200 animate-slide-up">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="text-center sm:text-left">
                     <h3 className="text-lg md:text-xl font-bold text-dark-900 mb-1">
@@ -320,7 +320,7 @@ export default function LessonPage() {
               <aside className="hidden lg:block lg:sticky lg:top-24 lg:self-start lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
                 <div className="card !p-0 overflow-hidden">
                   {/* Заголовок курса */}
-                  <div className="p-5 bg-gradient-to-br from-primary-50 to-primary-100 border-b border-primary-200">
+                  <div className="p-5 bg-primary-50 border-b border-primary-200">
                     <Link
                       href={`/course/${courseId}`}
                       className="text-xs font-semibold text-primary-700 uppercase tracking-wide hover:underline"
@@ -346,7 +346,7 @@ export default function LessonPage() {
                     </div>
                   </div>
 
-                  {/* Список модулей и уроков */}
+                  {/* Список разделов и уроков */}
                   <div className="p-3 space-y-3">
                     {course.modules.map((module) => (
                       <div key={module.id}>

@@ -247,7 +247,7 @@ export default function EditPricingPlanPage() {
 
       {/* Форма редактирования */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6">
+        <div className="bg-white rounded-2xl p-6 shadow-soft border border-gray-100 space-y-6">
           <h2 className="text-lg font-bold text-gray-900">Основная информация</h2>
 
           {/* Название */}

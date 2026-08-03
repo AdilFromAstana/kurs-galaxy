@@ -20,21 +20,13 @@ import Header from '@/components/layout/Header';
 import SiteFooter from '@/components/layout/SiteFooter';
 import PurchaseModal from '@/components/modals/PurchaseModal';
 
-// Палитра обложек (4 варианта в pink/rose тональности)
-const COVER_GRADIENTS = [
-  'from-pink-500 via-rose-500 to-orange-400',
-  'from-rose-500 via-pink-500 to-fuchsia-500',
-  'from-fuchsia-500 via-purple-500 to-pink-600',
-  'from-purple-500 via-rose-500 to-pink-500',
-];
-
 function pluralModule(n: number) {
   const mod10 = n % 10;
   const mod100 = n % 100;
-  if (mod100 >= 11 && mod100 <= 14) return 'модулей';
-  if (mod10 === 1) return 'модуль';
-  if (mod10 >= 2 && mod10 <= 4) return 'модуля';
-  return 'модулей';
+  if (mod100 >= 11 && mod100 <= 14) return 'разделов';
+  if (mod10 === 1) return 'раздел';
+  if (mod10 >= 2 && mod10 <= 4) return 'раздела';
+  return 'разделов';
 }
 
 function pluralLesson(n: number) {
@@ -52,7 +44,7 @@ export default function CoursesPage() {
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
-  // Только курсы с реальным контентом (фильтрует тестовый мусор без модулей)
+  // Только курсы с реальным контентом (фильтрует тестовый мусор без разделов)
   const visibleCourses = courses.filter((c) => c.modules.length > 0);
 
   const totalLessons = visibleCourses.reduce(
@@ -94,14 +86,14 @@ export default function CoursesPage() {
 
               {visibleCourses.length > 0 && (
                 <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm md:text-base">
-                  <div className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl shadow-sm border border-gray-100">
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl shadow-soft border border-gray-100">
                     <BookOpen className="w-4 h-4 md:w-5 md:h-5 text-primary-600" />
                     <span className="font-semibold text-dark-900">
                       {visibleCourses.length}
                     </span>
                     <span className="text-dark-500">курсов</span>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl shadow-sm border border-gray-100">
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-white rounded-xl shadow-soft border border-gray-100">
                     <Video className="w-4 h-4 md:w-5 md:h-5 text-primary-600" />
                     <span className="font-semibold text-dark-900">
                       {totalLessons}
@@ -189,14 +181,6 @@ function CourseCard({
       : null;
   const currency = activePlans[0]?.currency ?? '₸';
 
-  // Детерминированный градиент по id курса (для визуального разнообразия)
-  const gradientIdx =
-    course.id
-      .split('')
-      .reduce((sum: number, ch: string) => sum + ch.charCodeAt(0), 0) %
-    COVER_GRADIENTS.length;
-  const coverGradient = COVER_GRADIENTS[gradientIdx];
-
   // Инициал курса для обложки
   const initial = (course.title || '?').trim().charAt(0).toUpperCase();
 
@@ -226,27 +210,27 @@ function CourseCard({
   let statusBadge: React.ReactNode = null;
   if (isPurchased) {
     statusBadge = (
-      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 backdrop-blur-sm text-green-700 rounded-full text-xs font-bold shadow-sm">
+      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 rounded-full text-xs font-bold border border-green-100">
         <CheckCircle2 className="w-3.5 h-3.5" />
         Доступ
       </div>
     );
   } else if (hasProgress) {
     statusBadge = (
-      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 backdrop-blur-sm text-primary-700 rounded-full text-xs font-bold shadow-sm">
+      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-primary-50 text-primary-700 rounded-full text-xs font-bold border border-primary-100">
         <TrendingUp className="w-3.5 h-3.5" />В процессе
       </div>
     );
   } else if (freeLessonsCount > 0) {
     statusBadge = (
-      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 backdrop-blur-sm text-emerald-700 rounded-full text-xs font-bold shadow-sm">
+      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold border border-emerald-100">
         <Star className="w-3.5 h-3.5 fill-emerald-700" />
         Бесплатные уроки
       </div>
     );
   } else if (!isAuthenticated) {
     statusBadge = (
-      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/95 backdrop-blur-sm text-dark-700 rounded-full text-xs font-bold shadow-sm">
+      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 text-dark-700 rounded-full text-xs font-bold">
         <Lock className="w-3.5 h-3.5" />
         Доступ после покупки
       </div>
@@ -255,30 +239,17 @@ function CourseCard({
 
   return (
     <article
-      className="group bg-white rounded-2xl shadow-sm hover:shadow-xl border border-gray-100 hover:border-primary-200 transition-all overflow-hidden flex flex-col h-full animate-slide-up"
+      className="group bg-white rounded-2xl shadow-soft border border-gray-100 hover:border-primary-200 transition-all overflow-hidden flex flex-col h-full animate-slide-up"
       style={{ animationDelay: `${Math.min(index, 8) * 0.05}s` }}
     >
       {/* Обложка */}
       <Link href={`/course/${course.id}`} className="block">
-        <div
-          className={`relative h-44 md:h-48 bg-gradient-to-br ${coverGradient} overflow-hidden`}
-        >
-          {/* Декоративный фон-паттерн */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/40 blur-3xl" />
-            <div className="absolute -bottom-12 -left-8 w-48 h-48 rounded-full bg-white/30 blur-3xl" />
-          </div>
-
+        <div className="relative h-44 md:h-48 bg-primary-50 overflow-hidden">
           {/* Большой инициал */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-7xl md:text-8xl font-black text-white/90 drop-shadow-lg group-hover:scale-110 transition-transform duration-300">
+            <span className="text-7xl md:text-8xl font-black text-primary-200 group-hover:scale-110 transition-transform duration-300">
               {initial}
             </span>
-          </div>
-
-          {/* Иконка в углу */}
-          <div className="absolute bottom-3 right-3 w-9 h-9 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <BookOpen className="w-5 h-5 text-white" strokeWidth={2.5} />
           </div>
 
           {/* Status badge */}
@@ -288,9 +259,9 @@ function CourseCard({
 
           {/* Прогресс-полоска снизу обложки */}
           {hasProgress && (
-            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/20">
+            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-primary-100">
               <div
-                className="h-full bg-white shadow-sm transition-all duration-500"
+                className="h-full bg-primary-600 transition-all duration-500"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -360,7 +331,7 @@ function CourseCard({
           {ctaIsLink ? (
             <Link
               href={ctaHref}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-sm font-semibold rounded-xl transition-colors whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-sm font-semibold rounded-lg transition-colors whitespace-nowrap"
             >
               <Play className="w-4 h-4" />
               {ctaLabel}
@@ -369,7 +340,7 @@ function CourseCard({
             <button
               type="button"
               onClick={handleCtaClick}
-              className="inline-flex items-center justify-center px-4 py-2.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-sm font-semibold rounded-xl transition-colors whitespace-nowrap"
+              className="inline-flex items-center justify-center px-4 py-2.5 bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-sm font-semibold rounded-lg transition-colors whitespace-nowrap"
             >
               {ctaLabel}
             </button>

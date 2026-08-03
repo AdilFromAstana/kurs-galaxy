@@ -195,7 +195,7 @@ export default function PurchaseModal({
           <>
         {/* Header */}
         <div className="text-center mb-3 md:mb-6">
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4 shadow-lg shadow-primary-500/30">
+          <div className="w-12 h-12 md:w-16 md:h-16 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-4">
             <Sparkles className="w-6 h-6 md:w-9 md:h-9 text-white" />
           </div>
           <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-dark-900 mb-1 md:mb-2">
@@ -214,7 +214,7 @@ export default function PurchaseModal({
               onClick={() => setSelectedPlan(plan.id)}
               className={`relative cursor-pointer rounded-xl border-2 p-3 md:p-5 transition-all ${
                 selectedPlan === plan.id
-                  ? "border-primary-600 bg-primary-50 shadow-lg"
+                  ? "border-primary-600 bg-primary-50"
                   : "border-gray-200 bg-white hover:border-primary-300"
               } ${plan.isRecommended ? "ring-2 ring-primary-600" : ""}`}
             >

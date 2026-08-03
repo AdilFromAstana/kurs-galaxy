@@ -164,50 +164,56 @@ export default function CoursePage() {
           <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_400px] lg:gap-8 gap-6">
             {/* Course Hero */}
             <div className="card animate-slide-up lg:row-start-1 lg:col-start-1">
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Course Image */}
-                <div className="w-full md:w-1/3 lg:w-2/5 xl:w-1/3 h-48 md:h-auto md:min-h-[12rem] bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-20 h-20 lg:w-24 lg:h-24 text-primary-600" />
+              <div className="flex items-start gap-4 mb-4">
+                {/* Course Icon */}
+                <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-8 h-8 text-primary-600" />
                 </div>
-
-                {/* Course Info */}
-                <div className="flex-1">
-                  <h1 className="mb-3 text-2xl md:text-3xl lg:text-4xl">
+                <div className="flex-1 min-w-0">
+                  <span
+                    className={`text-xs font-bold uppercase tracking-wide ${
+                      isPurchased ? "text-green-600" : "text-primary-600"
+                    }`}
+                  >
+                    {isPurchased ? "Полный доступ" : "Требуется покупка"}
+                  </span>
+                  <h1 className="text-xl md:text-2xl font-bold text-dark-900 mt-1">
                     {course.title}
                   </h1>
-                  <p className="text-base md:text-lg text-dark-600 mb-6">
-                    {course.description}
-                  </p>
-
-                  {/* Stats */}
-                  <div className="flex flex-wrap items-center gap-3 md:gap-4">
-                    <div className="flex items-center gap-2 text-dark-700">
-                      <Layers className="w-5 h-5 text-primary-600" />
-                      <span className="font-medium">
-                        {totalModules} модулей
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-dark-700">
-                      <Video className="w-5 h-5 text-primary-600" />
-                      <span className="font-medium">{total} уроков</span>
-                    </div>
-                    {freeLessonsCount > 0 && (
-                      <div className="flex items-center gap-2 text-dark-700">
-                        <Lock className="w-5 h-5 text-green-600" />
-                        <span className="font-medium">
-                          {freeLessonsCount} бесплатных
-                        </span>
-                      </div>
-                    )}
-                  </div>
                 </div>
+              </div>
+
+              <p className="text-base md:text-lg text-dark-600 mb-4">
+                {course.description}
+              </p>
+
+              {/* Stats */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
+                  <Layers className="w-4 h-4 text-blue-600" />
+                  <span className="font-semibold text-dark-900">
+                    {totalModules} разделов
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg">
+                  <Video className="w-4 h-4 text-green-600" />
+                  <span className="font-semibold text-dark-900">{total} уроков</span>
+                </div>
+                {freeLessonsCount > 0 && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-50 rounded-lg">
+                    <Lock className="w-4 h-4 text-primary-600" />
+                    <span className="font-semibold text-dark-900">
+                      {freeLessonsCount} бесплатных
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Aside: статус/покупка (sticky на десктопе) */}
             <aside className="lg:row-start-1 lg:row-span-2 lg:col-start-2 lg:sticky lg:top-24 lg:self-start space-y-4">
               {isPurchased ? (
-                <div className="card bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 animate-slide-up">
+                <div className="card bg-green-50 border-green-200 animate-slide-up">
                   <div className="flex items-center gap-2 mb-3">
                     <CheckCircle2 className="w-6 h-6 text-green-600" />
                     <span className="text-green-700 font-bold text-lg">
@@ -295,7 +301,7 @@ export default function CoursePage() {
                   )}
                 </div>
               ) : (
-                <div className="card bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 animate-slide-up">
+                <div className="card bg-primary-50 border-primary-200 animate-slide-up">
                   {/* Цена */}
                   {minPrice !== null && (
                     <div className="mb-4 pb-4 border-b border-primary-200">
@@ -329,7 +335,7 @@ export default function CoursePage() {
                       {activePlans.map((plan) => (
                         <div
                           key={plan.id}
-                          className={`flex items-center justify-between p-3 rounded-lg bg-white border-2 ${
+                          className={`flex items-center justify-between p-3 rounded-lg bg-white border ${
                             plan.isRecommended
                               ? "border-primary-500"
                               : "border-gray-200"
@@ -382,7 +388,7 @@ export default function CoursePage() {
               </h2>
             <div className="space-y-4">
               {course.modules.map((module, index) => {
-                // Вычисляем прогресс по модулю
+                // Вычисляем прогресс по разделу
                 const completedLessons = module.lessons.filter((lesson) =>
                   progressIds.includes(lesson.id),
                 ).length;
@@ -418,7 +424,7 @@ export default function CoursePage() {
                         </div>
                       </div>
 
-                      {/* Статистика модуля */}
+                      {/* Статистика раздела */}
                       <div className="flex items-center gap-4 mb-2">
                         <div className="text-sm text-dark-500">
                           {module.lessons.length}{" "}
@@ -431,7 +437,7 @@ export default function CoursePage() {
                         )}
                       </div>
 
-                      {/* Прогресс-бар модуля */}
+                      {/* Прогресс-бар раздела */}
                       {completedLessons > 0 && !isModuleCompleted && (
                         <div className="mt-2">
                           <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
@@ -506,7 +512,7 @@ export default function CoursePage() {
                             href={`/lesson/${lesson.id}`}
                             className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
                               isLastLesson && !isCompleted
-                                ? "bg-primary-50 border-2 border-primary-200 hover:bg-primary-100"
+                                ? "bg-primary-50 border border-primary-200 hover:bg-primary-100"
                                 : "bg-gray-50 hover:bg-gray-100"
                             }`}
                           >

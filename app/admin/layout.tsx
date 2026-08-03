@@ -24,7 +24,7 @@ export default async function AdminLayout({
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 pt-4 md:pt-8 pb-8">
         {/* Десктопная шапка с навигацией */}
-        <div className="hidden md:flex bg-white rounded-lg shadow-sm px-6 py-4 mb-6 items-center justify-between gap-6">
+        <div className="hidden md:flex bg-white rounded-2xl shadow-soft border border-gray-100 px-6 py-4 mb-6 items-center justify-between gap-6">
           <div className="flex items-center gap-6">
             <span className="text-lg font-bold text-primary-600 whitespace-nowrap">KursGalaxy.kz</span>
             <AdminDesktopNav />

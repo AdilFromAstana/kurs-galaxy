@@ -210,7 +210,7 @@ export default function CertificateSettingsPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-700">{error}</p>
         </div>
@@ -220,7 +220,7 @@ export default function CertificateSettingsPage() {
         {/* Левая колонка — форма */}
         <div className="space-y-6">
           {/* Выбор шаблона */}
-          <section className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+          <section className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
             <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <ImageIcon className="w-5 h-5" />
               Шаблон
@@ -257,7 +257,7 @@ export default function CertificateSettingsPage() {
           </section>
 
           {/* Брендинг */}
-          <section className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+          <section className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
             <h2 className="text-lg font-bold text-gray-900 mb-4">
               Брендинг
             </h2>
@@ -410,7 +410,7 @@ export default function CertificateSettingsPage() {
           </section>
 
           {/* Тексты */}
-          <section className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+          <section className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
             <h2 className="text-lg font-bold text-gray-900 mb-4">
               Тексты на сертификате
             </h2>
@@ -463,7 +463,7 @@ export default function CertificateSettingsPage() {
           </section>
 
           {/* QR */}
-          <section className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+          <section className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -493,7 +493,7 @@ export default function CertificateSettingsPage() {
 
         {/* Правая колонка — превью */}
         <aside className="lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
-          <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
             <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
               <Eye className="w-5 h-5" />
               Превью

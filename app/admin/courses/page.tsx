@@ -43,7 +43,7 @@ export default function CoursesListPage() {
 
   const handleDeleteCourse = async (courseId: string) => {
     const ok = await confirmToast({
-      message: 'Удалить курс? Все модули и уроки тоже удалятся. Действие необратимо.',
+      message: 'Удалить курс? Все разделы и уроки тоже удалятся. Действие необратимо.',
       confirmText: 'Удалить',
       destructive: true,
     });
@@ -84,60 +84,60 @@ export default function CoursesListPage() {
       </div>
 
       {/* Статистика */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-primary-600" />
-            </div>
-            <p className="text-sm text-gray-600">Курсов</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="bg-white border border-gray-100 rounded-2xl p-3.5 shadow-soft flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
+            <BookOpen className="w-4 h-4" />
           </div>
-          <p className="text-3xl font-bold text-gray-900">{courses.length}</p>
+          <div>
+            <div className="text-lg font-bold text-gray-900 leading-none mb-1">{courses.length}</div>
+            <div className="text-[11px] font-medium text-gray-400">Курсов</div>
+          </div>
         </div>
 
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Layers className="w-5 h-5 text-blue-600" />
-            </div>
-            <p className="text-sm text-gray-600">Модулей</p>
+        <div className="bg-white border border-gray-100 rounded-2xl p-3.5 shadow-soft flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+            <Layers className="w-4 h-4" />
           </div>
-          <p className="text-3xl font-bold text-gray-900">
-            {courses.reduce((sum, course) => sum + course.modules.length, 0)}
-          </p>
+          <div>
+            <div className="text-lg font-bold text-gray-900 leading-none mb-1">
+              {courses.reduce((sum, course) => sum + course.modules.length, 0)}
+            </div>
+            <div className="text-[11px] font-medium text-gray-400">Разделов</div>
+          </div>
         </div>
 
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <Video className="w-5 h-5 text-green-600" />
-            </div>
-            <p className="text-sm text-gray-600">Уроков</p>
+        <div className="bg-white border border-gray-100 rounded-2xl p-3.5 shadow-soft flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+            <Video className="w-4 h-4" />
           </div>
-          <p className="text-3xl font-bold text-gray-900">
-            {courses.reduce(
-              (sum, course) =>
-                sum + course.modules.reduce((mSum, module) => mSum + module.lessons.length, 0),
-              0
-            )}
-          </p>
+          <div>
+            <div className="text-lg font-bold text-gray-900 leading-none mb-1">
+              {courses.reduce(
+                (sum, course) =>
+                  sum + course.modules.reduce((mSum, module) => mSum + module.lessons.length, 0),
+                0
+              )}
+            </div>
+            <div className="text-[11px] font-medium text-gray-400">Уроков</div>
+          </div>
         </div>
 
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-orange-600" />
-            </div>
-            <p className="text-sm text-gray-600">Тарифов</p>
+        <div className="bg-white border border-gray-100 rounded-2xl p-3.5 shadow-soft flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+            <DollarSign className="w-4 h-4" />
           </div>
-          <p className="text-3xl font-bold text-gray-900">
-            {courses.reduce((sum, course) => sum + (course.pricingPlans?.length || 0), 0)}
-          </p>
+          <div>
+            <div className="text-lg font-bold text-gray-900 leading-none mb-1">
+              {courses.reduce((sum, course) => sum + (course.pricingPlans?.length || 0), 0)}
+            </div>
+            <div className="text-[11px] font-medium text-gray-400">Тарифов</div>
+          </div>
         </div>
       </div>
 
       {loading && (
-        <div className="bg-white rounded-xl p-8 text-center border border-gray-100 text-gray-500">
+        <div className="bg-white rounded-2xl p-8 text-center border border-gray-100 shadow-soft text-gray-500">
           Загрузка...
         </div>
       )}
@@ -166,83 +166,78 @@ export default function CoursesListPage() {
           return (
             <div
               key={course.id}
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:border-primary-200 transition-colors"
+              className="bg-white rounded-2xl p-5 shadow-soft border border-gray-100 hover:border-primary-200 transition-colors"
             >
-              <div className="flex items-start gap-4">
-                {/* Иконка курса */}
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-8 h-8 text-primary-600" />
+              {/* Иконка + бейдж + заголовок */}
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="w-7 h-7 text-primary-600" />
                 </div>
-
-                {/* Информация о курсе */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <h2 className="text-xl font-bold text-gray-900">{course.title}</h2>
-                    {!course.published && (
-                      <span className="text-xs font-bold px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">
-                        Черновик
-                      </span>
-                    )}
-                    {course.creator && (
-                      <span className="text-xs font-medium px-2 py-0.5 bg-primary-50 text-primary-700 rounded-full">
-                        Автор: {course.creator.name}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-gray-600 mb-4 line-clamp-2">{course.description}</p>
+                  {!course.published && (
+                    <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full mb-1">
+                      Черновик
+                    </span>
+                  )}
+                  <h2 className="text-lg font-bold text-gray-900 leading-tight">{course.title}</h2>
+                  {course.creator && (
+                    <p className="text-primary-600 text-xs font-semibold mt-1">
+                      Автор: {course.creator.name}
+                    </p>
+                  )}
+                </div>
+              </div>
 
-                  {/* Метрики */}
-                  <div className="flex items-center gap-3 flex-wrap mb-4">
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-50 rounded-lg">
-                      <DollarSign className="w-4 h-4 text-primary-600" />
-                      <span className="font-semibold text-gray-900">
-                        {course.pricingPlans && course.pricingPlans.length > 0 ? (
-                          <>
-                            от {Math.min(...course.pricingPlans.map(p => p.price)).toLocaleString()} {course.pricingPlans[0].currency}
-                          </>
-                        ) : (
-                          <span className="text-gray-400">Не указана</span>
-                        )}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
-                      <Layers className="w-4 h-4 text-blue-600" />
-                      <span className="font-medium text-gray-700">
-                        {totalModules} {totalModules === 1 ? 'модуль' : 'модулей'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg">
-                      <Video className="w-4 h-4 text-green-600" />
-                      <span className="font-medium text-gray-700">
-                        {totalLessons} {totalLessons === 1 ? 'урок' : 'уроков'}
-                      </span>
-                    </div>
-                  </div>
+              <p className="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-2">
+                {course.description}
+              </p>
 
-                  {/* Действия */}
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <Link
-                      href={`/admin/courses/${course.id}`}
-                      className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 rounded-lg font-medium text-sm"
-                    >
-                      <BookOpen className="w-4 h-4" />
-                      Открыть
-                    </Link>
-                    <Link
-                      href={`/admin/courses/${course.id}/edit`}
-                      className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100 rounded-lg font-medium text-sm"
-                    >
-                      <Edit className="w-4 h-4" />
-                      Редактировать
-                    </Link>
-                    <button
-                      onClick={() => handleDeleteCourse(course.id)}
-                      className="flex items-center gap-2 px-4 py-2 bg-white border border-red-300 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-lg font-medium text-sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Удалить
-                    </button>
-                  </div>
+              {/* Метрики */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 rounded-lg text-xs font-semibold text-gray-900">
+                  <DollarSign className="w-3.5 h-3.5 text-primary-600" />
+                  {course.pricingPlans && course.pricingPlans.length > 0 ? (
+                    <>
+                      от {Math.min(...course.pricingPlans.map(p => p.price)).toLocaleString()} {course.pricingPlans[0].currency}
+                    </>
+                  ) : (
+                    <span className="text-gray-400 font-normal">Не указана</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 rounded-lg text-xs font-semibold text-gray-700">
+                  <Layers className="w-3.5 h-3.5 text-blue-600" />
+                  {totalModules} {totalModules === 1 ? 'раздел' : 'разделов'}
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 rounded-lg text-xs font-semibold text-gray-700">
+                  <Video className="w-3.5 h-3.5 text-green-600" />
+                  {totalLessons} {totalLessons === 1 ? 'урок' : 'уроков'}
+                </div>
+              </div>
+
+              {/* Действия */}
+              <div className="grid grid-cols-1 gap-2">
+                <Link
+                  href={`/admin/courses/${course.id}`}
+                  className="flex items-center justify-center gap-2 py-3 px-4 bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 rounded-xl font-bold text-sm transition-colors"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  Открыть курс
+                </Link>
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    href={`/admin/courses/${course.id}/edit`}
+                    className="flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 active:bg-gray-100 rounded-xl font-semibold text-sm transition-colors"
+                  >
+                    <Edit className="w-4 h-4 text-gray-500" />
+                    Редактировать
+                  </Link>
+                  <button
+                    onClick={() => handleDeleteCourse(course.id)}
+                    className="flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-red-100 text-red-600 hover:bg-red-50 active:bg-red-100 rounded-xl font-semibold text-sm transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Удалить
+                  </button>
                 </div>
               </div>
             </div>
@@ -250,7 +245,7 @@ export default function CoursesListPage() {
         })}
 
         {courses.length === 0 && !loading && !error && (
-          <div className="bg-white rounded-xl p-12 text-center border-2 border-dashed border-gray-200">
+          <div className="bg-white rounded-2xl p-12 text-center border-2 border-dashed border-gray-200">
             <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-gray-900 mb-2">Нет курсов</h3>
             <p className="text-gray-600 mb-6">Создайте свой первый курс</p>

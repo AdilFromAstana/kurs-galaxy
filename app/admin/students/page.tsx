@@ -75,11 +75,11 @@ export default function StudentsPage() {
       </form>
 
       {loading ? (
-        <div className="bg-white rounded-xl p-12 text-center text-gray-500 border border-gray-100">
+        <div className="bg-white rounded-2xl p-12 text-center text-gray-500 border border-gray-100 shadow-soft">
           Загрузка...
         </div>
       ) : error ? (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
           <p className="text-red-700 font-medium mb-3">Не удалось загрузить студентов</p>
           <button
             onClick={() => fetchList(q)}
@@ -89,12 +89,12 @@ export default function StudentsPage() {
           </button>
         </div>
       ) : students.length === 0 ? (
-        <div className="bg-white rounded-xl p-12 text-center border-2 border-dashed border-gray-200">
+        <div className="bg-white rounded-2xl p-12 text-center border-2 border-dashed border-gray-200">
           <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-600">Студенты ещё не зарегистрированы</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl overflow-hidden shadow-soft border border-gray-100">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>

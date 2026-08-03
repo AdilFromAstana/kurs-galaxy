@@ -15,9 +15,9 @@ export default function ContinueButton({ courseId }: ContinueButtonProps) {
   
   if (isFullyCompleted()) {
     return (
-      <div className="card bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 animate-slide-up">
+      <div className="card bg-green-50 border-green-200 animate-slide-up">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 md:w-14 md:h-14 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="w-12 h-12 md:w-14 md:h-14 bg-green-600 rounded-full flex items-center justify-center flex-shrink-0">
             <CheckCircle2 className="w-7 h-7 md:w-8 md:h-8 text-white" />
           </div>
           <div className="flex-1">
@@ -60,10 +60,10 @@ export default function ContinueButton({ courseId }: ContinueButtonProps) {
   return (
     <Link 
       href={`/lesson/${nextLesson.id}`}
-      className="card card-hover bg-gradient-to-br from-primary-50 to-primary-100 border-2 border-primary-200 animate-slide-up block"
+      className="card card-hover bg-primary-50 border-primary-200 animate-slide-up block"
     >
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 md:w-14 md:h-14 bg-primary-500 rounded-full flex items-center justify-center flex-shrink-0">
+        <div className="w-12 h-12 md:w-14 md:h-14 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
           <Play className="w-7 h-7 md:w-8 md:h-8 text-white ml-1" />
         </div>
         <div className="flex-1">

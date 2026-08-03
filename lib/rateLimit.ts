@@ -26,6 +26,11 @@ export function rateLimit(
   max: number,
   windowMs: number,
 ): RateLimitResult {
+  // Вне продакшена лимит отключён, чтобы не мешать локальному тестированию.
+  if (process.env.NODE_ENV !== 'production') {
+    return { ok: true, retryAfterSec: 0, remaining: max };
+  }
+
   const now = Date.now();
   sweep(now);
 

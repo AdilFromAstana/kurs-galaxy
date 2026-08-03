@@ -39,7 +39,7 @@ export default function RegisterPage() {
 
         <div className="card animate-scale-in">
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center shadow-lg shadow-primary-500/30">
+            <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center">
               <Award className="w-9 h-9 text-white" />
             </div>
           </div>

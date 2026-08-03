@@ -34,6 +34,9 @@ const config: Config = {
           900: '#18181b',
         }
       },
+      boxShadow: {
+        soft: '0 2px 12px -2px rgba(15, 23, 42, 0.04)',
+      },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-up': 'slideUp 0.5s ease-out',

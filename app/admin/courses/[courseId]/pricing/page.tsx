@@ -137,7 +137,7 @@ export default function CoursePricingPage() {
       </div>
 
       {/* Тарифные планы */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-2xl p-6 shadow-soft border border-gray-100">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
           Тарифные планы ({plans.length})
         </h3>
@@ -152,7 +152,7 @@ export default function CoursePricingPage() {
             {plans.map((plan) => (
               <div
                 key={plan.id}
-                className="border rounded-lg p-4 hover:border-primary-300 transition-colors bg-gray-50"
+                className="bg-white border border-gray-100 rounded-2xl shadow-soft p-4 hover:border-primary-200 transition-colors"
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   {/* План info */}
@@ -223,7 +223,7 @@ export default function CoursePricingPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+          <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-gray-200">
             <DollarSign className="w-12 h-12 text-gray-400 mx-auto mb-3" />
             <h4 className="text-lg font-semibold text-gray-900 mb-2">Нет тарифных планов</h4>
             <p className="text-gray-600 mb-4">Создайте первый тарифный план для этого курса</p>
@@ -239,7 +239,7 @@ export default function CoursePricingPage() {
       </div>
 
       {/* Информация */}
-      <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+      <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
             <DollarSign className="w-5 h-5 text-blue-600" />

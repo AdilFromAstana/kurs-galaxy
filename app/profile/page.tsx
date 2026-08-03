@@ -59,7 +59,7 @@ export default function ProfilePage() {
           {/* User Info Card */}
           <div className="card card-hover mb-6 animate-slide-up">
             <div className="flex items-center gap-4 md:gap-6">
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0">
                 <User className="w-8 h-8 md:w-10 md:h-10 text-white" />
               </div>
               <div className="flex-1">
@@ -217,10 +217,10 @@ function CourseProfileCard({ course, userName, index }: CourseProfileCardProps) 
 
       {/* Certificate Section — только при 100% завершении */}
       {canDownloadCertificate && (
-        <div className="rounded-2xl p-4 md:p-6 bg-gradient-to-br from-yellow-50 to-yellow-100 border-2 border-yellow-200">
+        <div className="rounded-2xl p-4 md:p-6 bg-yellow-50 border border-yellow-200">
           <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6">
             <div className="flex-shrink-0">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center bg-yellow-500 shadow-lg shadow-yellow-500/30">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center bg-yellow-600">
                 <Award className="w-10 h-10 md:w-12 md:h-12 text-white" />
               </div>
             </div>

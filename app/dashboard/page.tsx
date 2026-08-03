@@ -174,7 +174,7 @@ function CourseCard({
       className="card card-hover animate-slide-up group"
       style={{ animationDelay: `${index * 0.1}s` }}
     >
-      <div className="w-full h-40 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl flex items-center justify-center mb-4 group-hover:from-primary-200 group-hover:to-primary-300 transition-all">
+      <div className="w-full h-40 bg-primary-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-100 transition-colors">
         <BookOpen className="w-16 h-16 text-primary-600" />
       </div>
 
@@ -188,7 +188,7 @@ function CourseCard({
       <div className="flex items-center gap-4 mb-4 text-sm text-dark-500">
         <div className="flex items-center gap-1.5">
           <Layers className="w-4 h-4" />
-          <span>{totalModules} модулей</span>
+          <span>{totalModules} разделов</span>
         </div>
         <div className="flex items-center gap-1.5">
           <Video className="w-4 h-4" />

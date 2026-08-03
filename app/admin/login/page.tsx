@@ -51,7 +51,7 @@ export default function AdminLoginPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Вход</h2>
 
           {IS_DEV && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
               <p className="text-sm text-blue-800">
                 <strong>Демо доступ:</strong>
                 <br />

@@ -116,7 +116,7 @@ export default function CreateCoursePage() {
 
       {/* Форма создания */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6">
+        <div className="bg-white rounded-2xl p-6 shadow-soft border border-gray-100 space-y-6">
           <h2 className="text-lg font-bold text-gray-900">
             Основная информация
           </h2>
@@ -171,7 +171,7 @@ export default function CreateCoursePage() {
         </div>
 
         {/* Информационная панель */}
-        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+        <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <BookOpen className="w-5 h-5 text-blue-600" />
@@ -179,7 +179,7 @@ export default function CreateCoursePage() {
             <div>
               <h3 className="font-bold text-gray-900 mb-2">Что дальше?</h3>
               <ul className="text-sm text-gray-700 space-y-1">
-                <li>• После создания добавьте модули и уроки с видео</li>
+                <li>• После создания добавьте разделы и уроки с видео</li>
                 <li>• Цену и период доступа задайте в разделе «Тарифы» курса</li>
                 <li>• Опубликуйте курс, чтобы он появился в каталоге</li>
               </ul>

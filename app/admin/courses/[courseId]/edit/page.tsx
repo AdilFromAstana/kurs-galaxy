@@ -140,7 +140,7 @@ export default function EditCoursePage() {
 
   const handleDelete = async () => {
     const ok = await confirmToast({
-      message: `Удалить курс «${course.title}»? Все модули и уроки тоже удалятся. Действие необратимо.`,
+      message: `Удалить курс «${course.title}»? Все разделы и уроки тоже удалятся. Действие необратимо.`,
       confirmText: 'Удалить',
       destructive: true,
     });
@@ -180,7 +180,7 @@ export default function EditCoursePage() {
 
       {/* Форма редактирования */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 space-y-6">
+        <div className="bg-white rounded-2xl p-6 shadow-soft border border-gray-100 space-y-6">
           <h2 className="text-lg font-bold text-gray-900">
             Основная информация
           </h2>
@@ -234,7 +234,7 @@ export default function EditCoursePage() {
           </div>
 
           {/* Тарифы */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <p className="text-sm text-gray-700">
               Цена и тарифы: настроено {course?.pricingPlans?.length || 0}
             </p>
@@ -248,7 +248,7 @@ export default function EditCoursePage() {
         </div>
 
         {/* Информация о курсе */}
-        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+        <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <BookOpen className="w-5 h-5 text-blue-600" />
@@ -256,7 +256,7 @@ export default function EditCoursePage() {
             <div>
               <h3 className="font-bold text-gray-900 mb-2">Статистика курса</h3>
               <ul className="text-sm text-gray-700 space-y-1">
-                <li>• Модулей: {course.modules.length}</li>
+                <li>• Разделов: {course.modules.length}</li>
                 <li>
                   • Уроков:{" "}
                   {course.modules.reduce(

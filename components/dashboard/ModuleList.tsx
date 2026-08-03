@@ -59,7 +59,7 @@ export default function ModuleList({ courseId }: ModuleListProps) {
                   {/* Status Icon */}
                   <div className="flex-shrink-0">
                     {completed ? (
-                      <div className="w-10 h-10 md:w-12 md:h-12 bg-primary-500 rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 md:w-12 md:h-12 bg-primary-600 rounded-full flex items-center justify-center">
                         <CheckCircle2 className="w-5 h-5 md:w-6 md:h-6 text-white" />
                       </div>
                     ) : accessible ? (

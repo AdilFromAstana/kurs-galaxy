@@ -15,6 +15,7 @@ import {
   Infinity,
   CalendarPlus,
   Ban,
+  DollarSign,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { confirmToast } from '@/lib/toastConfirm';
@@ -274,14 +275,21 @@ export default function StudentDetailPage() {
         К списку студентов
       </Link>
 
-      {/* Header */}
-      <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
-        <div className="flex items-start gap-4 flex-wrap">
-          <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-bold text-2xl flex-shrink-0">
+      {/* Профиль студента */}
+      <div className="bg-white rounded-2xl p-6 shadow-soft border border-gray-100">
+        <div className="flex items-start gap-4 mb-4">
+          <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center text-primary-700 font-bold text-2xl flex-shrink-0">
             {data.user.name.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+            <span
+              className={`text-xs font-bold uppercase tracking-wide ${
+                activeCount > 0 ? 'text-green-600' : 'text-gray-400'
+              }`}
+            >
+              {activeCount > 0 ? 'Есть доступ' : 'Нет активных покупок'}
+            </span>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900 mt-1">
               {data.user.name}
             </h1>
             <div className="flex items-center gap-2 text-gray-600 mt-1 text-sm">
@@ -296,49 +304,30 @@ export default function StudentDetailPage() {
         </div>
 
         {/* Сводные статы */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-5">
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-              Активных покупок
-            </div>
-            <div className="text-2xl font-bold text-gray-900 mt-1">
-              {activeCount}
-            </div>
+        <div className="flex items-center gap-4 flex-wrap mb-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-50 rounded-lg">
+            <ShoppingBag className="w-4 h-4 text-primary-600" />
+            <span className="font-semibold text-gray-900">{activeCount} активных покупок</span>
           </div>
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-              Заплачено
-            </div>
-            <div className="text-2xl font-bold text-gray-900 mt-1">
-              {totalPaid.toLocaleString()} ₸
-            </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-lg">
+            <DollarSign className="w-4 h-4 text-green-600" />
+            <span className="font-semibold text-gray-900">{totalPaid.toLocaleString()} ₸ заплачено</span>
           </div>
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="text-xs text-gray-500 uppercase tracking-wide font-medium">
-              Курсов в прогрессе
-            </div>
-            <div className="text-2xl font-bold text-gray-900 mt-1">
-              {data.progressByCourse.length}
-            </div>
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-lg">
+            <CheckCircle2 className="w-4 h-4 text-blue-600" />
+            <span className="font-semibold text-gray-900">{data.progressByCourse.length} курсов в прогрессе</span>
           </div>
         </div>
-      </div>
 
-      {/* Выдача доступа */}
-      <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
-        <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">
-              Выдать доступ вручную
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Например, после оплаты на Каспи или для подарка / промо
-            </p>
-          </div>
+        {/* Выдача доступа */}
+        <div className="flex items-center justify-between gap-3 pt-4 border-t border-gray-100 flex-wrap">
+          <p className="text-sm text-gray-600">
+            Выдать доступ вручную — например, после оплаты на Каспи или для подарка / промо
+          </p>
           {!showGrant && (
             <button
               onClick={() => setShowGrant(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-lg font-medium text-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white hover:bg-primary-700 rounded-lg font-medium text-sm whitespace-nowrap"
             >
               <Plus className="w-4 h-4" />
               Выдать
@@ -347,7 +336,7 @@ export default function StudentDetailPage() {
         </div>
 
         {showGrant && (
-          <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 space-y-3">
+          <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 space-y-3">
             <select
               value={grantPlanId}
               onChange={(e) => setGrantPlanId(e.target.value)}
@@ -390,7 +379,7 @@ export default function StudentDetailPage() {
       </div>
 
       {/* Покупки */}
-      <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
         <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
           <ShoppingBag className="w-5 h-5 text-primary-600" />
           Покупки ({data.purchases.length})
@@ -408,7 +397,7 @@ export default function StudentDetailPage() {
               return (
                 <div
                   key={p.id}
-                  className="border border-gray-200 rounded-lg p-4"
+                  className="bg-white border border-gray-100 rounded-2xl shadow-soft p-4"
                 >
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="flex-1 min-w-0">
@@ -520,7 +509,7 @@ export default function StudentDetailPage() {
       </div>
 
       {/* Прогресс по курсам */}
-      <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
         <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
           <CheckCircle2 className="w-5 h-5 text-green-600" />
           Прогресс по курсам
@@ -536,7 +525,7 @@ export default function StudentDetailPage() {
               const percent =
                 c.total > 0 ? Math.round((c.completed / c.total) * 100) : 0;
               return (
-                <div key={c.courseId} className="border border-gray-200 rounded-lg p-4">
+                <div key={c.courseId} className="bg-white border border-gray-100 rounded-2xl shadow-soft p-4">
                   <div className="flex items-center justify-between gap-3 mb-2">
                     <h3 className="font-medium text-gray-900">
                       {c.courseTitle}

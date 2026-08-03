@@ -152,7 +152,7 @@ export default function CreateLessonPage() {
     setSubmitError(null);
 
     if (!moduleId) {
-      setSubmitError('Выберите модуль');
+      setSubmitError('Выберите раздел');
       return;
     }
 
@@ -265,7 +265,7 @@ export default function CreateLessonPage() {
         >
           <ArrowLeft className="w-4 h-4" />
           {selectedModule
-            ? `Назад к модулю: ${selectedModule.title}`
+            ? `Назад к разделу: ${selectedModule.title}`
             : course
               ? `Назад к курсу: ${course.title}`
               : 'Назад к курсам'}
@@ -276,14 +276,14 @@ export default function CreateLessonPage() {
         </h1>
         <p className="text-gray-600 mt-1 text-sm md:text-base">
           {selectedModule
-            ? `Добавить новый урок в модуль "${selectedModule.title}"`
+            ? `Добавить новый урок в раздел "${selectedModule.title}"`
             : 'Добавить новый урок'}
         </p>
       </div>
 
       {/* Breadcrumbs */}
       {course && selectedModule && (
-        <div className="bg-primary-50 rounded-xl p-4 border border-primary-100">
+        <div className="bg-primary-50 rounded-2xl p-4 border border-primary-100">
           <div className="flex items-center gap-2 text-sm text-gray-700 flex-wrap">
             <BookOpen className="w-4 h-4 text-primary-600" />
             <span className="font-semibold text-primary-900">{course.title}</span>
@@ -299,7 +299,7 @@ export default function CreateLessonPage() {
 
       {/* Submit error */}
       {submitError && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-700">{submitError}</p>
         </div>
@@ -307,16 +307,16 @@ export default function CreateLessonPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Основная информация */}
-        <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
           <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <FileText className="w-5 h-5" />
             Основная информация
           </h2>
 
-          {/* Модуль */}
+          {/* Раздел */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Модуль *
+              Раздел *
             </label>
             <select
               value={moduleId}
@@ -325,7 +325,7 @@ export default function CreateLessonPage() {
               required
               disabled={isBusy}
             >
-              <option value="">Выберите модуль</option>
+              <option value="">Выберите раздел</option>
               {course?.modules.map((module: any) => (
                 <option key={module.id} value={module.id}>
                   {module.title}
@@ -393,7 +393,7 @@ export default function CreateLessonPage() {
         </div>
 
         {/* Видео */}
-        <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
           <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Video className="w-5 h-5" />
             Видео урока
@@ -575,7 +575,7 @@ export default function CreateLessonPage() {
         </div>
 
         {/* Контент урока */}
-        <div className="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
           <h2 className="text-lg font-bold text-gray-900 mb-4">
             Контент урока (Markdown)
           </h2>
