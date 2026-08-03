@@ -94,13 +94,13 @@ export default function WelcomePage() {
               <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto lg:mx-0">
                 <Link
                   href="/courses"
-                  className="btn btn-primary flex-1 animate-scale-in"
+                  className="btn btn-primary flex-1 flex items-center justify-center animate-scale-in"
                 >
                   Посмотреть курсы
                 </Link>
                 <Link
                   href="/auth/login"
-                  className="btn btn-secondary flex-1 animate-scale-in"
+                  className="btn btn-secondary flex-1 flex items-center justify-center animate-scale-in"
                   style={{ animationDelay: "0.1s" }}
                 >
                   Войти
