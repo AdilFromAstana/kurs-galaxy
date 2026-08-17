@@ -28,6 +28,11 @@ yarn-error.log*
 .env.prod
 .env*.local
 
+# мок-режим: схема и база собираются командой dev:mock, в git не нужны
+prisma/schema.mock.prisma
+prisma/mock.db
+prisma/mock.db-journal
+
 # vercel
 .vercel
 

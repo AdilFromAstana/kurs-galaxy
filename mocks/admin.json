@@ -1,0 +1,29 @@
+[
+  {
+    "id": "cmrx8xarj0000g8o9kysfg88u",
+    "email": "admin@nailacademy.com",
+    "name": "Admin",
+    "passwordHash": "$2b$10$6/qoLeX/Pa5ftBU/pQL26.GhyZ2LCMowOLAK3o6Ae0dSZ9e9b3Fre",
+    "role": "ADMIN",
+    "createdAt": "2026-07-23T08:25:07.520Z",
+    "updatedAt": "2026-07-23T08:25:07.520Z"
+  },
+  {
+    "id": "cmrx90ebd0000ty49qglv8m3y",
+    "email": "kamila@nailacademy.kz",
+    "name": "Камила",
+    "passwordHash": "$2b$10$.jjBmL/rQZrZkzt5klxm4Omk9ZYKxO4XQHKYhTpbo/hK8JX4M/P5y",
+    "role": "ADMIN",
+    "createdAt": "2026-07-23T08:27:32.090Z",
+    "updatedAt": "2026-07-23T08:27:32.090Z"
+  },
+  {
+    "id": "cmrx90ed10001ty49c5h2m2t8",
+    "email": "demo-author@nailacademy.kz",
+    "name": "Демо Автор",
+    "passwordHash": "$2b$10$a3nBt1eWwP6dQogsEOoSG.o/tPMMXxkc.TXTIpNGrKBZP3NKvCH6W",
+    "role": "ADMIN",
+    "createdAt": "2026-07-23T08:27:32.150Z",
+    "updatedAt": "2026-07-23T08:27:32.150Z"
+  }
+]

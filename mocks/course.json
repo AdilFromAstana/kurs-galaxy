@@ -1,0 +1,62 @@
+[
+  {
+    "id": "cmrxsg2u5000rjh1cbscmycy9",
+    "slug": "course-1784827896338",
+    "title": "Онлайн обучение по бровям",
+    "description": "Тут все просто",
+    "published": true,
+    "createdAt": "2026-07-23T17:31:36.413Z",
+    "updatedAt": "2026-07-23T17:31:50.023Z",
+    "creatorId": "cmrx8xarj0000g8o9kysfg88u"
+  },
+  {
+    "id": "cmry3mt5e000010vx9kq5xbwy",
+    "slug": "brow-master-pro",
+    "title": "Brow Master Pro - Профессиональный курс бровиста",
+    "description": "Станьте профессиональным мастером по бровям от А до Я",
+    "published": false,
+    "createdAt": "2026-07-23T22:44:46.226Z",
+    "updatedAt": "2026-07-23T22:44:46.226Z",
+    "creatorId": null
+  },
+  {
+    "id": "cmrypzbib000112bxos2g5fs3",
+    "slug": "course-1784884221019",
+    "title": "бровь",
+    "description": "монобровь",
+    "published": false,
+    "createdAt": "2026-07-24T09:10:21.441Z",
+    "updatedAt": "2026-07-24T09:10:21.441Z",
+    "creatorId": "cmrx8xarj0000g8o9kysfg88u"
+  },
+  {
+    "id": "cmryr36di000312bxq7b6occ3",
+    "slug": "course-1784886079217",
+    "title": "БЬТИМС",
+    "description": "ОРПА",
+    "published": false,
+    "createdAt": "2026-07-24T09:41:21.030Z",
+    "updatedAt": "2026-07-24T09:41:21.030Z",
+    "creatorId": "cmrx8xarj0000g8o9kysfg88u"
+  },
+  {
+    "id": "cmrysc81l000512bx30m8mobt",
+    "slug": "nails",
+    "title": "nails",
+    "description": "aaaaa",
+    "published": false,
+    "createdAt": "2026-07-24T10:16:22.713Z",
+    "updatedAt": "2026-07-24T10:16:22.713Z",
+    "creatorId": "cmrx8xarj0000g8o9kysfg88u"
+  },
+  {
+    "id": "cmsx8n1500001ej4vprcr193v",
+    "slug": "manicure-pro-2026",
+    "title": "Курс маникюра Pro: от новичка до мастера",
+    "description": "Полный практический курс по аппаратному маникюру и покрытию гель-лаком. Подходит как новичкам, так и опытным мастерам, желающим систематизировать знания. После прохождения вы сможете уверенно работать с любым типом ногтя, выполнять идеальную обработку кутикулы и качественное долговечное покрытие.",
+    "published": true,
+    "createdAt": "2026-08-17T12:56:50.821Z",
+    "updatedAt": "2026-08-17T12:56:50.821Z",
+    "creatorId": "cmrx90ed10001ty49c5h2m2t8"
+  }
+]

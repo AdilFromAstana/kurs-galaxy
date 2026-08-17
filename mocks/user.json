@@ -1,0 +1,18 @@
+[
+  {
+    "id": "cmrx90eej0002ty4990cwipmj",
+    "email": "test@nailacademy.kz",
+    "name": "Тест Тестов",
+    "passwordHash": "$2b$10$2HuXDlt0W3du.b7jQqg4euVfWBw6fRAD0uL.WU707G6M/EJh8oHUi",
+    "createdAt": "2026-07-23T08:27:32.203Z",
+    "updatedAt": "2026-07-23T08:27:32.203Z"
+  },
+  {
+    "id": "cmrx90efz0003ty49eh7180jq",
+    "email": "student@nailacademy.kz",
+    "name": "Демо Студент",
+    "passwordHash": "$2b$10$PDpaoVcPG8ADgELpsf1DO.PTeRhV2M6v3LGQBDLa2Voypk9S7LBGm",
+    "createdAt": "2026-07-23T08:27:32.255Z",
+    "updatedAt": "2026-07-23T08:27:32.255Z"
+  }
+]

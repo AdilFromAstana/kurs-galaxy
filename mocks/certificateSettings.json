@@ -1,0 +1,18 @@
+[
+  {
+    "id": "default",
+    "templateId": "classic-pink",
+    "brandName": "KursGalaxy.kz",
+    "brandSubtitle": "Онлайн-академия",
+    "titleText": "СЕРТИФИКАТ",
+    "subtitleText": "об успешном окончании курса",
+    "introText": "Настоящим удостоверяется, что",
+    "completedText": "успешно прошёл(а) курс",
+    "signaturePath": null,
+    "instructorName": null,
+    "logoPath": null,
+    "qrEnabled": true,
+    "publicBaseUrl": "http://localhost:39010",
+    "updatedAt": "2026-07-23T08:28:40.602Z"
+  }
+]

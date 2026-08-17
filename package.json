@@ -20,6 +20,8 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:install": "playwright install chromium",
     "dev:up": "bash scripts/dev-up.sh",
+    "dev:mock": "bash scripts/dev-mock.sh",
+    "mock:export": "bash scripts/with-env.sh node scripts/mock/export.js",
     "deploy": "bash scripts/deploy.sh",
     "db:remote": "bash scripts/db-remote.sh"
   },
