@@ -93,7 +93,8 @@ export const ALLOWED_VIDEO_TYPES = [
 export const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.m4v'];
 
 // 200 МБ — разумный лимит для одного видеоурока в 720p
-export const MAX_VIDEO_SIZE = 200 * 1024 * 1024;
+export const MAX_VIDEO_SIZE =
+  Number(process.env.MAX_VIDEO_MB || 200) * 1024 * 1024;
 
 async function ensureLessonsDir(): Promise<void> {
   await fs.mkdir(LESSONS_DIR, { recursive: true });

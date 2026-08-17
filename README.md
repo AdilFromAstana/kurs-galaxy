@@ -15,20 +15,47 @@
 
 ## 🚀 Быстрый старт
 
-### Установка зависимостей
+Проекту нужен Postgres и переменная `DATABASE_URL`. Все переменные живут в `.env.dev`
+(создаётся из `.env.dev.example` автоматически, в git не попадает).
+
+### Вариант 1 — через Docker (рекомендуется)
 
 ```bash
-cd nail-academy-pro
-npm install
+npm run dev:up
 ```
 
-### Запуск в режиме разработки
+Поднимет Postgres + Next, применит схему и зальёт демо-данные.
+Адрес и порт берутся из `APP_PORT` в `.env.dev` (по умолчанию http://localhost:3000).
+
+Полезное:
 
 ```bash
+npm run docker:logs    # логи приложения
+npm run docker:down    # остановить
+npm run docker:reset   # снести вместе с данными БД и поднять заново
+```
+
+Сид внутри контейнера, если нужен отдельно:
+
+```bash
+docker compose --env-file .env.dev exec -T app npm run db:seed
+```
+
+### Вариант 2 — без Docker
+
+Нужен свой Postgres. Пропиши в `.env.dev` реальные `POSTGRES_PORT` и `DATABASE_URL`
+(хост `localhost`, а не `db`), затем:
+
+```bash
+npm install
+npm run db:push
+npm run db:seed
 npm run dev
 ```
 
-Откройте [http://localhost:3000](http://localhost:3000) в браузере.
+Скрипты `dev`, `start`, `db:push`, `db:seed`, `db:studio` сами подхватывают `.env.dev`
+через `scripts/with-env.sh`. Если переменные уже заданы в окружении (контейнер, CI),
+файл игнорируется.
 
 ### Сборка для продакшна
 

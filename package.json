@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "bash scripts/with-env.sh next dev",
     "build": "prisma generate && next build",
-    "start": "next start",
+    "start": "bash scripts/with-env.sh next start",
     "lint": "next lint",
-    "db:push": "prisma db push",
+    "db:push": "bash scripts/with-env.sh prisma db push",
     "db:generate": "prisma generate",
-    "db:studio": "prisma studio",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "bash scripts/with-env.sh prisma studio",
+    "db:seed": "bash scripts/with-env.sh tsx prisma/seed.ts",
     "docker:up": "docker compose --env-file .env.dev up -d --build",
     "docker:down": "docker compose --env-file .env.dev down",
     "docker:logs": "docker compose --env-file .env.dev logs -f app",
@@ -19,10 +19,12 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:install": "playwright install chromium",
-    "dev:up": "bash scripts/dev-up.sh"
+    "dev:up": "bash scripts/dev-up.sh",
+    "deploy": "bash scripts/deploy.sh",
+    "db:remote": "bash scripts/db-remote.sh"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "bash scripts/with-env.sh tsx prisma/seed.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

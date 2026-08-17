@@ -9,12 +9,26 @@ if [ ! -f .env.dev ]; then
   cp .env.dev.example .env.dev
 fi
 
+set -a
+. ./.env.dev
+set +a
+APP_PORT=${APP_PORT:-3000}
+APP_URL="http://localhost:${APP_PORT}"
+
+if ! docker ps --filter name=nail-academy-app --filter status=running -q | grep -q .; then
+  if lsof -nP -iTCP:"${APP_PORT}" -sTCP:LISTEN >/dev/null 2>&1; then
+    echo "    !! порт ${APP_PORT} уже занят другим процессом."
+    echo "       Освободи его или поменяй APP_PORT в .env.dev и запусти снова."
+    exit 1
+  fi
+fi
+
 echo "==> 2/4 Поднимаю docker (db + app, с билдом)"
 docker compose --env-file .env.dev up -d --build
 
-echo "==> 3/4 Жду готовности Next-сервера на http://localhost:3000"
+echo "==> 3/4 Жду готовности Next-сервера на ${APP_URL}"
 for i in $(seq 1 90); do
-  code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 || echo 000)
+  code=$(curl -s -o /dev/null -w "%{http_code}" "${APP_URL}" || echo 000)
   if [ "$code" = "200" ] || [ "$code" = "307" ] || [ "$code" = "302" ]; then
     echo "    Сервер готов (HTTP $code)"
     break
@@ -28,7 +42,7 @@ docker compose --env-file .env.dev exec -T app node scripts/test-data-seed.js
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "  Готово → http://localhost:3000"
+echo "  Готово → ${APP_URL}"
 echo "  Админка:   /admin/login   admin@nailacademy.com / admin123"
 echo "  Студент:   /auth/login    student@nailacademy.kz / Student2026!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
