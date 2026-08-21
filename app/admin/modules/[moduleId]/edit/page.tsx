@@ -148,7 +148,8 @@ export default function EditModulePage() {
           {/* Описание */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Описание раздела *
+              Описание раздела{' '}
+              <span className="font-normal text-gray-400">(необязательно)</span>
             </label>
             <textarea
               value={description}
@@ -156,7 +157,6 @@ export default function EditModulePage() {
               rows={4}
               className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Описание содержания раздела..."
-              required
             />
           </div>
         </div>

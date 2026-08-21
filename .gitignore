@@ -36,6 +36,10 @@ prisma/mock.db-journal
 # vercel
 .vercel
 
+# claude code agent worktrees (временные копии репо для фоновых агентов)
+/.claude/worktrees/
+/.omc/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
