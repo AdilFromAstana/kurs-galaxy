@@ -18,31 +18,24 @@ const MIME_BY_EXT: Record<string, string> = {
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: { videoId: string } },
 ) {
-  const lesson = await prisma.lesson.findUnique({
-    where: { id: params.id },
+  const video = await prisma.lessonVideo.findUnique({
+    where: { id: params.videoId },
     include: {
-      module: { select: { courseId: true } },
-      videos: { orderBy: { order: 'asc' }, take: 1 },
+      lesson: {
+        include: { module: { select: { courseId: true } } },
+      },
     },
   });
-  if (!lesson) {
-    return NextResponse.json({ error: 'lesson_not_found' }, { status: 404 });
+  if (!video) {
+    return NextResponse.json({ error: 'video_not_found' }, { status: 404 });
   }
-
-  // Урок переведён на массив видео — отдаём первое через новый per-video роут.
-  // Этот роут остаётся только для легаси-уроков с одиночным videoUrl.
-  const firstVideo = lesson.videos[0];
-  if (firstVideo) {
-    return NextResponse.redirect(
-      new URL(`/api/lessons/videos/${firstVideo.id}`, req.url),
-    );
-  }
-
-  if (!lesson.videoUrl) {
+  if (!video.url) {
     return NextResponse.json({ error: 'no_video' }, { status: 404 });
   }
+
+  const lesson = video.lesson;
 
   // ===== Авторизация =====
   // Админ — всегда (для предпросмотра).
@@ -71,12 +64,12 @@ export async function GET(
   }
 
   // ===== Внешний URL — редиректим =====
-  if (!isLocalLessonVideo(lesson.videoUrl)) {
-    return NextResponse.redirect(lesson.videoUrl);
+  if (!isLocalLessonVideo(video.url)) {
+    return NextResponse.redirect(video.url);
   }
 
   // ===== Локальный файл — стримим =====
-  const filePath = resolveLocalLessonPath(lesson.videoUrl);
+  const filePath = resolveLocalLessonPath(video.url);
   if (!filePath) {
     return NextResponse.json({ error: 'invalid_path' }, { status: 400 });
   }

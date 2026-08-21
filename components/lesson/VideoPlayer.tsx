@@ -5,37 +5,56 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface VideoPlayerProps {
   lessonId: string;
+  /** Конкретное видео урока. Без него играет легаси-видео урока целиком. */
+  videoId?: string;
   /** Оставлен для обратной совместимости — реально не используется,
    *  плеер всегда ходит через защищённый эндпоинт. */
   videoUrl?: string;
+  onEnded?: () => void;
 }
 
-export default function VideoPlayer({ lessonId }: VideoPlayerProps) {
+export default function VideoPlayer({
+  lessonId,
+  videoId,
+  onEnded,
+}: VideoPlayerProps) {
   // Видео отдаётся защищённым стрим-эндпоинтом с проверкой авторизации.
   // Внешние URL (если такие были сохранены) сервер прозрачно редиректит.
-  const streamSrc = `/api/lessons/${lessonId}/video`;
+  const streamSrc = videoId
+    ? `/api/lessons/videos/${videoId}`
+    : `/api/lessons/${lessonId}/video`;
 
   const { isAuthenticated } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Позиция может прийти раньше, чем видео загрузит метаданные — применяем её в onLoadedMetadata
+  const pendingSeek = useRef<number | null>(null);
   const [speed, setSpeed] = useState(1);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
 
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
   useEffect(() => {
+    pendingSeek.current = null;
     // Гостям video-position не сохраняется — пропускаем загрузку
     if (!isAuthenticated) return;
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/video-position?lessonId=${encodeURIComponent(lessonId)}`, {
+        const query = videoId
+          ? `lessonId=${encodeURIComponent(lessonId)}&videoId=${encodeURIComponent(videoId)}`
+          : `lessonId=${encodeURIComponent(lessonId)}`;
+        const res = await fetch(`/api/video-position?${query}`, {
           credentials: 'include',
         });
         if (!res.ok) return;
         const data = await res.json();
-        if (!cancelled && videoRef.current && data.time) {
-          videoRef.current.currentTime = data.time;
+        if (cancelled || !data.time) return;
+        const el = videoRef.current;
+        if (el && el.readyState >= 1) {
+          el.currentTime = data.time;
+        } else {
+          pendingSeek.current = data.time;
         }
       } catch {
         /* ignore */
@@ -44,7 +63,7 @@ export default function VideoPlayer({ lessonId }: VideoPlayerProps) {
     return () => {
       cancelled = true;
     };
-  }, [lessonId, isAuthenticated]);
+  }, [lessonId, videoId, isAuthenticated]);
 
   const persistTime = (time: number) => {
     if (!isAuthenticated) return;
@@ -54,7 +73,7 @@ export default function VideoPlayer({ lessonId }: VideoPlayerProps) {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lessonId, time }),
+        body: JSON.stringify({ lessonId, videoId, time }),
       }).catch(() => {});
     }, 1500);
   };
@@ -79,6 +98,14 @@ export default function VideoPlayer({ lessonId }: VideoPlayerProps) {
           controlsList="nodownload"
           className="w-full h-full"
           onTimeUpdate={handleTimeUpdate}
+          onEnded={onEnded}
+          onLoadedMetadata={() => {
+            if (pendingSeek.current != null && videoRef.current) {
+              videoRef.current.currentTime = pendingSeek.current;
+              pendingSeek.current = null;
+            }
+            if (videoRef.current) videoRef.current.playbackRate = speed;
+          }}
           playsInline
         />
 

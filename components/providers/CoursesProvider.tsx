@@ -3,6 +3,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 export type CourseMaterial = { id: string; title: string; url: string; type: 'PDF' | 'LINK' | 'PRODUCT' };
+export type CourseVideo = {
+  id: string;
+  title: string | null;
+  url: string;
+  duration: string | null;
+  order: number;
+};
 export type CourseLesson = {
   id: string;
   title: string;
@@ -12,6 +19,7 @@ export type CourseLesson = {
   content: string;
   order: number;
   materials: CourseMaterial[];
+  videos: CourseVideo[];
 };
 export type CourseModule = {
   id: string;

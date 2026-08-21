@@ -17,7 +17,7 @@ import { useProgress } from "@/hooks/useProgress";
 import { usePurchase } from "@/hooks/usePurchase";
 import { useCourses } from "@/components/providers/CoursesProvider";
 import Header from "@/components/layout/Header";
-import VideoPlayer from "@/components/lesson/VideoPlayer";
+import LessonVideoPlaylist from "@/components/lesson/LessonVideoPlaylist";
 import PurchaseModal from "@/components/modals/PurchaseModal";
 import LessonMobileNav from "@/components/lesson/LessonMobileNav";
 
@@ -211,7 +211,11 @@ export default function LessonPage() {
 
               {/* Video Player */}
               <div className="animate-slide-up">
-                <VideoPlayer lessonId={lesson.id} videoUrl={lesson.videoUrl} />
+                <LessonVideoPlaylist
+                  lessonId={lesson.id}
+                  videos={lesson.videos ?? []}
+                  legacyVideoUrl={lesson.videoUrl}
+                />
               </div>
 
               {/* Lesson Content */}

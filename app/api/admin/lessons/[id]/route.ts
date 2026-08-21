@@ -7,7 +7,11 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   if ('response' in r) return r.response;
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.id },
-    include: { materials: true, module: { include: { course: true } } },
+    include: {
+      materials: true,
+      videos: { orderBy: { order: 'asc' } },
+      module: { include: { course: true } },
+    },
   });
   if (!lesson) return NextResponse.json({ error: 'not_found' }, { status: 404 });
   return NextResponse.json({ lesson });
