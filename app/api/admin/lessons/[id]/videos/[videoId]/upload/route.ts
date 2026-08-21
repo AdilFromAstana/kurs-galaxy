@@ -9,8 +9,6 @@ import {
   saveLessonVideo,
 } from '@/lib/uploads';
 
-// Легаси: одиночное видео урока (Lesson.videoUrl). Для новых уроков админка
-// использует /api/admin/lessons/[id]/videos/*. Оставлен для старых данных.
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 
@@ -33,24 +31,23 @@ function detectMime(file: File): string {
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: { id: string; videoId: string } },
 ) {
   const r = await requireAdmin();
   if ('response' in r) return r.response;
 
-  const lesson = await prisma.lesson.findUnique({ where: { id: params.id } });
-  if (!lesson) {
-    return NextResponse.json({ error: 'lesson_not_found' }, { status: 404 });
+  const video = await prisma.lessonVideo.findUnique({
+    where: { id: params.videoId },
+  });
+  if (!video || video.lessonId !== params.id) {
+    return NextResponse.json({ error: 'video_not_found' }, { status: 404 });
   }
 
   let formData: FormData;
   try {
     formData = await req.formData();
   } catch {
-    return NextResponse.json(
-      { error: 'invalid_form_data' },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: 'invalid_form_data' }, { status: 400 });
   }
 
   const file = formData.get('video');
@@ -89,8 +86,7 @@ export async function POST(
     );
   }
 
-  // Удалить предыдущее видео, если оно было загружено локально
-  await deleteLessonVideoIfLocal(lesson.videoUrl);
+  await deleteLessonVideoIfLocal(video.url);
 
   const filename = generateVideoFilename(file.name, mime);
   let publicUrl: string;
@@ -104,36 +100,15 @@ export async function POST(
     );
   }
 
-  await prisma.lesson.update({
-    where: { id: params.id },
-    data: { videoUrl: publicUrl },
+  const updated = await prisma.lessonVideo.update({
+    where: { id: params.videoId },
+    data: { url: publicUrl },
   });
 
   return NextResponse.json({
     videoUrl: publicUrl,
+    video: updated,
     size: file.size,
     type: mime,
   });
-}
-
-export async function DELETE(
-  _req: Request,
-  { params }: { params: { id: string } },
-) {
-  const r = await requireAdmin();
-  if ('response' in r) return r.response;
-
-  const lesson = await prisma.lesson.findUnique({ where: { id: params.id } });
-  if (!lesson) {
-    return NextResponse.json({ error: 'lesson_not_found' }, { status: 404 });
-  }
-
-  await deleteLessonVideoIfLocal(lesson.videoUrl);
-
-  await prisma.lesson.update({
-    where: { id: params.id },
-    data: { videoUrl: '' },
-  });
-
-  return NextResponse.json({ ok: true });
 }

@@ -11,6 +11,7 @@
     "db:generate": "prisma generate",
     "db:studio": "bash scripts/with-env.sh prisma studio",
     "db:seed": "bash scripts/with-env.sh tsx prisma/seed.ts",
+    "db:backfill-videos": "bash scripts/with-env.sh tsx prisma/backfill-lesson-videos.ts",
     "docker:up": "docker compose --env-file .env.dev up -d --build",
     "docker:down": "docker compose --env-file .env.dev down",
     "docker:logs": "docker compose --env-file .env.dev logs -f app",

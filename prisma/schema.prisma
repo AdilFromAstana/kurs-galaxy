@@ -17,20 +17,20 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  purchases     Purchase[]
-  progress      Progress[]
-  videoPos      VideoPosition[]
-  lastLessons   LastLesson[]
-  resetTokens   PasswordResetToken[]
+  purchases   Purchase[]
+  progress    Progress[]
+  videoPos    VideoPosition[]
+  lastLessons LastLesson[]
+  resetTokens PasswordResetToken[]
 }
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  tokenHash String   @unique
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -72,11 +72,11 @@ model Course {
   creatorId String?
   creator   Admin?  @relation(fields: [creatorId], references: [id], onDelete: SetNull)
 
-  modules       Module[]
-  pricingPlans  PricingPlan[]
-  purchases     Purchase[]
-  progress      Progress[]
-  lastLessons   LastLesson[]
+  modules      Module[]
+  pricingPlans PricingPlan[]
+  purchases    Purchase[]
+  progress     Progress[]
+  lastLessons  LastLesson[]
 }
 
 model Module {
@@ -106,13 +106,30 @@ model Lesson {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-  materials Material[]
-  progress  Progress[]
-  videoPos  VideoPosition[]
+  module      Module          @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  materials   Material[]
+  videos      LessonVideo[]
+  progress    Progress[]
+  videoPos    VideoPosition[]
   lastLessons LastLesson[]
 
   @@index([moduleId])
+}
+
+model LessonVideo {
+  id        String   @id @default(cuid())
+  lessonId  String
+  title     String?
+  url       String
+  duration  String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lesson   Lesson          @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  videoPos VideoPosition[]
+
+  @@index([lessonId])
 }
 
 model Material {
@@ -135,19 +152,19 @@ enum MaterialType {
 
 // ===== Тарифы =====
 model PricingPlan {
-  id              String            @id @default(cuid())
-  courseId        String
-  name            String
-  description     String?
-  accessPeriod    AccessPeriodType
-  accessDays      Int?              // null для UNLIMITED
-  price           Int               // в минимальных единицах валюты или просто целые тенге
-  currency        String            @default("KZT")
-  isActive        Boolean           @default(true)
-  isRecommended   Boolean           @default(false)
-  order           Int               @default(0)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id            String           @id @default(cuid())
+  courseId      String
+  name          String
+  description   String?
+  accessPeriod  AccessPeriodType
+  accessDays    Int? // null для UNLIMITED
+  price         Int // в минимальных единицах валюты или просто целые тенге
+  currency      String           @default("KZT")
+  isActive      Boolean          @default(true)
+  isRecommended Boolean          @default(false)
+  order         Int              @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
   purchases Purchase[]
@@ -166,19 +183,19 @@ enum AccessPeriodType {
 
 // ===== Покупки =====
 model Purchase {
-  id              String          @id @default(cuid())
+  id              String         @id @default(cuid())
   userId          String
   courseId        String
   planId          String
-  status          PurchaseStatus  @default(ACTIVE)
-  purchasedAt     DateTime        @default(now())
+  status          PurchaseStatus @default(ACTIVE)
+  purchasedAt     DateTime       @default(now())
   expiresAt       DateTime?
   paymentAmount   Int
-  paymentCurrency String          @default("KZT")
-  paymentStatus   PaymentStatus   @default(COMPLETED)
+  paymentCurrency String         @default("KZT")
+  paymentStatus   PaymentStatus  @default(COMPLETED)
   paymentMethod   String?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -218,23 +235,26 @@ model Progress {
 }
 
 model VideoPosition {
-  id       String @id @default(cuid())
-  userId   String
-  lessonId String
-  time     Float  @default(0)
+  id        String   @id @default(cuid())
+  userId    String
+  lessonId  String
+  videoId   String?
+  time      Float    @default(0)
   updatedAt DateTime @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  video  LessonVideo? @relation(fields: [videoId], references: [id], onDelete: SetNull)
 
-  @@unique([userId, lessonId])
+  // Postgres считает каждый NULL уникальным — легаси-строки (videoId = null) остаются валидными
+  @@unique([userId, lessonId, videoId])
 }
 
 model LastLesson {
-  id       String @id @default(cuid())
-  userId   String
-  courseId String
-  lessonId String
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  lessonId  String
   updatedAt DateTime @updatedAt
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -247,57 +267,57 @@ model LastLesson {
 // ===== Сертификаты =====
 // Singleton — одна запись на платформу с id="default".
 model CertificateSettings {
-  id              String   @id @default("default")
-  templateId      String   @default("classic-pink")
-  brandName       String   @default("KursGalaxy.kz")
-  brandSubtitle   String   @default("Онлайн-академия")
-  titleText       String   @default("СЕРТИФИКАТ")
-  subtitleText    String   @default("об успешном окончании курса")
-  introText       String   @default("Настоящим удостоверяется, что")
-  completedText   String   @default("успешно прошёл(а) курс")
-  signaturePath   String?
-  instructorName  String?
-  logoPath        String?
-  qrEnabled       Boolean  @default(true)
-  publicBaseUrl   String   @default("http://localhost:39010")
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default("default")
+  templateId     String   @default("classic-pink")
+  brandName      String   @default("KursGalaxy.kz")
+  brandSubtitle  String   @default("Онлайн-академия")
+  titleText      String   @default("СЕРТИФИКАТ")
+  subtitleText   String   @default("об успешном окончании курса")
+  introText      String   @default("Настоящим удостоверяется, что")
+  completedText  String   @default("успешно прошёл(а) курс")
+  signaturePath  String?
+  instructorName String?
+  logoPath       String?
+  qrEnabled      Boolean  @default(true)
+  publicBaseUrl  String   @default("http://localhost:39010")
+  updatedAt      DateTime @updatedAt
 }
 
 // ===== Настройки сайта =====
 // Singleton — id="default". Контакты, реквизиты, тексты юр-страниц.
 model SiteSettings {
-  id                 String   @id @default("default")
+  id String @id @default("default")
 
   // Контакты
-  contactPhone       String?
-  contactEmail       String?
-  contactWhatsapp    String?
-  contactTelegram    String?
-  contactInstagram   String?
+  contactPhone     String?
+  contactEmail     String?
+  contactWhatsapp  String?
+  contactTelegram  String?
+  contactInstagram String?
 
   // Юридическое лицо (для оферты, чека и т.п.)
-  legalEntityName    String?  // "ИП Айжанов Адиль"
-  legalRequisites    String?  // ИИН/БИН
-  legalAddress       String?  // юридический адрес
-  legalRegisteredAt  String?  // дата регистрации, опционально
+  legalEntityName   String? // "ИП Айжанов Адиль"
+  legalRequisites   String? // ИИН/БИН
+  legalAddress      String? // юридический адрес
+  legalRegisteredAt String? // дата регистрации, опционально
 
   // Тексты юридических страниц (Markdown). null → используется шаблон-заглушка.
-  offerText          String?  // договор-оферта
-  privacyText        String?  // политика конфиденциальности
-  refundText         String?  // условия возврата
+  offerText   String? // договор-оферта
+  privacyText String? // политика конфиденциальности
+  refundText  String? // условия возврата
 
   updatedAt DateTime @updatedAt
 }
 
 // Запись каждого выданного сертификата для верификации
 model Certificate {
-  id        String   @id  // человекочитаемый ID, e.g., 20260507-HUTZ6X
-  userId    String
-  courseId  String
-  userName  String   // снимок имени пользователя на момент выдачи
+  id          String   @id // человекочитаемый ID, e.g., 20260507-HUTZ6X
+  userId      String
+  courseId    String
+  userName    String // снимок имени пользователя на момент выдачи
   courseTitle String // снимок названия курса
   templateId  String
-  issuedAt  DateTime @default(now())
+  issuedAt    DateTime @default(now())
 
   @@unique([userId, courseId])
   @@index([userId])

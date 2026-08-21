@@ -16,7 +16,13 @@ export async function GET() {
       modules: {
         orderBy: { order: 'asc' },
         include: {
-          lessons: { orderBy: { order: 'asc' }, include: { materials: true } },
+          lessons: {
+            orderBy: { order: 'asc' },
+            include: {
+              materials: true,
+              videos: { orderBy: { order: 'asc' } },
+            },
+          },
         },
       },
     },
