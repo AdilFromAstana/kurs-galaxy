@@ -11,6 +11,7 @@ import {
   ChevronUp,
   ChevronDown,
   AlertCircle,
+  ExternalLink,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { confirmToast } from '@/lib/toastConfirm';
@@ -22,6 +23,7 @@ import {
   fromDTO,
   adminPreviewSrc,
 } from '@/lib/lessonVideos';
+import { parseYoutubeId, youtubeEmbedUrl } from '@/lib/video';
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024;
 
@@ -242,9 +244,21 @@ export default function LessonVideosManager({
           <Video className="w-5 h-5" />
           Видео урока
         </h2>
-        <span className="text-sm text-gray-500 flex-shrink-0">
-          {videos.length}
-        </span>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <span className="text-sm text-gray-500">{videos.length}</span>
+          {live && videos.length > 0 && (
+            <a
+              href={`/lesson/${lessonId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span className="hidden sm:inline">Посмотреть как студент</span>
+              <span className="sm:hidden">Как студент</span>
+            </a>
+          )}
+        </div>
       </div>
 
       {videos.length === 0 && !adding && (
@@ -343,12 +357,21 @@ export default function LessonVideosManager({
 
             {openPreview === v.key && adminPreviewSrc(v) && (
               <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden mt-3">
-                <video
-                  src={adminPreviewSrc(v)}
-                  controls
-                  controlsList="nodownload"
-                  className="w-full h-full"
-                />
+                {parseYoutubeId(v.url) ? (
+                  <iframe
+                    src={youtubeEmbedUrl(parseYoutubeId(v.url)!)}
+                    className="absolute inset-0 w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <video
+                    src={adminPreviewSrc(v)}
+                    controls
+                    controlsList="nodownload"
+                    className="w-full h-full"
+                  />
+                )}
               </div>
             )}
           </div>
@@ -416,13 +439,13 @@ export default function LessonVideosManager({
                   type="url"
                   value={newUrl}
                   onChange={(e) => setNewUrl(e.target.value)}
-                  placeholder="https://..."
+                  placeholder="https://youtu.be/... или прямая ссылка на файл"
                   disabled={isBusy}
                   className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Прямая ссылка на видео-файл (.mp4, .webm). YouTube/Vimeo пока
-                  не поддерживаются — используйте загрузку файла.
+                  Ссылка на YouTube (в том числе «Доступ по ссылке») или прямая
+                  ссылка на видео-файл.
                 </p>
               </div>
             ) : !newFile ? (
