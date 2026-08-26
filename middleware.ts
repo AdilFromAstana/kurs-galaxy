@@ -1,8 +1,26 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyToken, COOKIE_NAMES, type AdminSession, type UserSession } from '@/lib/auth/session';
+import {
+  verifyToken,
+  COOKIE_NAMES,
+  renewedSessionCookie,
+  shouldRenewSession,
+  type AdminSession,
+  type UserSession,
+} from '@/lib/auth/session';
 
 const PUBLIC_ROUTES = ['/', '/auth/login', '/auth/register'];
+
+function redirectTo(request: NextRequest, path: string) {
+  const url = new URL(path, request.url);
+  const forwardedHost = request.headers.get('x-forwarded-host') ?? request.headers.get('host');
+  if (forwardedHost) {
+    url.protocol = request.headers.get('x-forwarded-proto') ?? url.protocol;
+    url.host = forwardedHost;
+    if (!forwardedHost.includes(':')) url.port = '';
+  }
+  return NextResponse.redirect(url);
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -14,15 +32,21 @@ export async function middleware(request: NextRequest) {
     const valid = session && session.kind === 'admin' && session.expiresAt > Date.now();
 
     if (pathname === '/admin/login') {
-      if (valid) return NextResponse.redirect(new URL('/admin', request.url));
+      if (valid) return redirectTo(request, '/admin');
       return NextResponse.next();
     }
     if (!valid) {
-      const res = NextResponse.redirect(new URL('/admin/login', request.url));
+      const res = redirectTo(request, '/admin/login');
       if (cookie) res.cookies.delete(COOKIE_NAMES.ADMIN);
       return res;
     }
-    return NextResponse.next();
+
+    const res = NextResponse.next();
+    if (shouldRenewSession(session)) {
+      const renewed = await renewedSessionCookie(session);
+      res.cookies.set(renewed.name, renewed.value, renewed.options);
+    }
+    return res;
   }
 
   // ===== Защищённые студенческие маршруты =====
@@ -38,7 +62,7 @@ export async function middleware(request: NextRequest) {
     const session = cookie ? await verifyToken<UserSession>(cookie) : null;
     const valid = session && session.kind === 'user' && session.expiresAt > Date.now();
     if (!valid) {
-      const res = NextResponse.redirect(new URL('/auth/login', request.url));
+      const res = redirectTo(request, '/auth/login');
       if (cookie) res.cookies.delete(COOKIE_NAMES.USER);
       return res;
     }
