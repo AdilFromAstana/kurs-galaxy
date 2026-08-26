@@ -101,6 +101,7 @@ model Lesson {
   duration  String
   isFree    Boolean  @default(false)
   videoUrl  String
+  coverUrl  String?
   content   String
   order     Int      @default(0)
   createdAt DateTime @default(now())

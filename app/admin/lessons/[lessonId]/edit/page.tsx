@@ -13,6 +13,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { confirmToast } from '@/lib/toastConfirm';
 import LessonVideosManager from '@/components/admin/LessonVideosManager';
+import LessonCoverManager from '@/components/admin/LessonCoverManager';
 import {
   fromDTO,
   type LessonVideoDTO,
@@ -24,6 +25,7 @@ type LessonDTO = {
   title: string;
   duration: string;
   videoUrl: string;
+  coverUrl: string | null;
   content: string;
   isFree: boolean;
   moduleId: string;
@@ -45,6 +47,7 @@ export default function EditLessonPage() {
   const [isFree, setIsFree] = useState(false);
 
   const [videos, setVideos] = useState<VideoDraft[]>([]);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
 
   const [submitState, setSubmitState] = useState<'idle' | 'saving' | 'done'>(
     'idle',
@@ -67,6 +70,7 @@ export default function EditLessonPage() {
           setContent(l.content);
           setIsFree(l.isFree);
           setVideos((l.videos ?? []).map(fromDTO));
+          setCoverUrl(l.coverUrl ?? null);
         }
         setLoading(false);
       }
@@ -247,6 +251,15 @@ export default function EditLessonPage() {
             </label>
           </div>
         </div>
+
+        <LessonCoverManager
+          lessonId={lesson.id}
+          coverUrl={coverUrl}
+          videos={videos.map((v, i) => ({ url: v.url, order: i }))}
+          videoUrl={lesson.videoUrl}
+          onChange={setCoverUrl}
+          disabled={isBusy}
+        />
 
         <LessonVideosManager
           lessonId={lesson.id}

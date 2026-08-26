@@ -20,6 +20,7 @@ import Header from "@/components/layout/Header";
 import LessonVideoPlaylist from "@/components/lesson/LessonVideoPlaylist";
 import PurchaseModal from "@/components/modals/PurchaseModal";
 import LessonMobileNav from "@/components/lesson/LessonMobileNav";
+import { resolveLessonCover } from "@/lib/lessonCover";
 
 export default function LessonPage() {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function LessonPage() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
   const completed = lesson ? isLessonCompleted(lesson.id) : false;
+  const cover = lesson ? resolveLessonCover(lesson) : null;
 
   // Сохранить текущий урок как последний просмотренный — только для авторизованных
   useEffect(() => {
@@ -193,8 +195,15 @@ export default function LessonPage() {
             <div className="space-y-6 md:space-y-8 min-w-0">
               {/* Lesson Header */}
               <div className="animate-slide-up">
-                <div className="flex items-start justify-between gap-4 mb-3">
-                  <h1 className="flex-1 text-2xl md:text-3xl lg:text-4xl">
+                <div className="flex items-start gap-4 mb-3">
+                  {cover && (
+                    <img
+                      src={cover}
+                      alt=""
+                      className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-2xl object-cover bg-gray-100 shadow-soft"
+                    />
+                  )}
+                  <h1 className="flex-1 min-w-0 text-2xl md:text-3xl lg:text-4xl">
                     {lesson.title}
                   </h1>
                   {completed && (

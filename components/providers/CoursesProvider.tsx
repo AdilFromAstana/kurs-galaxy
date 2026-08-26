@@ -16,6 +16,7 @@ export type CourseLesson = {
   duration: string;
   isFree: boolean;
   videoUrl: string;
+  coverUrl: string | null;
   content: string;
   order: number;
   materials: CourseMaterial[];
