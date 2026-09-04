@@ -4,16 +4,25 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 
 export type CourseMaterial = { id: string; title: string; url: string; type: 'PDF' | 'LINK' | 'PRODUCT' };
 export type CoursePhoto = { id: string; url: string; order: number };
+export type CourseVideo = {
+  id: string;
+  title: string | null;
+  url: string;
+  duration: string | null;
+  order: number;
+};
 export type CourseLesson = {
   id: string;
   title: string;
   duration: string;
   isFree: boolean;
   videoUrl: string;
+  coverUrl: string | null;
   content: string;
   order: number;
   materials: CourseMaterial[];
   photos: CoursePhoto[];
+  videos: CourseVideo[];
 };
 export type CourseModule = {
   id: string;

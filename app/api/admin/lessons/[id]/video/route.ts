@@ -9,6 +9,8 @@ import {
   saveLessonVideo,
 } from '@/lib/uploads';
 
+// Легаси: одиночное видео урока (Lesson.videoUrl). Для новых уроков админка
+// использует /api/admin/lessons/[id]/videos/*. Оставлен для старых данных.
 export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 

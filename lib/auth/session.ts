@@ -117,6 +117,32 @@ function isHttpsApp(): boolean {
   return url.startsWith('https://');
 }
 
+function sessionCookieOptions() {
+  return {
+    httpOnly: true,
+    secure: isHttpsApp(),
+    sameSite: 'lax' as const,
+    maxAge: MAX_AGE_SEC,
+    path: '/',
+  };
+}
+
+const RENEW_AFTER_SEC = 60 * 60 * 24;
+
+export function shouldRenewSession(session: { expiresAt: number }): boolean {
+  const remainingSec = (session.expiresAt - Date.now()) / 1000;
+  return remainingSec > 0 && remainingSec < MAX_AGE_SEC - RENEW_AFTER_SEC;
+}
+
+export async function renewedSessionCookie(session: AnySession) {
+  const refreshed = { ...session, expiresAt: Date.now() + MAX_AGE_SEC * 1000 };
+  return {
+    name: session.kind === 'admin' ? ADMIN_COOKIE : USER_COOKIE,
+    value: await signToken(refreshed),
+    options: sessionCookieOptions(),
+  };
+}
+
 // ===== User session =====
 export async function createUserSession(data: Omit<UserSession, 'kind' | 'expiresAt'>) {
   const expiresAt = Date.now() + MAX_AGE_SEC * 1000;
@@ -125,11 +151,7 @@ export async function createUserSession(data: Omit<UserSession, 'kind' | 'expire
   cookies().set({
     name: USER_COOKIE,
     value: token,
-    httpOnly: true,
-    secure: isHttpsApp(),
-    sameSite: 'lax',
-    maxAge: MAX_AGE_SEC,
-    path: '/',
+    ...sessionCookieOptions(),
   });
   return session;
 }
@@ -154,11 +176,7 @@ export async function createAdminSession(data: Omit<AdminSession, 'kind' | 'expi
   cookies().set({
     name: ADMIN_COOKIE,
     value: token,
-    httpOnly: true,
-    secure: isHttpsApp(),
-    sameSite: 'lax',
-    maxAge: MAX_AGE_SEC,
-    path: '/',
+    ...sessionCookieOptions(),
   });
   return session;
 }

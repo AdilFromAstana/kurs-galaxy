@@ -186,7 +186,8 @@ export default function CreateModulePage() {
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="block text-sm font-medium text-gray-700">
-                Описание раздела *
+                Описание раздела{' '}
+                <span className="font-normal text-gray-400">(необязательно)</span>
               </label>
               <span
                 className={`text-[11px] font-medium px-2 py-0.5 rounded-md ${
@@ -205,7 +206,6 @@ export default function CreateModulePage() {
               maxLength={DESCRIPTION_MAX}
               className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 font-sans resize-none"
               placeholder="Краткое описание раздела..."
-              required
             />
             <p className="text-xs text-gray-500 mt-1">
               Краткое описание того, что студенты изучат в этом разделе

@@ -22,11 +22,24 @@ export async function GET(
 ) {
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.id },
-    include: { module: { select: { courseId: true } } },
+    include: {
+      module: { select: { courseId: true } },
+      videos: { orderBy: { order: 'asc' }, take: 1 },
+    },
   });
   if (!lesson) {
     return NextResponse.json({ error: 'lesson_not_found' }, { status: 404 });
   }
+
+  // Урок переведён на массив видео — отдаём первое через новый per-video роут.
+  // Этот роут остаётся только для легаси-уроков с одиночным videoUrl.
+  const firstVideo = lesson.videos[0];
+  if (firstVideo) {
+    return NextResponse.redirect(
+      new URL(`/api/lessons/videos/${firstVideo.id}`, req.url),
+    );
+  }
+
   if (!lesson.videoUrl) {
     return NextResponse.json({ error: 'no_video' }, { status: 404 });
   }

@@ -1,0 +1,17 @@
+module.exports = [
+  'user',
+  'admin',
+  'course',
+  'module',
+  'lesson',
+  'material',
+  'pricingPlan',
+  'purchase',
+  'progress',
+  'videoPosition',
+  'lastLesson',
+  'certificateSettings',
+  'siteSettings',
+  'certificate',
+  'passwordResetToken',
+];

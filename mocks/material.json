@@ -1,0 +1,93 @@
+[
+  {
+    "id": "cmry3mt5n000c10vxch48nxcb",
+    "lessonId": "cmry3mt5k000a10vxgc0z85vo",
+    "title": "Чек-лист консультации клиента",
+    "url": "/materials/client-consultation.pdf",
+    "type": "PDF"
+  },
+  {
+    "id": "cmry3mt5p000e10vx625skvwe",
+    "lessonId": "cmry3mt5k000a10vxgc0z85vo",
+    "title": "Карта противопоказаний",
+    "url": "/materials/contraindications.pdf",
+    "type": "PDF"
+  },
+  {
+    "id": "cmry3mt5r000i10vx2aruphwb",
+    "lessonId": "cmry3mt5q000g10vxhzklphlh",
+    "title": "Схема построения формы бровей",
+    "url": "/materials/brow-mapping.pdf",
+    "type": "PDF"
+  },
+  {
+    "id": "cmry3mt5t000m10vxya829akv",
+    "lessonId": "cmry3mt5s000k10vxj2870cjr",
+    "title": "Шаблоны форм бровей",
+    "url": "/materials/brow-shapes-templates.pdf",
+    "type": "PDF"
+  },
+  {
+    "id": "cmry3mt5t000o10vx9z6sbmbl",
+    "lessonId": "cmry3mt5s000k10vxj2870cjr",
+    "title": "Таблица подбора форм по типу лица",
+    "url": "/materials/face-shape-guide.pdf",
+    "type": "PDF"
+  },
+  {
+    "id": "cmry3mt5v000s10vxkap0z3ol",
+    "lessonId": "cmry3mt5u000q10vxcdeggpma",
+    "title": "Протокол депиляции воском",
+    "url": "/materials/wax-protocol.pdf",
+    "type": "PDF"
+  },
+  {
+    "id": "cmry3mt5x000y10vxoe78dbb2",
+    "lessonId": "cmry3mt5x000w10vxj417eeu4",
+    "title": "Протокол ламинирования",
+    "url": "/materials/lamination-protocol.pdf",
+    "type": "PDF"
+  },
+  {
+    "id": "cmry3mt5y001010vxicxq2mtx",
+    "lessonId": "cmry3mt5x000w10vxj417eeu4",
+    "title": "Рекомендуемые составы",
+    "url": "https://example.com/lamination-products",
+    "type": "LINK"
+  },
+  {
+    "id": "cmry3mt60001410vxfknazosd",
+    "lessonId": "cmry3mt5z001210vxwk08pkf8",
+    "title": "Таблица смешивания оттенков",
+    "url": "/materials/color-mixing-chart.pdf",
+    "type": "PDF"
+  },
+  {
+    "id": "cmry3mt62001c10vxbf0p3ib3",
+    "lessonId": "cmry3mt62001a10vx3cum7hfm",
+    "title": "Список школ перманентного макияжа",
+    "url": "/materials/pm-schools-list.pdf",
+    "type": "PDF"
+  },
+  {
+    "id": "cmry3mt63001g10vxkb4iyt6t",
+    "lessonId": "cmry3mt63001e10vx773pafq5",
+    "title": "Шаблоны постов для соцсетей",
+    "url": "/materials/social-media-templates.pdf",
+    "type": "PDF"
+  },
+  {
+    "id": "cmry3mt64001i10vxe1k40zkh",
+    "lessonId": "cmry3mt63001e10vx773pafq5",
+    "title": "Калькулятор цен",
+    "url": "https://example.com/price-calculator",
+    "type": "LINK"
+  },
+  {
+    "id": "cmry3mt66001m10vx1vcccf9n",
+    "lessonId": "cmry3mt64001k10vx4jshbs4g",
+    "title": "Чек-лист проверки перед процедурой",
+    "url": "/materials/pre-procedure-checklist.pdf",
+    "type": "PDF"
+  }
+]

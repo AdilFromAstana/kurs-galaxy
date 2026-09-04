@@ -18,7 +18,11 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
         include: {
           lessons: {
             orderBy: { order: 'asc' },
-            include: { materials: true, photos: { orderBy: { order: 'asc' } } },
+            include: {
+              materials: true,
+              photos: { orderBy: { order: 'asc' } },
+              videos: { orderBy: { order: 'asc' } },
+            },
           },
         },
       },

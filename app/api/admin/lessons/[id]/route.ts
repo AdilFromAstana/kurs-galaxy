@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth/guard';
-import { deleteLessonPhotoIfLocal } from '@/lib/uploads';
+import { deleteLessonCoverIfLocal, deleteLessonPhotoIfLocal } from '@/lib/uploads';
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const r = await requireAdmin();
@@ -11,6 +11,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     include: {
       materials: true,
       photos: { orderBy: { order: 'asc' } },
+      videos: { orderBy: { order: 'asc' } },
       module: { include: { course: true } },
     },
   });
@@ -36,10 +37,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   const r = await requireAdmin();
   if ('response' in r) return r.response;
-  // Фото на диске не удаляются каскадом в БД — чистим их сами, иначе
-  // при удалении урока файлы останутся висеть в /public/lesson-photos.
+  // Файлы на диске не удаляются каскадом в БД — чистим их сами, иначе
+  // при удалении урока останутся висеть в /public/lesson-photos и /lesson-covers.
+  const lessonBeforeDelete = await prisma.lesson.findUnique({ where: { id: params.id } });
   const photos = await prisma.lessonPhoto.findMany({ where: { lessonId: params.id } });
-  await Promise.all(photos.map((p) => deleteLessonPhotoIfLocal(p.url)));
+  await Promise.all([
+    ...photos.map((p) => deleteLessonPhotoIfLocal(p.url)),
+    deleteLessonCoverIfLocal(lessonBeforeDelete?.coverUrl),
+  ]);
   await prisma.lesson.delete({ where: { id: params.id } });
   return NextResponse.json({ ok: true });
 }

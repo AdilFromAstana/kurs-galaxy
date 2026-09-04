@@ -150,7 +150,7 @@ export async function deleteCourseThumbnailIfLocal(
   }
 }
 
-// Фото уроков (референсы/шаги) — публичные по URL, как и обложки курсов.
+// Фото уроков (референсы/шаги, галерея) — публичные по URL.
 // Лежат в /public/lesson-photos/.
 const LESSON_PHOTOS_DIR = path.join(process.cwd(), 'public', 'lesson-photos');
 
@@ -211,6 +211,66 @@ export async function deleteLessonPhotoIfLocal(
   }
 }
 
+// Обложка урока (одна картинка, из ветки коллег) — публичная по URL.
+// Лежит в /public/lesson-covers/.
+const LESSON_COVER_DIR = path.join(process.cwd(), 'public', 'lesson-covers');
+
+export const LESSON_COVER_URL_PREFIX = '/lesson-covers';
+export const LESSON_COVER_DIR_PATH = LESSON_COVER_DIR;
+export const ALLOWED_COVER_TYPES = [...ALLOWED_IMAGE_TYPES, 'image/webp'];
+export const MAX_COVER_SIZE = 5 * 1024 * 1024;
+
+export function generateLessonCoverFilename(
+  lessonId: string,
+  originalName: string,
+  mimeType: string,
+): string {
+  const extByMime: Record<string, string> = {
+    'image/png': '.png',
+    'image/jpeg': '.jpg',
+    'image/webp': '.webp',
+  };
+  const ext =
+    extByMime[mimeType] ||
+    (path.extname(originalName).toLowerCase() === '.jpeg'
+      ? '.jpg'
+      : path.extname(originalName).toLowerCase()) ||
+    '.jpg';
+  const id = crypto.randomBytes(8).toString('hex');
+  return `${lessonId}-${id}${ext}`;
+}
+
+export async function saveLessonCover(
+  file: File,
+  filename: string,
+): Promise<string> {
+  await fs.mkdir(LESSON_COVER_DIR, { recursive: true });
+  const filePath = path.join(LESSON_COVER_DIR, filename);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await fs.writeFile(filePath, buffer);
+  return `${LESSON_COVER_URL_PREFIX}/${filename}`;
+}
+
+export function isLocalLessonCover(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return url.startsWith(LESSON_COVER_URL_PREFIX + '/');
+}
+
+export async function deleteLessonCoverIfLocal(
+  url: string | null | undefined,
+): Promise<void> {
+  if (!isLocalLessonCover(url)) return;
+  const filename = path.basename(url!);
+  if (filename.includes('/') || filename.includes('\\')) return;
+  try {
+    await fs.unlink(path.join(LESSON_COVER_DIR, filename));
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') {
+      console.error('deleteLessonCoverIfLocal error:', err);
+    }
+  }
+}
+
 export const ALLOWED_VIDEO_TYPES = [
   'video/mp4',
   'video/webm',
@@ -221,7 +281,8 @@ export const ALLOWED_VIDEO_TYPES = [
 export const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.m4v'];
 
 // 200 МБ — разумный лимит для одного видеоурока в 720p
-export const MAX_VIDEO_SIZE = 200 * 1024 * 1024;
+export const MAX_VIDEO_SIZE =
+  Number(process.env.MAX_VIDEO_MB || 200) * 1024 * 1024;
 
 async function ensureLessonsDir(): Promise<void> {
   await fs.mkdir(LESSONS_DIR, { recursive: true });

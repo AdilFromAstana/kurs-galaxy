@@ -1,0 +1,17 @@
+[
+  {
+    "id": "cmsx8n15h000uej4vnxthu2ep",
+    "userId": "cmrx90efz0003ty49eh7180jq",
+    "courseId": "cmsx8n1500001ej4vprcr193v",
+    "planId": "cmsx8n15c000sej4vfukvppka",
+    "status": "ACTIVE",
+    "purchasedAt": "2026-08-17T12:56:50.837Z",
+    "expiresAt": null,
+    "paymentAmount": 65000,
+    "paymentCurrency": "KZT",
+    "paymentStatus": "COMPLETED",
+    "paymentMethod": "admin_manual",
+    "createdAt": "2026-08-17T12:56:50.837Z",
+    "updatedAt": "2026-08-17T12:56:50.837Z"
+  }
+]

@@ -28,8 +28,17 @@ yarn-error.log*
 .env.prod
 .env*.local
 
+# мок-режим: схема и база собираются командой dev:mock, в git не нужны
+prisma/schema.mock.prisma
+prisma/mock.db
+prisma/mock.db-journal
+
 # vercel
 .vercel
+
+# claude code agent worktrees (временные копии репо для фоновых агентов)
+/.claude/worktrees/
+/.omc/
 
 # typescript
 *.tsbuildinfo
@@ -51,4 +60,7 @@ next-env.d.ts
 
 # фотогалереи уроков
 /public/lesson-photos/
+
+# обложки уроков
+/public/lesson-covers/
 /backups/

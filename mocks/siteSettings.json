@@ -1,0 +1,18 @@
+[
+  {
+    "id": "default",
+    "contactPhone": null,
+    "contactEmail": null,
+    "contactWhatsapp": null,
+    "contactTelegram": null,
+    "contactInstagram": null,
+    "legalEntityName": null,
+    "legalRequisites": null,
+    "legalAddress": null,
+    "legalRegisteredAt": null,
+    "offerText": null,
+    "privacyText": null,
+    "refundText": null,
+    "updatedAt": "2026-07-23T10:59:36.355Z"
+  }
+]

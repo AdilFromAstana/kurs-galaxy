@@ -15,20 +15,77 @@
 
 ## 🚀 Быстрый старт
 
-### Установка зависимостей
+Проекту нужен Postgres и переменная `DATABASE_URL`. Все переменные живут в `.env.dev`
+(создаётся из `.env.dev.example` автоматически, в git не попадает).
+
+### Вариант 1 — через Docker (рекомендуется)
 
 ```bash
-cd nail-academy-pro
-npm install
+npm run dev:up
 ```
 
-### Запуск в режиме разработки
+Поднимет Postgres + Next, применит схему и зальёт демо-данные.
+Адрес и порт берутся из `APP_PORT` в `.env.dev` (по умолчанию http://localhost:3000).
+
+Полезное:
 
 ```bash
+npm run docker:logs    # логи приложения
+npm run docker:down    # остановить
+npm run docker:reset   # снести вместе с данными БД и поднять заново
+```
+
+Сид внутри контейнера, если нужен отдельно:
+
+```bash
+docker compose --env-file .env.dev exec -T app npm run db:seed
+```
+
+### Вариант 2 — мок-режим, без Docker и без Postgres
+
+Если на машине нет ни Docker, ни Postgres:
+
+```bash
+npm install
+npm run dev:mock
+```
+
+Одна команда: собирает SQLite-версию схемы, создаёт файл `prisma/mock.db`,
+заливает в него данные из `mocks/*.json` и поднимает Next.
+
+Что важно понимать:
+
+- таблицы и связи — **настоящие**, те же 15 моделей из `prisma/schema.prisma`;
+  работают `include`, `groupBy`, транзакции, каскадные удаления
+- данные лежат в `mocks/*.json` — по файлу на таблицу, правятся руками
+- всё, что меняешь в интерфейсе, пишется в `prisma/mock.db` и переживает перезапуск
+- вернуть данные к исходным из JSON: `npm run dev:mock -- --reset`
+- `prisma/mock.db` и `prisma/schema.mock.prisma` генерируются и в git не попадают
+
+Обновить фикстуры из своей рабочей БД (делается на машине с Postgres):
+
+```bash
+npm run mock:export     # перезапишет mocks/*.json данными из текущей базы
+```
+
+Ограничения мок-режима: он для `dev`. Для `npm run build` нужен обычный клиент —
+`npm run db:generate`.
+
+### Вариант 3 — свой Postgres, без Docker
+
+Нужен свой Postgres. Пропиши в `.env.dev` реальные `POSTGRES_PORT` и `DATABASE_URL`
+(хост `localhost`, а не `db`), затем:
+
+```bash
+npm install
+npm run db:push
+npm run db:seed
 npm run dev
 ```
 
-Откройте [http://localhost:3000](http://localhost:3000) в браузере.
+Скрипты `dev`, `start`, `db:push`, `db:seed`, `db:studio` сами подхватывают `.env.dev`
+через `scripts/with-env.sh`. Если переменные уже заданы в окружении (контейнер, CI),
+файл игнорируется.
 
 ### Сборка для продакшна
 

@@ -1,0 +1,30 @@
+[
+  {
+    "id": "cmsxa769200018xpadt9ba877",
+    "userId": "cmrx90efz0003ty49eh7180jq",
+    "courseId": "cmsx8n1500001ej4vprcr193v",
+    "lessonId": "cmsx8n1540005ej4vua5qro06",
+    "completedAt": "2026-08-11T10:00:00.000Z"
+  },
+  {
+    "id": "cmsxa769300038xpa3nb2k9tl",
+    "userId": "cmrx90efz0003ty49eh7180jq",
+    "courseId": "cmsx8n1500001ej4vprcr193v",
+    "lessonId": "cmsx8n1560007ej4v52ytstw1",
+    "completedAt": "2026-08-12T10:00:00.000Z"
+  },
+  {
+    "id": "cmsxa769400058xpa2h7u6074",
+    "userId": "cmrx90efz0003ty49eh7180jq",
+    "courseId": "cmsx8n1500001ej4vprcr193v",
+    "lessonId": "cmsx8n1570009ej4v5s82tieh",
+    "completedAt": "2026-08-13T10:00:00.000Z"
+  },
+  {
+    "id": "cmsxa769400078xpa6ea3jute",
+    "userId": "cmrx90efz0003ty49eh7180jq",
+    "courseId": "cmsx8n1500001ej4vprcr193v",
+    "lessonId": "cmsx8n158000dej4v2r1epkbw",
+    "completedAt": "2026-08-14T10:00:00.000Z"
+  }
+]

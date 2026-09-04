@@ -16,6 +16,7 @@ export function uploadLessonVideo(
   lessonId: string,
   file: File,
   onProgress?: UploadProgressCallback,
+  videoId?: string,
 ): { promise: Promise<UploadResult>; cancel: () => void } {
   const xhr = new XMLHttpRequest();
   let cancelled = false;
@@ -54,7 +55,10 @@ export function uploadLessonVideo(
     };
     xhr.onabort = () => reject(new Error('Загрузка прервана'));
 
-    xhr.open('POST', `/api/admin/lessons/${lessonId}/video`);
+    const endpoint = videoId
+      ? `/api/admin/lessons/${lessonId}/videos/${videoId}/upload`
+      : `/api/admin/lessons/${lessonId}/video`;
+    xhr.open('POST', endpoint);
     xhr.withCredentials = true;
     xhr.send(formData);
   });
