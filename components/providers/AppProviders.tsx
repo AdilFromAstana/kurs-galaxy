@@ -4,11 +4,14 @@ import { ReactNode } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { SessionProvider } from './SessionProvider';
 import { CoursesProvider } from './CoursesProvider';
+import { RouteLoadingProvider } from './RouteLoadingProvider';
 
 export default function AppProviders({ children }: { children: ReactNode }) {
   return (
     <SessionProvider>
-      <CoursesProvider>{children}</CoursesProvider>
+      <RouteLoadingProvider>
+        <CoursesProvider>{children}</CoursesProvider>
+      </RouteLoadingProvider>
       <Toaster
         position="top-center"
         toastOptions={{

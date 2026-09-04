@@ -194,6 +194,11 @@
     animation: scaleIn 0.3s ease-out;
   }
 
+  /* Индикатор перехода между страницами (route-loading) */
+  .animate-route-bar {
+    animation: routeBar 1.1s ease-in-out infinite;
+  }
+
   /* Touch-friendly sizing */
   .touch-target {
     @apply min-w-[44px] min-h-[44px];
@@ -247,6 +252,18 @@
   to {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes routeBar {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(60%);
+  }
+  100% {
+    transform: translateX(250%);
   }
 }
 
