@@ -12,11 +12,13 @@ import {
   Play,
   Trash2,
   AlertCircle,
+  Images,
 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { confirmToast } from '@/lib/toastConfirm';
 import { uploadLessonVideo } from '@/lib/uploadVideo';
+import { LessonPhotoGallery, type LessonPhotoItem } from '@/components/admin/LessonPhotoGallery';
 
 type LessonDTO = {
   id: string;
@@ -26,6 +28,7 @@ type LessonDTO = {
   content: string;
   isFree: boolean;
   moduleId: string;
+  photos: Array<{ id: string; url: string }>;
   module?: { id: string; courseId: string; course?: { id: string; slug: string } };
 };
 
@@ -57,6 +60,10 @@ export default function EditLessonPage() {
 
   const [savedVideoUrl, setSavedVideoUrl] = useState<string>(''); // что уже лежит на сервере
 
+  // Фото галереи — тут сохраняются сразу при выборе (лайв-редактирование,
+  // отдельно от общей кнопки "Сохранить изменения")
+  const [photos, setPhotos] = useState<LessonPhotoItem[]>([]);
+
   const [submitState, setSubmitState] = useState<
     'idle' | 'saving' | 'uploading' | 'done'
   >('idle');
@@ -79,6 +86,7 @@ export default function EditLessonPage() {
           setContent(l.content);
           setIsFree(l.isFree);
           setSavedVideoUrl(l.videoUrl || '');
+          setPhotos((l.photos ?? []).map((p) => ({ key: p.id, url: p.url })));
 
           if (isLocalUploadedUrl(l.videoUrl)) {
             // Уже есть видео на сервере — показываем как файл
@@ -183,6 +191,71 @@ export default function EditLessonPage() {
       toast.success('Видео удалено');
     } else {
       toast.error('Не удалось удалить видео');
+    }
+  };
+
+  const handleAddPhotos = (files: File[]) => {
+    if (!lesson) return;
+
+    files.forEach(async (file) => {
+      const tempKey = `pending-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const blobUrl = URL.createObjectURL(file);
+      setPhotos((prev) => [...prev, { key: tempKey, url: blobUrl, uploading: true }]);
+
+      try {
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', file);
+        const uploadRes = await fetch('/api/admin/lesson-photos', {
+          method: 'POST',
+          credentials: 'include',
+          body: uploadFormData,
+        });
+        const uploadData = await uploadRes.json().catch(() => ({}));
+        if (!uploadRes.ok) {
+          throw new Error(uploadData.message ?? uploadData.error ?? 'Не удалось загрузить');
+        }
+
+        const attachRes = await fetch(`/api/admin/lessons/${lesson.id}/photos`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: uploadData.url }),
+        });
+        const attachData = await attachRes.json().catch(() => ({}));
+        if (!attachRes.ok) throw new Error('Не удалось прикрепить фото');
+
+        URL.revokeObjectURL(blobUrl);
+        setPhotos((prev) =>
+          prev.map((p) =>
+            p.key === tempKey ? { key: attachData.photo.id, url: attachData.photo.url } : p,
+          ),
+        );
+      } catch (err: any) {
+        URL.revokeObjectURL(blobUrl);
+        setPhotos((prev) => prev.filter((p) => p.key !== tempKey));
+        toast.error(err?.message || 'Не удалось загрузить фото');
+      }
+    });
+  };
+
+  const handleRemovePhoto = async (key: string) => {
+    if (!lesson) return;
+    const ok = await confirmToast({
+      message: 'Удалить это фото?',
+      confirmText: 'Удалить',
+      destructive: true,
+    });
+    if (!ok) return;
+
+    const res = await fetch(`/api/admin/lessons/${lesson.id}/photos/${key}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (res.ok) {
+      setPhotos((prev) => prev.filter((p) => p.key !== key));
+      toast.success('Фото удалено');
+    } else {
+      toast.error('Не удалось удалить фото');
     }
   };
 
@@ -611,6 +684,23 @@ export default function EditLessonPage() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Фото урока */}
+        <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+            <Images className="w-5 h-5" />
+            Фото урока
+          </h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Референсы, примеры работ или шаги — сохраняются сразу при добавлении
+          </p>
+
+          <LessonPhotoGallery
+            photos={photos}
+            onAdd={handleAddPhotos}
+            onRemove={handleRemovePhoto}
+          />
         </div>
 
         {/* Контент урока */}

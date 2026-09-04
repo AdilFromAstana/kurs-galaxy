@@ -16,7 +16,10 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       modules: {
         orderBy: { order: 'asc' },
         include: {
-          lessons: { orderBy: { order: 'asc' }, include: { materials: true } },
+          lessons: {
+            orderBy: { order: 'asc' },
+            include: { materials: true, photos: { orderBy: { order: 'asc' } } },
+          },
         },
       },
     },

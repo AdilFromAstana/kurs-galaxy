@@ -20,6 +20,7 @@ import Header from "@/components/layout/Header";
 import VideoPlayer from "@/components/lesson/VideoPlayer";
 import PurchaseModal from "@/components/modals/PurchaseModal";
 import LessonMobileNav from "@/components/lesson/LessonMobileNav";
+import LessonPhotoGrid from "@/components/lesson/LessonPhotoGrid";
 
 export default function LessonPage() {
   const router = useRouter();
@@ -239,6 +240,16 @@ export default function LessonPage() {
                   </ReactMarkdown>
                 </div>
               </div>
+
+              {/* Photos */}
+              {lesson.photos.length > 0 && (
+                <div className="card animate-slide-up">
+                  <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">
+                    Фото урока
+                  </h2>
+                  <LessonPhotoGrid photos={lesson.photos} />
+                </div>
+              )}
 
               {/* Materials */}
               {lesson.materials.length > 0 && (

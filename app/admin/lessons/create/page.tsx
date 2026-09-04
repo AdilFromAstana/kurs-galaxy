@@ -13,9 +13,12 @@ import {
   BookOpen,
   Layers,
   AlertCircle,
+  Images,
 } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 import { uploadLessonVideo } from '@/lib/uploadVideo';
+import { LessonPhotoGallery, type LessonPhotoItem } from '@/components/admin/LessonPhotoGallery';
 
 type CourseLite = {
   id: string;
@@ -46,10 +49,17 @@ export default function CreateLessonPage() {
   const [fileError, setFileError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Фото загружаются на сервер только после успешного создания урока —
+  // до этого храним только выбранные файлы с локальным blob-превью.
+  const [pendingPhotos, setPendingPhotos] = useState<
+    { key: string; file: File; url: string }[]
+  >([]);
+
   const [submitState, setSubmitState] = useState<
-    'idle' | 'creating' | 'uploading' | 'done'
+    'idle' | 'creating' | 'uploading' | 'uploading-photos' | 'done'
   >('idle');
   const [uploadPercent, setUploadPercent] = useState(0);
+  const [photoUploadProgress, setPhotoUploadProgress] = useState({ done: 0, total: 0 });
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [course, setCourse] = useState<CourseLite | null>(null);
@@ -88,6 +98,31 @@ export default function CreateLessonPage() {
     if (videoPreview.startsWith('blob:')) {
       URL.revokeObjectURL(videoPreview);
     }
+  };
+
+  // Чистим blob-превью фото при размонтировании
+  useEffect(() => {
+    return () => {
+      pendingPhotos.forEach((p) => URL.revokeObjectURL(p.url));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleAddPhotos = (files: File[]) => {
+    const items = files.map((file) => ({
+      key: `${file.name}-${file.size}-${Math.random().toString(36).slice(2)}`,
+      file,
+      url: URL.createObjectURL(file),
+    }));
+    setPendingPhotos((prev) => [...prev, ...items]);
+  };
+
+  const handleRemovePhoto = (key: string) => {
+    setPendingPhotos((prev) => {
+      const item = prev.find((p) => p.key === key);
+      if (item) URL.revokeObjectURL(item.url);
+      return prev.filter((p) => p.key !== key);
+    });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,6 +255,43 @@ export default function CreateLessonPage() {
         }
       }
 
+      // 3. Заливаем фото галереи (если выбраны) — по одному, без блокировки
+      // всего сохранения из-за одной неудачной картинки
+      if (pendingPhotos.length > 0) {
+        setSubmitState('uploading-photos');
+        setPhotoUploadProgress({ done: 0, total: pendingPhotos.length });
+        let failed = 0;
+        for (let i = 0; i < pendingPhotos.length; i++) {
+          try {
+            const photoFormData = new FormData();
+            photoFormData.append('file', pendingPhotos[i].file);
+            const uploadRes = await fetch('/api/admin/lesson-photos', {
+              method: 'POST',
+              credentials: 'include',
+              body: photoFormData,
+            });
+            const uploadData = await uploadRes.json().catch(() => ({}));
+            if (!uploadRes.ok) throw new Error(uploadData.message ?? uploadData.error ?? 'upload_failed');
+
+            const attachRes = await fetch(`/api/admin/lessons/${newLessonId}/photos`, {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: uploadData.url }),
+            });
+            if (!attachRes.ok) throw new Error('attach_failed');
+          } catch {
+            failed++;
+          }
+          setPhotoUploadProgress({ done: i + 1, total: pendingPhotos.length });
+        }
+        if (failed > 0) {
+          toast.error(
+            `Урок создан, но ${failed} из ${pendingPhotos.length} фото не загрузились. Добавьте их в редактировании урока.`,
+          );
+        }
+      }
+
       setSubmitState('done');
       router.push(`/admin/courses/${targetCourseId}`);
     } catch (error) {
@@ -253,7 +325,10 @@ export default function CreateLessonPage() {
 
   const selectedModule = course?.modules.find((m: any) => m.id === moduleId);
 
-  const isBusy = submitState === 'creating' || submitState === 'uploading';
+  const isBusy =
+    submitState === 'creating' ||
+    submitState === 'uploading' ||
+    submitState === 'uploading-photos';
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in pb-24 md:pb-8 max-w-6xl">
@@ -574,6 +649,45 @@ export default function CreateLessonPage() {
           )}
         </div>
 
+        {/* Фото урока */}
+        <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+            <Images className="w-5 h-5" />
+            Фото урока
+          </h2>
+          <p className="text-sm text-gray-500 mb-4">
+            Референсы, примеры работ или шаги — необязательно
+          </p>
+
+          <LessonPhotoGallery
+            photos={pendingPhotos}
+            onAdd={handleAddPhotos}
+            onRemove={handleRemovePhoto}
+            disabled={isBusy}
+          />
+
+          {submitState === 'uploading-photos' && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between mb-2 text-sm">
+                <span className="font-medium text-blue-900">
+                  Загрузка фото...
+                </span>
+                <span className="font-semibold text-blue-700">
+                  {photoUploadProgress.done}/{photoUploadProgress.total}
+                </span>
+              </div>
+              <div className="h-2 bg-blue-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-600 transition-all duration-200"
+                  style={{
+                    width: `${photoUploadProgress.total ? (photoUploadProgress.done / photoUploadProgress.total) * 100 : 0}%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Контент урока */}
         <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
           <h2 className="text-lg font-bold text-gray-900 mb-4">
@@ -611,7 +725,9 @@ export default function CreateLessonPage() {
               ? 'Создание урока...'
               : submitState === 'uploading'
                 ? `Загрузка видео ${uploadPercent}%...`
-                : 'Создать урок'}
+                : submitState === 'uploading-photos'
+                  ? `Загрузка фото ${photoUploadProgress.done}/${photoUploadProgress.total}...`
+                  : 'Создать урок'}
           </button>
         </div>
       </form>

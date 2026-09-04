@@ -1,13 +1,18 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth/guard';
+import { deleteLessonPhotoIfLocal } from '@/lib/uploads';
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const r = await requireAdmin();
   if ('response' in r) return r.response;
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.id },
-    include: { materials: true, module: { include: { course: true } } },
+    include: {
+      materials: true,
+      photos: { orderBy: { order: 'asc' } },
+      module: { include: { course: true } },
+    },
   });
   if (!lesson) return NextResponse.json({ error: 'not_found' }, { status: 404 });
   return NextResponse.json({ lesson });
@@ -31,6 +36,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   const r = await requireAdmin();
   if ('response' in r) return r.response;
+  // Фото на диске не удаляются каскадом в БД — чистим их сами, иначе
+  // при удалении урока файлы останутся висеть в /public/lesson-photos.
+  const photos = await prisma.lessonPhoto.findMany({ where: { lessonId: params.id } });
+  await Promise.all(photos.map((p) => deleteLessonPhotoIfLocal(p.url)));
   await prisma.lesson.delete({ where: { id: params.id } });
   return NextResponse.json({ ok: true });
 }
