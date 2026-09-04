@@ -174,8 +174,16 @@ function CourseCard({
       className="card card-hover animate-slide-up group"
       style={{ animationDelay: `${index * 0.1}s` }}
     >
-      <div className="w-full h-40 bg-primary-50 rounded-xl flex items-center justify-center mb-4 group-hover:bg-primary-100 transition-colors">
-        <BookOpen className="w-16 h-16 text-primary-600" />
+      <div className="w-full h-40 bg-primary-50 rounded-xl flex items-center justify-center mb-4 overflow-hidden group-hover:bg-primary-100 transition-colors">
+        {course.thumbnailUrl ? (
+          <img
+            src={course.thumbnailUrl}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <BookOpen className="w-16 h-16 text-primary-600" />
+        )}
       </div>
 
       <h3 className="text-xl font-bold text-dark-900 mb-2 group-hover:text-primary-600 transition-colors">

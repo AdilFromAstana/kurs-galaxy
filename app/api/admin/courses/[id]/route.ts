@@ -9,7 +9,12 @@ async function findCourse(idOrSlug: string) {
       pricingPlans: { orderBy: { order: 'asc' } },
       modules: {
         orderBy: { order: 'asc' },
-        include: { lessons: { orderBy: { order: 'asc' }, include: { materials: true } } },
+        include: {
+          lessons: {
+            orderBy: { order: 'asc' },
+            include: { materials: true, photos: { orderBy: { order: 'asc' } } },
+          },
+        },
       },
       creator: { select: { id: true, name: true, email: true } },
     },
@@ -34,6 +39,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (typeof body.title === 'string' && body.title.trim()) data.title = body.title.trim();
   if (typeof body.description === 'string') data.description = body.description;
   if (typeof body.published === 'boolean') data.published = body.published;
+  // thumbnailUrl может явно приходить как null (сброс лого) — поэтому проверяем
+  // наличие ключа, а не только тип строки.
+  if ('thumbnailUrl' in body) {
+    data.thumbnailUrl =
+      typeof body.thumbnailUrl === 'string' && body.thumbnailUrl.trim()
+        ? body.thumbnailUrl.trim()
+        : null;
+  }
 
   const existing = await findCourse(params.id);
   if (!existing) return NextResponse.json({ error: 'not_found' }, { status: 404 });

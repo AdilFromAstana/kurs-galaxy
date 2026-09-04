@@ -46,6 +46,7 @@ type AdminCourse = {
   slug: string;
   title: string;
   description: string;
+  thumbnailUrl: string | null;
   published: boolean;
   pricingPlans: Array<{
     id: string;
@@ -220,8 +221,16 @@ export default function CourseDetailPage() {
           {/* Карточка курса */}
           <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-soft">
             <div className="flex items-start justify-between mb-5">
-              <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center flex-shrink-0">
-                <BookOpen className="w-8 h-8 text-primary-600" />
+              <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {course.thumbnailUrl ? (
+                  <img
+                    src={course.thumbnailUrl}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <BookOpen className="w-8 h-8 text-primary-600" />
+                )}
               </div>
               <span
                 className={`text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full ${

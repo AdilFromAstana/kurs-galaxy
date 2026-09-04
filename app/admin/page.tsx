@@ -179,8 +179,16 @@ export default async function AdminDashboard() {
                 href={`/admin/courses/${course.id}`}
                 className="flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-2xl shadow-soft hover:border-gray-200 transition-all"
               >
-                <div className="w-9 h-9 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
-                  <BookOpen className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0 overflow-hidden">
+                  {course.thumbnailUrl ? (
+                    <img
+                      src={course.thumbnailUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <BookOpen className="w-4 h-4" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-800 truncate">{course.title}</p>

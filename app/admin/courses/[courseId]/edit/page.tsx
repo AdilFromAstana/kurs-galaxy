@@ -6,12 +6,14 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { confirmToast } from "@/lib/toastConfirm";
+import { CourseLogoUpload } from "@/components/admin/CourseLogoUpload";
 
 type AdminCourse = {
   id: string;
   slug: string;
   title: string;
   description: string;
+  thumbnailUrl: string | null;
   pricingPlans: Array<{ id: string }>;
   modules: Array<{ id: string; lessons: Array<{ id: string }> }>;
 };
@@ -24,6 +26,8 @@ export default function EditCoursePage() {
   const [course, setCourse] = useState<AdminCourse | null>(null);
   const [loading, setLoading] = useState(true);
   const [formData, setFormData] = useState({ title: "", description: "" });
+  const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -36,6 +40,7 @@ export default function EditCoursePage() {
           const data = await res.json();
           setCourse(data.course);
           setFormData({ title: data.course.title, description: data.course.description });
+          setThumbnailUrl(data.course.thumbnailUrl ?? null);
         }
         setLoading(false);
       }
@@ -115,6 +120,38 @@ export default function EditCoursePage() {
     setIsSubmitting(true);
 
     try {
+      // Логотип: если выбран новый файл — загружаем его и (если была старая
+      // картинка) чистим за собой диск. Если картинку явно удалили и новую
+      // не выбрали — отправляем null.
+      let finalThumbnailUrl = thumbnailUrl;
+      if (logoFile) {
+        const logoFormData = new FormData();
+        logoFormData.append('file', logoFile);
+        const logoRes = await fetch('/api/admin/course-thumbnail', {
+          method: 'POST',
+          credentials: 'include',
+          body: logoFormData,
+        });
+        const logoData = await logoRes.json().catch(() => ({}));
+        if (!logoRes.ok) {
+          toast.error(logoData.message || logoData.error || 'Не удалось загрузить логотип');
+          setIsSubmitting(false);
+          return;
+        }
+        finalThumbnailUrl = logoData.url;
+        if (course?.thumbnailUrl && course.thumbnailUrl !== finalThumbnailUrl) {
+          fetch(`/api/admin/course-thumbnail?url=${encodeURIComponent(course.thumbnailUrl)}`, {
+            method: 'DELETE',
+            credentials: 'include',
+          }).catch(() => {});
+        }
+      } else if (course?.thumbnailUrl && !thumbnailUrl) {
+        fetch(`/api/admin/course-thumbnail?url=${encodeURIComponent(course.thumbnailUrl)}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        }).catch(() => {});
+      }
+
       const res = await fetch(`/api/admin/courses/${courseId}`, {
         method: 'PATCH',
         credentials: 'include',
@@ -122,6 +159,7 @@ export default function EditCoursePage() {
         body: JSON.stringify({
           title: formData.title.trim(),
           description: formData.description.trim(),
+          thumbnailUrl: finalThumbnailUrl,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -167,14 +205,25 @@ export default function EditCoursePage() {
         >
           <ArrowLeft className="w-6 h-6 text-gray-600" />
         </Link>
-        <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <BookOpen className="w-8 h-8 text-primary-600" />
-            Редактирование курса
-          </h1>
-          <p className="text-gray-600 mt-1 text-sm md:text-base">
-            {course.title}
-          </p>
+        <div className="flex-1 flex items-center gap-4">
+          <CourseLogoUpload
+            savedUrl={thumbnailUrl}
+            file={logoFile}
+            onFileSelect={setLogoFile}
+            onRemove={() => {
+              setLogoFile(null);
+              setThumbnailUrl(null);
+            }}
+            size={64}
+          />
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+              Редактирование курса
+            </h1>
+            <p className="text-gray-600 mt-1 text-sm md:text-base">
+              {course.title}
+            </p>
+          </div>
         </div>
       </div>
 

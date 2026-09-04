@@ -245,12 +245,20 @@ function CourseCard({
       {/* Обложка */}
       <Link href={`/course/${course.id}`} className="block">
         <div className="relative h-44 md:h-48 bg-primary-50 overflow-hidden">
-          {/* Большой инициал */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-7xl md:text-8xl font-black text-primary-200 group-hover:scale-110 transition-transform duration-300">
-              {initial}
-            </span>
-          </div>
+          {course.thumbnailUrl ? (
+            <img
+              src={course.thumbnailUrl}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+          ) : (
+            /* Большой инициал — запасной вариант, пока у курса нет своего лого */
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-7xl md:text-8xl font-black text-primary-200 group-hover:scale-110 transition-transform duration-300">
+                {initial}
+              </span>
+            </div>
+          )}
 
           {/* Status badge */}
           {statusBadge && (

@@ -58,13 +58,16 @@ enum AdminRole {
 
 // ===== Каталог =====
 model Course {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  title       String
-  description String
-  published   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  description  String
+  // Логотип/обложка курса, который показывается вместо иконки-книжки по умолчанию.
+  // Хранится как публичный URL (см. lib/uploads.ts -> saveCourseThumbnail).
+  thumbnailUrl String?
+  published    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Автор курса (опционально для legacy и системных курсов).
   // При удалении админа просто очищаем ссылку (SetNull), курс остаётся.
@@ -107,11 +110,26 @@ model Lesson {
 
   module    Module     @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   materials Material[]
+  photos    LessonPhoto[]
   progress  Progress[]
   videoPos  VideoPosition[]
   lastLessons LastLesson[]
 
   @@index([moduleId])
+}
+
+// Фотогалерея урока (референсы, шаги работы и т.п.) — отдельно от materials,
+// т.к. materials это внешние ссылки/PDF с названием, а тут просто картинки.
+model LessonPhoto {
+  id        String   @id @default(cuid())
+  lessonId  String
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
 }
 
 model Material {

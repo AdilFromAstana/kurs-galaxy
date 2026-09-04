@@ -166,8 +166,16 @@ export default function CoursePage() {
             <div className="card animate-slide-up lg:row-start-1 lg:col-start-1">
               <div className="flex items-start gap-4 mb-4">
                 {/* Course Icon */}
-                <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-8 h-8 text-primary-600" />
+                <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {course.thumbnailUrl ? (
+                    <img
+                      src={course.thumbnailUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <BookOpen className="w-8 h-8 text-primary-600" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <span

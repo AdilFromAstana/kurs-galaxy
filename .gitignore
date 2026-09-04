@@ -45,4 +45,10 @@ next-env.d.ts
 
 # админские публичные ассеты сертификата (логотип, подпись)
 /public/certificate-assets/
+
+# лого/обложки курсов
+/public/course-thumbnails/
+
+# фотогалереи уроков
+/public/lesson-photos/
 /backups/

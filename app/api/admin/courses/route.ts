@@ -29,6 +29,10 @@ export async function POST(req: Request) {
   const slug = String(body.slug ?? '').trim();
   const title = String(body.title ?? '').trim();
   const description = String(body.description ?? '').trim();
+  const thumbnailUrl =
+    typeof body.thumbnailUrl === 'string' && body.thumbnailUrl.trim()
+      ? body.thumbnailUrl.trim()
+      : null;
 
   if (!slug || !title) {
     return NextResponse.json({ error: 'slug and title required' }, { status: 400 });
@@ -40,7 +44,7 @@ export async function POST(req: Request) {
 
   // Создатель — текущий залогиненный админ
   const course = await prisma.course.create({
-    data: { slug, title, description, creatorId: r.session.id },
+    data: { slug, title, description, thumbnailUrl, creatorId: r.session.id },
   });
   return NextResponse.json({ course }, { status: 201 });
 }

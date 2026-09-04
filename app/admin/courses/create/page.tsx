@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
+import { CourseLogoUpload } from "@/components/admin/CourseLogoUpload";
 
 function slugify(s: string) {
   return s
@@ -23,6 +24,7 @@ export default function CreateCoursePage() {
     title: "",
     description: "",
   });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -68,6 +70,24 @@ export default function CreateCoursePage() {
     setIsSubmitting(true);
 
     try {
+      let thumbnailUrl: string | null = null;
+      if (logoFile) {
+        const logoFormData = new FormData();
+        logoFormData.append('file', logoFile);
+        const logoRes = await fetch('/api/admin/course-thumbnail', {
+          method: 'POST',
+          credentials: 'include',
+          body: logoFormData,
+        });
+        const logoData = await logoRes.json().catch(() => ({}));
+        if (!logoRes.ok) {
+          toast.error(logoData.message || logoData.error || 'Не удалось загрузить логотип');
+          setIsSubmitting(false);
+          return;
+        }
+        thumbnailUrl = logoData.url;
+      }
+
       const createRes = await fetch('/api/admin/courses', {
         method: 'POST',
         credentials: 'include',
@@ -76,6 +96,7 @@ export default function CreateCoursePage() {
           slug: slugify(formData.title),
           title: formData.title.trim(),
           description: formData.description.trim(),
+          thumbnailUrl,
         }),
       });
       const createData = await createRes.json().catch(() => ({}));
@@ -106,11 +127,22 @@ export default function CreateCoursePage() {
         >
           <ArrowLeft className="w-6 h-6 text-gray-600" />
         </Link>
-        <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <BookOpen className="w-8 h-8 text-primary-600" />
-            Создание курса
-          </h1>
+        <div className="flex-1 flex items-center gap-4">
+          <CourseLogoUpload
+            savedUrl={null}
+            file={logoFile}
+            onFileSelect={setLogoFile}
+            onRemove={() => setLogoFile(null)}
+            size={64}
+          />
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+              Создание курса
+            </h1>
+            <p className="text-xs text-gray-500 mt-1">
+              Логотип необязателен — можно добавить позже
+            </p>
+          </div>
         </div>
       </div>
 

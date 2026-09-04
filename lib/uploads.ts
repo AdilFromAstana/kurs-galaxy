@@ -83,6 +83,134 @@ export async function deleteCertificateAssetIfLocal(
   }
 }
 
+// Обложки/логотипы курсов — публичные по URL, как и ассеты сертификата.
+// Лежат в /public/course-thumbnails/.
+const COURSE_THUMBNAIL_DIR = path.join(
+  process.cwd(),
+  'public',
+  'course-thumbnails',
+);
+
+export const COURSE_THUMBNAIL_URL_PREFIX = '/course-thumbnails';
+export const COURSE_THUMBNAIL_DIR_PATH = COURSE_THUMBNAIL_DIR;
+
+async function ensureCourseThumbnailDir(): Promise<void> {
+  await fs.mkdir(COURSE_THUMBNAIL_DIR, { recursive: true });
+}
+
+export function generateCourseThumbnailFilename(
+  originalName: string,
+  mimeType: string,
+): string {
+  const extByMime: Record<string, string> = {
+    'image/png': '.png',
+    'image/jpeg': '.jpg',
+  };
+  const ext =
+    extByMime[mimeType] ||
+    (path.extname(originalName).toLowerCase() === '.jpeg'
+      ? '.jpg'
+      : path.extname(originalName).toLowerCase()) ||
+    '.png';
+  const id = crypto.randomBytes(8).toString('hex');
+  return `course-${id}${ext}`;
+}
+
+export async function saveCourseThumbnail(
+  file: File,
+  filename: string,
+): Promise<string> {
+  await ensureCourseThumbnailDir();
+  const filePath = path.join(COURSE_THUMBNAIL_DIR, filename);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await fs.writeFile(filePath, buffer);
+  return `${COURSE_THUMBNAIL_URL_PREFIX}/${filename}`;
+}
+
+export function isLocalCourseThumbnail(
+  url: string | null | undefined,
+): boolean {
+  if (!url) return false;
+  return url.startsWith(COURSE_THUMBNAIL_URL_PREFIX + '/');
+}
+
+export async function deleteCourseThumbnailIfLocal(
+  url: string | null | undefined,
+): Promise<void> {
+  if (!isLocalCourseThumbnail(url)) return;
+  const filename = path.basename(url!);
+  if (filename.includes('/') || filename.includes('\\')) return;
+  const filePath = path.join(COURSE_THUMBNAIL_DIR, filename);
+  try {
+    await fs.unlink(filePath);
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') {
+      console.error('deleteCourseThumbnailIfLocal error:', err);
+    }
+  }
+}
+
+// Фото уроков (референсы/шаги) — публичные по URL, как и обложки курсов.
+// Лежат в /public/lesson-photos/.
+const LESSON_PHOTOS_DIR = path.join(process.cwd(), 'public', 'lesson-photos');
+
+export const LESSON_PHOTOS_URL_PREFIX = '/lesson-photos';
+export const LESSON_PHOTOS_DIR_PATH = LESSON_PHOTOS_DIR;
+
+async function ensureLessonPhotosDir(): Promise<void> {
+  await fs.mkdir(LESSON_PHOTOS_DIR, { recursive: true });
+}
+
+export function generateLessonPhotoFilename(
+  originalName: string,
+  mimeType: string,
+): string {
+  const extByMime: Record<string, string> = {
+    'image/png': '.png',
+    'image/jpeg': '.jpg',
+  };
+  const ext =
+    extByMime[mimeType] ||
+    (path.extname(originalName).toLowerCase() === '.jpeg'
+      ? '.jpg'
+      : path.extname(originalName).toLowerCase()) ||
+    '.png';
+  const id = crypto.randomBytes(8).toString('hex');
+  return `photo-${id}${ext}`;
+}
+
+export async function saveLessonPhoto(
+  file: File,
+  filename: string,
+): Promise<string> {
+  await ensureLessonPhotosDir();
+  const filePath = path.join(LESSON_PHOTOS_DIR, filename);
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await fs.writeFile(filePath, buffer);
+  return `${LESSON_PHOTOS_URL_PREFIX}/${filename}`;
+}
+
+export function isLocalLessonPhoto(url: string | null | undefined): boolean {
+  if (!url) return false;
+  return url.startsWith(LESSON_PHOTOS_URL_PREFIX + '/');
+}
+
+export async function deleteLessonPhotoIfLocal(
+  url: string | null | undefined,
+): Promise<void> {
+  if (!isLocalLessonPhoto(url)) return;
+  const filename = path.basename(url!);
+  if (filename.includes('/') || filename.includes('\\')) return;
+  const filePath = path.join(LESSON_PHOTOS_DIR, filename);
+  try {
+    await fs.unlink(filePath);
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') {
+      console.error('deleteLessonPhotoIfLocal error:', err);
+    }
+  }
+}
+
 export const ALLOWED_VIDEO_TYPES = [
   'video/mp4',
   'video/webm',

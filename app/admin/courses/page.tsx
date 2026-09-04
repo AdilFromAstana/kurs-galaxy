@@ -11,6 +11,7 @@ type AdminCourse = {
   slug: string;
   title: string;
   description: string;
+  thumbnailUrl: string | null;
   published: boolean;
   modules: { id: string; lessons: { id: string }[] }[];
   pricingPlans: { id: string; price: number; currency: string }[];
@@ -170,8 +171,16 @@ export default function CoursesListPage() {
             >
               {/* Иконка + бейдж + заголовок */}
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="w-7 h-7 text-primary-600" />
+                <div className="w-14 h-14 bg-primary-50 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {course.thumbnailUrl ? (
+                    <img
+                      src={course.thumbnailUrl}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <BookOpen className="w-7 h-7 text-primary-600" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   {!course.published && (
