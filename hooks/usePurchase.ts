@@ -1,10 +1,13 @@
 'use client';
 
 import { useSession } from '@/components/providers/SessionProvider';
+import { useCourses } from '@/components/providers/CoursesProvider';
 import type { ExpirationInfo, PricingPlan } from '@/types';
 
 interface UsePurchaseReturn {
   isPurchased: boolean;
+  /** Курс помечен админом как бесплатный — доступ открыт без покупки. */
+  isFree: boolean;
   isLoading: boolean;
   purchase: (
     planId: string,
@@ -26,9 +29,12 @@ const ACCESS_PERIOD_BACK_MAP: Record<string, { type: any; days: number | null; l
 
 export const usePurchase = (courseId: string): UsePurchaseReturn => {
   const session = useSession();
+  const { getCourseById } = useCourses();
 
+  const isFree = !!getCourseById(courseId)?.isFree;
   const active = session.getActivePurchase(courseId);
-  const isPurchased = !!active;
+  // Бесплатный курс даёт полный доступ так же, как активная покупка.
+  const isPurchased = isFree || !!active;
 
   const expirationInfo: ExpirationInfo | null = active
     ? (() => {
@@ -79,6 +85,7 @@ export const usePurchase = (courseId: string): UsePurchaseReturn => {
 
   return {
     isPurchased,
+    isFree,
     isLoading: session.isLoading,
     purchase,
     hasAccess,

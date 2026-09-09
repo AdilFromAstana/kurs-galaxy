@@ -26,13 +26,13 @@ export async function POST(req: Request) {
 
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
-    include: { module: true },
+    include: { module: { include: { course: { select: { isFree: true } } } } },
   });
   if (!lesson) return NextResponse.json({ error: 'lesson not found' }, { status: 404 });
 
-  // Доступ: бесплатный урок открыт всем авторизованным; платный — только при
-  // активной непросроченной покупке курса. Иначе — 403 no_access.
-  if (!lesson.isFree) {
+  // Доступ: бесплатный урок (или бесплатный курс) открыт всем авторизованным;
+  // платный — только при активной непросроченной покупке курса. Иначе — 403 no_access.
+  if (!lesson.isFree && !lesson.module.course.isFree) {
     const purchase = await prisma.purchase.findFirst({
       where: {
         userId: session.userId,

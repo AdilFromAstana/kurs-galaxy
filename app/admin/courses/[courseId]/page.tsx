@@ -22,6 +22,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { Gift } from 'lucide-react';
+import { confirmToast } from '@/lib/toastConfirm';
 
 const ACCESS_LABEL: Record<string, string> = {
   ONE_MONTH: '1 месяц',
@@ -48,6 +50,7 @@ type AdminCourse = {
   description: string;
   thumbnailUrl: string | null;
   published: boolean;
+  isFree: boolean;
   pricingPlans: Array<{
     id: string;
     name: string;
@@ -82,6 +85,7 @@ export default function CourseDetailPage() {
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [savingFree, setSavingFree] = useState(false);
 
   useEffect(() => {
     let cancel = false;
@@ -132,6 +136,52 @@ export default function CourseDetailPage() {
     setCourse((prev) => (prev ? { ...prev, published: next } : prev));
     toast.success(
       next ? 'Курс опубликован, виден в каталоге' : 'Курс снят с публикации',
+    );
+  };
+
+  const handleToggleFree = async () => {
+    if (!course || savingFree) return;
+    const next = !course.isFree;
+
+    // Включение бесплатного режима у курса с активными платными тарифами —
+    // операция с денежными последствиями, поэтому подтверждаем.
+    if (next) {
+      const hasActivePaidPlan = course.pricingPlans?.some(
+        (p) => p.isActive && p.price > 0,
+      );
+      if (hasActivePaidPlan) {
+        const ok = await confirmToast({
+          message:
+            'Сделать курс бесплатным? Тарифы сохранятся, но перестанут показываться, ' +
+            'а все студенты получат полный доступ ко всем урокам без покупки.',
+          confirmText: 'Сделать бесплатным',
+        });
+        if (!ok) return;
+      }
+    }
+
+    setSavingFree(true);
+    const prev = course.isFree;
+    // Оптимистичное обновление — откатываем при ошибке.
+    setCourse((c) => (c ? { ...c, isFree: next } : c));
+
+    const res = await fetch(`/api/admin/courses/${course.id}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isFree: next }),
+    });
+    setSavingFree(false);
+
+    if (!res.ok) {
+      setCourse((c) => (c ? { ...c, isFree: prev } : c));
+      toast.error('Не удалось изменить тип доступа');
+      return;
+    }
+    toast.success(
+      next
+        ? 'Курс теперь бесплатный — открыт всем студентам'
+        : 'Курс снова платный — доступ по тарифам',
     );
   };
 
@@ -232,15 +282,23 @@ export default function CourseDetailPage() {
                   <BookOpen className="w-8 h-8 text-primary-600" />
                 )}
               </div>
-              <span
-                className={`text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full ${
-                  course.published
-                    ? 'bg-green-50 text-green-700'
-                    : 'bg-primary-50 text-primary-700'
-                }`}
-              >
-                {course.published ? 'Опубликован' : 'Черновик'}
-              </span>
+              <div className="flex flex-col items-end gap-2">
+                <span
+                  className={`text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full ${
+                    course.published
+                      ? 'bg-green-50 text-green-700'
+                      : 'bg-primary-50 text-primary-700'
+                  }`}
+                >
+                  {course.published ? 'Опубликован' : 'Черновик'}
+                </span>
+                {course.isFree && (
+                  <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700">
+                    <Gift className="w-3.5 h-3.5" />
+                    Бесплатный
+                  </span>
+                )}
+              </div>
             </div>
 
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight mb-2">
@@ -292,6 +350,62 @@ export default function CourseDetailPage() {
                 </>
               )}
             </button>
+
+            {/* Тип доступа: платный / бесплатный */}
+            <div
+              className={`mt-3 rounded-xl border p-4 transition-colors ${
+                course.isFree
+                  ? 'border-emerald-200 bg-emerald-50/60'
+                  : 'border-gray-200 bg-gray-50'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                    course.isFree
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-white text-gray-500 border border-gray-200'
+                  }`}
+                >
+                  <Gift className="w-4 h-4" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-3">
+                    <label
+                      htmlFor="course-free-toggle"
+                      className="text-sm font-semibold text-gray-900 cursor-pointer"
+                    >
+                      Сделать бесплатным
+                    </label>
+
+                    <button
+                      id="course-free-toggle"
+                      type="button"
+                      role="switch"
+                      aria-checked={course.isFree}
+                      onClick={handleToggleFree}
+                      disabled={savingFree}
+                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed ${
+                        course.isFree ? 'bg-emerald-500' : 'bg-gray-300'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                          course.isFree ? 'translate-x-5' : 'translate-x-0.5'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                    {course.isFree
+                      ? 'Студенты получают полный доступ ко всем урокам без покупки. Тарифы сохранены и скрыты — выключите тумблер, чтобы вернуть платный доступ.'
+                      : 'Включите, чтобы открыть весь курс бесплатно. Тарифные планы сохранятся и снова заработают, когда вы выключите тумблер.'}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Статистика */}
@@ -458,6 +572,17 @@ export default function CourseDetailPage() {
               Управление
             </Link>
           </div>
+
+          {course.isFree && (
+            <div className="mb-4 flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              <Gift className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>
+                Курс сейчас <strong>бесплатный</strong>: тарифы не показываются студентам и не
+                применяются. Они сохранены и снова заработают, когда вы выключите тумблер
+                «Сделать бесплатным» на вкладке «Инфо».
+              </span>
+            </div>
+          )}
 
           {course.pricingPlans && course.pricingPlans.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

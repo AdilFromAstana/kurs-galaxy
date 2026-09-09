@@ -79,6 +79,7 @@ export interface Course {
   id: string;
   title: string;
   description: string;
+  isFree?: boolean;             // Бесплатный курс — полный доступ без покупки
   modules: Module[];
   pricingPlans: PricingPlan[];  // ✅ Основной источник цен
 }

@@ -39,6 +39,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (typeof body.title === 'string' && body.title.trim()) data.title = body.title.trim();
   if (typeof body.description === 'string') data.description = body.description;
   if (typeof body.published === 'boolean') data.published = body.published;
+  if (typeof body.isFree === 'boolean') data.isFree = body.isFree;
   // thumbnailUrl может явно приходить как null (сброс лого) — поэтому проверяем
   // наличие ключа, а не только тип строки.
   if ('thumbnailUrl' in body) {

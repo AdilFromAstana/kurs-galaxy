@@ -23,7 +23,9 @@ export async function GET(
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.id },
     include: {
-      module: { select: { courseId: true } },
+      module: {
+        select: { courseId: true, course: { select: { isFree: true } } },
+      },
       videos: { orderBy: { order: 'asc' }, take: 1 },
     },
   });
@@ -50,7 +52,7 @@ export async function GET(
   // Платный — требует user-сессии и активной непросроченной покупки.
   const adminSession = await getAdminSession();
 
-  if (!adminSession && !lesson.isFree) {
+  if (!adminSession && !lesson.isFree && !lesson.module.course.isFree) {
     const userSession = await getUserSession();
     if (!userSession) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 });

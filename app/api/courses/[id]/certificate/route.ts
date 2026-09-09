@@ -40,25 +40,27 @@ export async function GET(
     );
   }
 
-  // Доступ
-  const purchase = await prisma.purchase.findFirst({
-    where: {
-      userId: session.userId,
-      courseId: course.id,
-      status: 'ACTIVE',
-    },
-  });
-  if (!purchase) {
-    return NextResponse.json(
-      { error: 'no_access', message: 'Курс не куплен' },
-      { status: 403 },
-    );
-  }
-  if (purchase.expiresAt && purchase.expiresAt.getTime() < Date.now()) {
-    return NextResponse.json(
-      { error: 'access_expired', message: 'Срок доступа истёк' },
-      { status: 403 },
-    );
+  // Доступ: бесплатный курс открыт всем авторизованным, платный — только по активной покупке
+  if (!course.isFree) {
+    const purchase = await prisma.purchase.findFirst({
+      where: {
+        userId: session.userId,
+        courseId: course.id,
+        status: 'ACTIVE',
+      },
+    });
+    if (!purchase) {
+      return NextResponse.json(
+        { error: 'no_access', message: 'Курс не куплен' },
+        { status: 403 },
+      );
+    }
+    if (purchase.expiresAt && purchase.expiresAt.getTime() < Date.now()) {
+      return NextResponse.json(
+        { error: 'access_expired', message: 'Срок доступа истёк' },
+        { status: 403 },
+      );
+    }
   }
 
   // 100% прогресс

@@ -41,7 +41,7 @@ export default function LessonPage() {
   const previousLesson = idx > 0 ? allLessons[idx - 1] : null;
 
   const { addLesson, isLessonCompleted } = useProgress(courseId);
-  const { hasAccess } = usePurchase(courseId);
+  const { hasAccess, isFree: courseIsFree } = usePurchase(courseId);
 
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
@@ -71,7 +71,8 @@ export default function LessonPage() {
   // Доступ:
   // - бесплатный урок открыт всем (включая гостей)
   // - платный требует user-сессии + активной покупки курса
-  const canViewLesson = lesson.isFree || (isAuthenticated && hasAccess(lesson.isFree));
+  const canViewLesson =
+    lesson.isFree || courseIsFree || (isAuthenticated && hasAccess(lesson.isFree));
 
   if (!canViewLesson) {
     return (

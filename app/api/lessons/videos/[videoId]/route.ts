@@ -24,7 +24,11 @@ export async function GET(
     where: { id: params.videoId },
     include: {
       lesson: {
-        include: { module: { select: { courseId: true } } },
+        include: {
+          module: {
+            select: { courseId: true, course: { select: { isFree: true } } },
+          },
+        },
       },
     },
   });
@@ -43,7 +47,7 @@ export async function GET(
   // Платный — требует user-сессии и активной непросроченной покупки.
   const adminSession = await getAdminSession();
 
-  if (!adminSession && !lesson.isFree) {
+  if (!adminSession && !lesson.isFree && !lesson.module.course.isFree) {
     const userSession = await getUserSession();
     if (!userSession) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 });

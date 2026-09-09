@@ -36,7 +36,7 @@ export default function DashboardPage() {
     const purchased: CourseDTO[] = [];
     const free: CourseDTO[] = [];
     courses.forEach((course) => {
-      if (isPurchaseActive(course.id)) purchased.push(course);
+      if (course.isFree || isPurchaseActive(course.id)) purchased.push(course);
       else free.push(course);
     });
     return { purchasedCourses: purchased, freeCourses: free };

@@ -67,6 +67,10 @@ model Course {
   // Хранится как публичный URL (см. lib/uploads.ts -> saveCourseThumbnail).
   thumbnailUrl String?
   published    Boolean  @default(false)
+  // Бесплатный курс: студенты получают полный доступ ко всем урокам без покупки.
+  // Тарифные планы при этом сохраняются, но не показываются, пока флаг включён —
+  // курс можно в любой момент вернуть к платной модели.
+  isFree       Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

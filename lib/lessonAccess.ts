@@ -6,7 +6,7 @@ type LessonWithCourse = {
   id: string;
   videoUrl: string;
   isFree: boolean;
-  module: { courseId: string };
+  module: { courseId: string; course: { isFree: boolean } };
 };
 
 type AccessResult =
@@ -18,7 +18,11 @@ export async function resolveLessonVideoAccess(
 ): Promise<AccessResult> {
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
-    include: { module: { select: { courseId: true } } },
+    include: {
+      module: {
+        select: { courseId: true, course: { select: { isFree: true } } },
+      },
+    },
   });
   if (!lesson) {
     return {
@@ -34,7 +38,7 @@ export async function resolveLessonVideoAccess(
   }
 
   const adminSession = await getAdminSession();
-  if (!adminSession && !lesson.isFree) {
+  if (!adminSession && !lesson.isFree && !lesson.module.course.isFree) {
     const userSession = await getUserSession();
     if (!userSession) {
       return {
@@ -82,7 +86,13 @@ export async function resolveLessonVideoRowAccess(
   const video = await prisma.lessonVideo.findUnique({
     where: { id: videoId },
     include: {
-      lesson: { include: { module: { select: { courseId: true } } } },
+      lesson: {
+        include: {
+          module: {
+            select: { courseId: true, course: { select: { isFree: true } } },
+          },
+        },
+      },
     },
   });
   if (!video) {
@@ -99,7 +109,7 @@ export async function resolveLessonVideoRowAccess(
   }
 
   const adminSession = await getAdminSession();
-  if (!adminSession && !video.lesson.isFree) {
+  if (!adminSession && !video.lesson.isFree && !video.lesson.module.course.isFree) {
     const userSession = await getUserSession();
     if (!userSession) {
       return {

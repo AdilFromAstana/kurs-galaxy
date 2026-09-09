@@ -50,6 +50,7 @@ export type CourseDTO = {
   title: string;
   description: string;
   thumbnailUrl: string | null;
+  isFree: boolean;
   modules: CourseModule[];
   pricingPlans: CoursePricingPlan[];
 };

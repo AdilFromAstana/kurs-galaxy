@@ -174,6 +174,7 @@ function CourseCard({
     0,
   );
 
+  const isFreeCourse = !!course.isFree;
   const activePlans = (course.pricingPlans ?? []).filter((p: any) => p.isActive);
   const minPrice =
     activePlans.length > 0
@@ -208,7 +209,14 @@ function CourseCard({
 
   // Бейдж статуса в углу обложки
   let statusBadge: React.ReactNode = null;
-  if (isPurchased) {
+  if (isFreeCourse) {
+    statusBadge = (
+      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs font-bold border border-emerald-100">
+        <Star className="w-3.5 h-3.5 fill-emerald-700" />
+        Бесплатно
+      </div>
+    );
+  } else if (isPurchased) {
     statusBadge = (
       <div className="flex items-center gap-1.5 px-2.5 py-1 bg-green-50 text-green-700 rounded-full text-xs font-bold border border-green-100">
         <CheckCircle2 className="w-3.5 h-3.5" />
@@ -315,7 +323,12 @@ function CourseCard({
 
         {/* Footer: цена + CTA */}
         <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between gap-3">
-          {isPurchased ? (
+          {isFreeCourse ? (
+            <div className="flex items-center gap-2 text-emerald-700 font-bold text-sm">
+              <Star className="w-4 h-4 fill-emerald-700" />
+              <span>Бесплатно</span>
+            </div>
+          ) : isPurchased ? (
             <div className="flex items-center gap-2 text-green-700 font-semibold text-sm">
               <CheckCircle2 className="w-4 h-4" />
               <span>Полный доступ</span>

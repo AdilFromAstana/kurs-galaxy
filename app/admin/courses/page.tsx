@@ -13,6 +13,7 @@ type AdminCourse = {
   description: string;
   thumbnailUrl: string | null;
   published: boolean;
+  isFree: boolean;
   modules: { id: string; lessons: { id: string }[] }[];
   pricingPlans: { id: string; price: number; currency: string }[];
   creator?: { id: string; name: string; email: string } | null;
@@ -183,11 +184,18 @@ export default function CoursesListPage() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  {!course.published && (
-                    <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full mb-1">
-                      Черновик
-                    </span>
-                  )}
+                  <div className="flex flex-wrap gap-1 mb-1">
+                    {!course.published && (
+                      <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full">
+                        Черновик
+                      </span>
+                    )}
+                    {course.isFree && (
+                      <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full">
+                        Бесплатный
+                      </span>
+                    )}
+                  </div>
                   <h2 className="text-lg font-bold text-gray-900 leading-tight">{course.title}</h2>
                   {course.creator && (
                     <p className="text-primary-600 text-xs font-semibold mt-1">
@@ -205,7 +213,9 @@ export default function CoursesListPage() {
               <div className="flex flex-wrap gap-2 mb-4">
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 rounded-lg text-xs font-semibold text-gray-900">
                   <DollarSign className="w-3.5 h-3.5 text-primary-600" />
-                  {course.pricingPlans && course.pricingPlans.length > 0 ? (
+                  {course.isFree ? (
+                    <span className="text-emerald-700">Бесплатно</span>
+                  ) : course.pricingPlans && course.pricingPlans.length > 0 ? (
                     <>
                       от {Math.min(...course.pricingPlans.map(p => p.price)).toLocaleString()} {course.pricingPlans[0].currency}
                     </>

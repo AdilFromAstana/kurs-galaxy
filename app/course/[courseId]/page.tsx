@@ -44,7 +44,7 @@ export default function CoursePage() {
     progress: progressIds,
     getLastLessonId,
   } = useProgress(courseId);
-  const { isPurchased, expirationInfo, currentPlan } = usePurchase(courseId);
+  const { isPurchased, isFree: courseIsFree, expirationInfo, currentPlan } = usePurchase(courseId);
 
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
@@ -183,7 +183,11 @@ export default function CoursePage() {
                       isPurchased ? "text-green-600" : "text-primary-600"
                     }`}
                   >
-                    {isPurchased ? "Полный доступ" : "Требуется покупка"}
+                    {courseIsFree
+                      ? "Бесплатный курс"
+                      : isPurchased
+                        ? "Полный доступ"
+                        : "Требуется покупка"}
                   </span>
                   <h1 className="text-xl md:text-2xl font-bold text-dark-900 mt-1">
                     {course.title}
@@ -225,7 +229,7 @@ export default function CoursePage() {
                   <div className="flex items-center gap-2 mb-3">
                     <CheckCircle2 className="w-6 h-6 text-green-600" />
                     <span className="text-green-700 font-bold text-lg">
-                      Полный доступ
+                      {courseIsFree ? "Бесплатный доступ" : "Полный доступ"}
                     </span>
                   </div>
 
