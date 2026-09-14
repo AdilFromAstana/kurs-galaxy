@@ -198,14 +198,14 @@ export default function EditCoursePage() {
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-start gap-4">
         <Link
           href={`/admin/courses/${courseId}`}
-          className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors"
+          className="p-2 mt-1 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors"
         >
           <ArrowLeft className="w-6 h-6 text-gray-600" />
         </Link>
-        <div className="flex-1 flex items-center gap-4">
+        <div className="flex-1 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
           <CourseLogoUpload
             savedUrl={thumbnailUrl}
             file={logoFile}
@@ -214,7 +214,6 @@ export default function EditCoursePage() {
               setLogoFile(null);
               setThumbnailUrl(null);
             }}
-            size={64}
           />
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
