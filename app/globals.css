@@ -28,6 +28,17 @@
   p {
     @apply text-base md:text-lg leading-relaxed;
   }
+
+  /* Инпуты по всему проекту рисуют свой focus-ring через Tailwind
+     (focus:ring-*), но без outline-none поверх него остаётся ещё и
+     нативный контур браузера — получается двойная рамка при фокусе.
+     Убираем нативный контур глобально, кастомный ring остаётся —
+     доступность не страдает, индикатор фокуса никуда не пропадает. */
+  input:focus,
+  textarea:focus,
+  select:focus {
+    @apply outline-none;
+  }
 }
 
 @layer components {
