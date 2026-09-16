@@ -10,13 +10,11 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   if (!module) return NextResponse.json({ error: 'module_not_found' }, { status: 404 });
 
   const body = await req.json().catch(() => ({}));
-  const title = String(body.title ?? '').trim();
+  const title = String(body.title ?? '').trim() || 'Без названия';
   const duration = String(body.duration ?? '').trim() || '00:00';
   const videoUrl = String(body.videoUrl ?? '').trim();
   const content = String(body.content ?? '');
   const isFree = Boolean(body.isFree);
-
-  if (!title) return NextResponse.json({ error: 'title required' }, { status: 400 });
 
   const last = await prisma.lesson.findFirst({
     where: { moduleId: module.id },

@@ -126,7 +126,7 @@ export default function CreateLessonPage() {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            title,
+            title: title.trim() || 'Без названия',
             duration,
             videoUrl: initialVideoUrl,
             content,
@@ -320,7 +320,7 @@ export default function CreateLessonPage() {
           {/* Название */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Название урока *
+              Название урока
             </label>
             <input
               type="text"
@@ -328,7 +328,6 @@ export default function CreateLessonPage() {
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-4 py-3 md:py-4 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="Урок 1: Введение..."
-              required
               disabled={isBusy}
             />
           </div>

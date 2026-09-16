@@ -27,15 +27,15 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const slug = String(body.slug ?? '').trim();
-  const title = String(body.title ?? '').trim();
+  const title = String(body.title ?? '').trim() || 'Без названия';
   const description = String(body.description ?? '').trim();
   const thumbnailUrl =
     typeof body.thumbnailUrl === 'string' && body.thumbnailUrl.trim()
       ? body.thumbnailUrl.trim()
       : null;
 
-  if (!slug || !title) {
-    return NextResponse.json({ error: 'slug and title required' }, { status: 400 });
+  if (!slug) {
+    return NextResponse.json({ error: 'slug required' }, { status: 400 });
   }
   const exists = await prisma.course.findUnique({ where: { slug } });
   if (exists) {

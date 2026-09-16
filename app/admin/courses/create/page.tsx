@@ -48,10 +48,6 @@ export default function CreateCoursePage() {
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.title.trim()) {
-      newErrors.title = "Название обязательно";
-    }
-
     if (!formData.description.trim()) {
       newErrors.description = "Описание обязательно";
     }
@@ -94,7 +90,7 @@ export default function CreateCoursePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           slug: slugify(formData.title),
-          title: formData.title.trim(),
+          title: formData.title.trim() || "Без названия",
           description: formData.description.trim(),
           thumbnailUrl,
         }),
@@ -158,7 +154,7 @@ export default function CreateCoursePage() {
               htmlFor="title"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Название курса <span className="text-red-500">*</span>
+              Название курса
             </label>
             <input
               type="text"
