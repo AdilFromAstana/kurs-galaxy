@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 export type CourseMaterial = { id: string; title: string; url: string; type: 'PDF' | 'LINK' | 'PRODUCT' };
-export type CoursePhoto = { id: string; url: string; order: number };
+export type CoursePhoto = { id: string; url: string; order: number; caption: string | null };
 export type CourseVideo = {
   id: string;
   title: string | null;

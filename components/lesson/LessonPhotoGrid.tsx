@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
-type Photo = { id: string; url: string };
+type Photo = { id: string; url: string; caption?: string | null };
 
 export default function LessonPhotoGrid({ photos }: { photos: Photo[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -46,7 +46,7 @@ export default function LessonPhotoGrid({ photos }: { photos: Photo[] }) {
           >
             <img
               src={photo.url}
-              alt=""
+              alt={photo.caption ?? ''}
               loading="lazy"
               className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
             />
@@ -100,16 +100,23 @@ export default function LessonPhotoGrid({ photos }: { photos: Photo[] }) {
 
           <img
             src={photos[openIndex].url}
-            alt=""
+            alt={photos[openIndex].caption ?? ''}
             onClick={(e) => e.stopPropagation()}
             className="max-w-full max-h-[85vh] rounded-lg object-contain"
           />
 
-          {photos.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-medium">
-              {openIndex + 1} / {photos.length}
-            </div>
-          )}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 px-4 max-w-[90vw]">
+            {photos[openIndex].caption && (
+              <p className="px-3 py-1.5 rounded-xl bg-white/10 text-white text-sm text-center">
+                {photos[openIndex].caption}
+              </p>
+            )}
+            {photos.length > 1 && (
+              <div className="px-3 py-1 rounded-full bg-white/10 text-white text-xs font-medium">
+                {openIndex + 1} / {photos.length}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </>

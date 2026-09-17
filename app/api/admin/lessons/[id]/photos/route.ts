@@ -21,10 +21,12 @@ export async function POST(
   if (!url || !isLocalLessonPhoto(url)) {
     return NextResponse.json({ error: 'bad_url' }, { status: 400 });
   }
+  // Подпись необязательна — референс/шаг/комментарий к фото.
+  const caption = String(body.caption ?? '').trim() || null;
 
   const count = await prisma.lessonPhoto.count({ where: { lessonId: lesson.id } });
   const photo = await prisma.lessonPhoto.create({
-    data: { lessonId: lesson.id, url, order: count },
+    data: { lessonId: lesson.id, url, caption, order: count },
   });
 
   return NextResponse.json({ photo }, { status: 201 });
