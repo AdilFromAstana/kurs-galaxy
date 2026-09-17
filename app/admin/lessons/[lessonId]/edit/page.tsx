@@ -32,7 +32,7 @@ type LessonDTO = {
   isFree: boolean;
   moduleId: string;
   videos?: LessonVideoDTO[];
-  photos: Array<{ id: string; url: string }>;
+  photos: Array<{ id: string; url: string; caption: string | null }>;
   module?: { id: string; courseId: string; course?: { id: string; slug: string } };
 };
 
@@ -78,7 +78,9 @@ export default function EditLessonPage() {
           setIsFree(l.isFree);
           setVideos((l.videos ?? []).map(fromDTO));
           setCoverUrl(l.coverUrl ?? null);
-          setPhotos((l.photos ?? []).map((p) => ({ key: p.id, url: p.url })));
+          setPhotos(
+            (l.photos ?? []).map((p) => ({ key: p.id, url: p.url, caption: p.caption ?? '' })),
+          );
         }
         setLoading(false);
       }
@@ -121,7 +123,9 @@ export default function EditLessonPage() {
         URL.revokeObjectURL(blobUrl);
         setPhotos((prev) =>
           prev.map((p) =>
-            p.key === tempKey ? { key: attachData.photo.id, url: attachData.photo.url } : p,
+            p.key === tempKey
+              ? { key: attachData.photo.id, url: attachData.photo.url, caption: '' }
+              : p,
           ),
         );
       } catch (err: any) {
@@ -130,6 +134,23 @@ export default function EditLessonPage() {
         toast.error(err?.message || 'Не удалось загрузить фото');
       }
     });
+  };
+
+  const handleCaptionChange = (key: string, caption: string) => {
+    setPhotos((prev) => prev.map((p) => (p.key === key ? { ...p, caption } : p)));
+  };
+
+  const handleCaptionBlur = async (key: string, caption: string) => {
+    if (!lesson) return;
+    const res = await fetch(`/api/admin/lessons/${lesson.id}/photos/${key}`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ caption }),
+    });
+    if (!res.ok) {
+      toast.error('Не удалось сохранить подпись');
+    }
   };
 
   const handleRemovePhoto = async (key: string) => {
@@ -354,6 +375,8 @@ export default function EditLessonPage() {
             photos={photos}
             onAdd={handleAddPhotos}
             onRemove={handleRemovePhoto}
+            onCaptionChange={handleCaptionChange}
+            onCaptionBlur={handleCaptionBlur}
           />
         </div>
 

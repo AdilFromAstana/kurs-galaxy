@@ -42,7 +42,7 @@ export default function CreateLessonPage() {
   // Фото загружаются на сервер только после успешного создания урока —
   // до этого храним только выбранные файлы с локальным blob-превью.
   const [pendingPhotos, setPendingPhotos] = useState<
-    { key: string; file: File; url: string }[]
+    { key: string; file: File; url: string; caption?: string }[]
   >([]);
 
   const [submitState, setSubmitState] = useState<
@@ -90,6 +90,10 @@ export default function CreateLessonPage() {
       url: URL.createObjectURL(file),
     }));
     setPendingPhotos((prev) => [...prev, ...items]);
+  };
+
+  const handleCaptionChange = (key: string, caption: string) => {
+    setPendingPhotos((prev) => prev.map((p) => (p.key === key ? { ...p, caption } : p)));
   };
 
   const handleRemovePhoto = (key: string) => {
@@ -185,7 +189,7 @@ export default function CreateLessonPage() {
               method: 'POST',
               credentials: 'include',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ url: uploadData.url }),
+              body: JSON.stringify({ url: uploadData.url, caption: pendingPhotos[i].caption }),
             });
             if (!attachRes.ok) throw new Error('attach_failed');
           } catch {
@@ -394,6 +398,7 @@ export default function CreateLessonPage() {
             photos={pendingPhotos}
             onAdd={handleAddPhotos}
             onRemove={handleRemovePhoto}
+            onCaptionChange={handleCaptionChange}
             disabled={isBusy}
           />
 

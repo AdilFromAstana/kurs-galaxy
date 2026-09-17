@@ -131,6 +131,8 @@ model LessonPhoto {
   id        String   @id @default(cuid())
   lessonId  String
   url       String
+  // Необязательная подпись под фото — референс, шаг, комментарий мастера.
+  caption   String?
   order     Int      @default(0)
   createdAt DateTime @default(now())
 

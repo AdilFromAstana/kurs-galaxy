@@ -10,6 +10,8 @@ export type LessonPhotoItem = {
   url: string;
   /** true, пока идёт загрузка на сервер (актуально для страницы редактирования) */
   uploading?: boolean;
+  /** Необязательная подпись под фото */
+  caption?: string;
 };
 
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg'];
@@ -19,6 +21,10 @@ type Props = {
   photos: LessonPhotoItem[];
   onAdd: (files: File[]) => void;
   onRemove: (key: string) => void;
+  /** Текст подписи меняется на каждый ввод — родитель просто обновляет своё состояние */
+  onCaptionChange?: (key: string, caption: string) => void;
+  /** Момент сохранения подписи на сервере — вызывается по уходу с поля (blur), не на каждый символ */
+  onCaptionBlur?: (key: string, caption: string) => void;
   disabled?: boolean;
   maxCount?: number;
 };
@@ -32,6 +38,8 @@ export function LessonPhotoGallery({
   photos,
   onAdd,
   onRemove,
+  onCaptionChange,
+  onCaptionBlur,
   disabled = false,
   maxCount = 12,
 }: Props) {
@@ -129,32 +137,40 @@ export function LessonPhotoGallery({
           }`}
         >
           {photos.map((photo) => (
-            <div
-              key={photo.key}
-              className="group relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50"
-            >
-              <img
-                src={photo.url}
-                alt=""
-                className={`w-full h-full object-cover transition-opacity ${
-                  photo.uploading ? 'opacity-40' : ''
-                }`}
+            <div key={photo.key} className="flex flex-col gap-1">
+              <div className="group relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+                <img
+                  src={photo.url}
+                  alt=""
+                  className={`w-full h-full object-cover transition-opacity ${
+                    photo.uploading ? 'opacity-40' : ''
+                  }`}
+                />
+                {photo.uploading ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/40">
+                    <Loader2 className="w-5 h-5 text-primary-600 animate-spin" />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onRemove(photo.key)}
+                    disabled={disabled}
+                    className="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity disabled:opacity-0"
+                    aria-label="Удалить фото"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <input
+                type="text"
+                value={photo.caption ?? ''}
+                onChange={(e) => onCaptionChange?.(photo.key, e.target.value)}
+                onBlur={(e) => onCaptionBlur?.(photo.key, e.target.value)}
+                placeholder="Подпись (необязательно)"
+                disabled={disabled || photo.uploading}
+                className="w-full text-[11px] leading-tight px-1.5 py-1 border border-gray-200 rounded-md focus:ring-1 focus:ring-primary-500 disabled:bg-gray-100 disabled:text-gray-400"
               />
-              {photo.uploading ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/40">
-                  <Loader2 className="w-5 h-5 text-primary-600 animate-spin" />
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => onRemove(photo.key)}
-                  disabled={disabled}
-                  className="absolute top-1 right-1 w-6 h-6 bg-black/60 hover:bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity disabled:opacity-0"
-                  aria-label="Удалить фото"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              )}
             </div>
           ))}
 

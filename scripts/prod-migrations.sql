@@ -9,3 +9,6 @@
 
 -- 2026-09: Course.isFree — курс можно в любой момент сделать бесплатным.
 ALTER TABLE "Course" ADD COLUMN IF NOT EXISTS "isFree" BOOLEAN NOT NULL DEFAULT false;
+
+-- 2026-09: LessonPhoto.caption — необязательная подпись под фото урока.
+ALTER TABLE "LessonPhoto" ADD COLUMN IF NOT EXISTS "caption" TEXT;
