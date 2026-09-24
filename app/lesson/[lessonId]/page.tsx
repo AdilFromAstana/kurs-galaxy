@@ -229,7 +229,8 @@ export default function LessonPage() {
                 />
               </div>
 
-              {/* Lesson Content */}
+              {/* Lesson Content — блок скрыт, если текст урока не заполнен */}
+              {lesson.content?.trim() && (
               <div className="card animate-slide-up">
                 <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">
                   Конспект урока
@@ -254,6 +255,7 @@ export default function LessonPage() {
                   </ReactMarkdown>
                 </div>
               </div>
+              )}
 
               {/* Photos */}
               {lesson.photos.length > 0 && (

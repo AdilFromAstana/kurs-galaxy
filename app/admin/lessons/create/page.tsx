@@ -433,7 +433,7 @@ export default function CreateLessonPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Контент *
+              Контент <span className="text-gray-400 font-normal">(необязательно)</span>
             </label>
             <textarea
               value={content}
@@ -441,7 +441,6 @@ export default function CreateLessonPage() {
               rows={12}
               className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 font-mono text-sm"
               placeholder="# Заголовок&#10;&#10;Текст урока..."
-              required
               disabled={isBusy}
             />
             <p className="text-xs text-gray-500 mt-1">
