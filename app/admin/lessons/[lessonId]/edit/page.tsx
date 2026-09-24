@@ -21,6 +21,7 @@ import {
   type VideoDraft,
 } from '@/lib/lessonVideos';
 import { LessonPhotoGallery, type LessonPhotoItem } from '@/components/admin/LessonPhotoGallery';
+import { compressImage } from '@/lib/compressImage';
 
 type LessonDTO = {
   id: string;
@@ -100,7 +101,7 @@ export default function EditLessonPage() {
 
       try {
         const uploadFormData = new FormData();
-        uploadFormData.append('file', file);
+        uploadFormData.append('file', await compressImage(file));
         const uploadRes = await fetch('/api/admin/lesson-photos', {
           method: 'POST',
           credentials: 'include',

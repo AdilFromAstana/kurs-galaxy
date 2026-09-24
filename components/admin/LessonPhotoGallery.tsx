@@ -138,11 +138,11 @@ export function LessonPhotoGallery({
         >
           {photos.map((photo) => (
             <div key={photo.key} className="flex flex-col gap-1">
-              <div className="group relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+              <div className="group relative aspect-[4/5] rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
                 <img
                   src={photo.url}
                   alt=""
-                  className={`w-full h-full object-cover transition-opacity ${
+                  className={`w-full h-full object-contain transition-opacity ${
                     photo.uploading ? 'opacity-40' : ''
                   }`}
                 />
@@ -185,7 +185,7 @@ export function LessonPhotoGallery({
                   inputRef.current?.click();
                 }
               }}
-              className={`aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors ${
+              className={`aspect-[4/5] rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors ${
                 dragOver
                   ? 'border-primary-500 bg-primary-50'
                   : 'border-gray-300 hover:border-primary-400 bg-gray-50 hover:bg-primary-50/60'

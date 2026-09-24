@@ -17,6 +17,7 @@ import toast from 'react-hot-toast';
 import LessonVideosManager from '@/components/admin/LessonVideosManager';
 import { persistVideoDrafts, type VideoDraft } from '@/lib/lessonVideos';
 import { LessonPhotoGallery, type LessonPhotoItem } from '@/components/admin/LessonPhotoGallery';
+import { compressImage } from '@/lib/compressImage';
 
 type CourseLite = {
   id: string;
@@ -176,7 +177,7 @@ export default function CreateLessonPage() {
         for (let i = 0; i < pendingPhotos.length; i++) {
           try {
             const photoFormData = new FormData();
-            photoFormData.append('file', pendingPhotos[i].file);
+            photoFormData.append('file', await compressImage(pendingPhotos[i].file));
             const uploadRes = await fetch('/api/admin/lesson-photos', {
               method: 'POST',
               credentials: 'include',

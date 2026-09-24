@@ -7,6 +7,7 @@ import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { confirmToast } from "@/lib/toastConfirm";
 import { CourseLogoUpload } from "@/components/admin/CourseLogoUpload";
+import { compressImage } from '@/lib/compressImage';
 
 type AdminCourse = {
   id: string;
@@ -122,7 +123,7 @@ export default function EditCoursePage() {
       let finalThumbnailUrl = thumbnailUrl;
       if (logoFile) {
         const logoFormData = new FormData();
-        logoFormData.append('file', logoFile);
+        logoFormData.append('file', await compressImage(logoFile));
         const logoRes = await fetch('/api/admin/course-thumbnail', {
           method: 'POST',
           credentials: 'include',

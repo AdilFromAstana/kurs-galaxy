@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { CourseLogoUpload } from "@/components/admin/CourseLogoUpload";
+import { compressImage } from '@/lib/compressImage';
 
 function slugify(s: string) {
   return s
@@ -69,7 +70,7 @@ export default function CreateCoursePage() {
       let thumbnailUrl: string | null = null;
       if (logoFile) {
         const logoFormData = new FormData();
-        logoFormData.append('file', logoFile);
+        logoFormData.append('file', await compressImage(logoFile));
         const logoRes = await fetch('/api/admin/course-thumbnail', {
           method: 'POST',
           credentials: 'include',

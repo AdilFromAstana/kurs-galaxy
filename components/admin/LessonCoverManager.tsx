@@ -5,6 +5,7 @@ import { Image as ImageIcon, Upload, Trash2, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { confirmToast } from '@/lib/toastConfirm';
 import { youtubeCoverFor } from '@/lib/lessonCover';
+import { compressImage } from '@/lib/compressImage';
 
 interface Props {
   lessonId: string;
@@ -36,7 +37,7 @@ export default function LessonCoverManager({
     setBusy(true);
     try {
       const body = new FormData();
-      body.append('file', file);
+      body.append('file', await compressImage(file));
       const res = await fetch(`/api/admin/lessons/${lessonId}/cover`, {
         method: 'POST',
         credentials: 'include',

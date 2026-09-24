@@ -42,13 +42,13 @@ export default function LessonPhotoGrid({ photos }: { photos: Photo[] }) {
             key={photo.id}
             type="button"
             onClick={() => setOpenIndex(index)}
-            className="group relative aspect-square rounded-xl overflow-hidden border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="group relative aspect-[4/5] rounded-xl overflow-hidden border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <img
               src={photo.url}
               alt={photo.caption ?? ''}
               loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+              className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-105"
             />
           </button>
         ))}
@@ -98,14 +98,16 @@ export default function LessonPhotoGrid({ photos }: { photos: Photo[] }) {
             </>
           )}
 
+          {/* Фото и подпись столбиком — подпись под кадром, а не поверх него */}
+          <div className="flex flex-col items-center gap-3 max-w-full">
           <img
             src={photos[openIndex].url}
             alt={photos[openIndex].caption ?? ''}
             onClick={(e) => e.stopPropagation()}
-            className="max-w-full max-h-[85vh] rounded-lg object-contain"
+            className="max-w-full max-h-[calc(100vh-9rem)] rounded-lg object-contain"
           />
 
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 px-4 max-w-[90vw]">
+          <div className="flex flex-col items-center gap-2 px-4 max-w-[90vw]">
             {photos[openIndex].caption && (
               <p className="px-3 py-1.5 rounded-xl bg-white/10 text-white text-sm text-center">
                 {photos[openIndex].caption}
@@ -116,6 +118,7 @@ export default function LessonPhotoGrid({ photos }: { photos: Photo[] }) {
                 {openIndex + 1} / {photos.length}
               </div>
             )}
+          </div>
           </div>
         </div>
       )}
