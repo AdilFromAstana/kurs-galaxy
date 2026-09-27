@@ -61,7 +61,10 @@ type SessionState = {
 
 type SessionContextValue = SessionState & {
   refresh: () => Promise<void>;
-  login: (email: string, password: string) => Promise<{ ok: true } | { ok: false; error: string }>;
+  login: (
+    email: string,
+    password: string,
+  ) => Promise<{ ok: true; redirect?: string } | { ok: false; error: string }>;
   register: (
     name: string,
     email: string,
@@ -127,7 +130,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
-      if (!res.ok) return { ok: false, error: data.error ?? 'Ошибка входа' };
+      if (!res.ok) return { ok: false, error: data.message ?? data.error ?? 'Ошибка входа' };
+      // Вход администратора через общую форму — сразу в админку
+      if (data.admin) return { ok: true, redirect: data.redirect ?? '/admin' };
       await refresh();
       return { ok: true };
     },

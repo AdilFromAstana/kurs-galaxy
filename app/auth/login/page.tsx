@@ -20,7 +20,8 @@ export default function LoginPage() {
     const r = await login(formData.email, formData.password);
     setSubmitting(false);
     if (r.ok) {
-      router.push("/dashboard");
+      if (r.redirect) window.location.href = r.redirect;
+      else router.push("/dashboard");
     } else {
       setError(r.error);
     }

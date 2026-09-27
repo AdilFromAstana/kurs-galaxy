@@ -12,6 +12,12 @@ import {
   Award,
   Settings,
   LogOut,
+  Tag,
+  ListChecks,
+  MessageSquare,
+  HelpCircle,
+  Images,
+  Phone,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
@@ -53,7 +59,14 @@ export default function SideDrawer({ isOpen, onClose }: SideDrawerProps) {
   // Навигация для неавторизованных
   const publicNav = [
     { name: "Главная", href: "/", icon: Home },
-    { name: "Курсы", href: "/courses", icon: BookOpen },
+    { name: "Об авторе", href: "/#author", icon: User },
+    { name: "Как проходит обучение", href: "/#how", icon: ListChecks },
+    { name: "Работы учениц", href: "/#results", icon: Images },
+    { name: "Отзывы", href: "/#reviews", icon: MessageSquare },
+    { name: "Контакты и заявка", href: "/#contacts", icon: Phone },
+    { name: "Вопросы и ответы", href: "/#faq", icon: HelpCircle },
+    { name: "Цены на курсы", href: "/#courses", icon: Tag },
+    { name: "Каталог", href: "/courses", icon: BookOpen },
   ];
 
   const navigation = isAuthenticated ? authenticatedNav : publicNav;

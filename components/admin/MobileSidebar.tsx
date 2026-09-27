@@ -9,6 +9,8 @@ import {
   Award,
   Globe,
   Settings,
+  Inbox,
+  LayoutTemplate,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,6 +27,8 @@ const menuItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Главная" },
   { href: "/admin/courses", icon: BookOpen, label: "Курсы" },
   { href: "/admin/students", icon: Users, label: "Студенты" },
+  { href: "/admin/leads", icon: Inbox, label: "Заявки" },
+  { href: "/admin/content", icon: LayoutTemplate, label: "Контент сайта" },
   { href: "/admin/certificate", icon: Award, label: "Сертификат" },
   { href: "/admin/site", icon: Globe, label: "Сайт" },
   { href: "/admin/settings", icon: Settings, label: "Настройки" },

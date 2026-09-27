@@ -1,60 +1,492 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Award,
-  CheckCircle2,
-  Star,
-  BookOpen,
   ArrowRight,
-  Layers,
+  BookOpen,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Gem,
+  Sparkles,
+  TrendingUp,
+  Users,
   Video,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useCourses } from "@/components/providers/CoursesProvider";
+import { useCourses, type CourseDTO } from "@/components/providers/CoursesProvider";
+import type { LandingContentData, WorkPhoto } from "@/lib/landingContent";
 import Header from "@/components/layout/Header";
-import SiteFooter from "@/components/layout/SiteFooter";
+import LandingFooter from "@/components/landing/LandingFooter";
+import { focusRing, formatPrice, manrope, pinkButtonCls, plural } from "@/components/landing/shared";
 
-function pluralCourse(n: number) {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod100 >= 11 && mod100 <= 14) return "Курсов";
-  if (mod10 === 1) return "Курс";
-  if (mod10 >= 2 && mod10 <= 4) return "Курса";
-  return "Курсов";
+function lessonCount(course: CourseDTO) {
+  return course.modules.reduce((sum, m) => sum + m.lessons.length, 0);
 }
 
-function pluralLesson(n: number) {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod100 >= 11 && mod100 <= 14) return "Уроков";
-  if (mod10 === 1) return "Урок";
-  if (mod10 >= 2 && mod10 <= 4) return "Урока";
-  return "Уроков";
+function activePlans(course: CourseDTO) {
+  // У бесплатного курса тарифы скрыты, пока включён флаг isFree
+  if (course.isFree) return [];
+  return course.pricingPlans
+    .filter((p) => p.isActive)
+    .sort((a, b) => a.order - b.order);
 }
+
+function minPlan(course: CourseDTO) {
+  return activePlans(course).reduce<CourseDTO["pricingPlans"][number] | null>(
+    (min, p) => (!min || p.price < min.price ? p : min),
+    null,
+  );
+}
+
+// Авторство стоковых фото с Wikimedia Commons (лицензии CC BY / CC BY-SA
+// требуют подписи). Когда замените фото на свои — уберите записи отсюда.
+type Credit = { author: string; url: string; license: string };
+const CC_BY_2 = "CC BY 2.0";
+const CC_BY_SA_4 = "CC BY-SA 4.0";
+const LICENSE_URLS: Record<string, string> = {
+  [CC_BY_2]: "https://creativecommons.org/licenses/by/2.0/",
+  [CC_BY_SA_4]: "https://creativecommons.org/licenses/by-sa/4.0/",
+};
+const PHOTO_CREDITS: Record<string, Credit> = {
+};
+
+const num = (i: number) => `(${String(i + 1).padStart(2, "0")})`;
+
+// Единый видимый фокус для клавиатурной навигации
+
+// ─── Статичный контент лендинга ────────────────────────────────────────────
+const BENEFITS = [
+  {
+    icon: Sparkles,
+    title: "Без лишней теории",
+    text: "Только то, что работает на практике: форма, хна, краска, колористика",
+  },
+  {
+    icon: Users,
+    title: "Новичкам и мастерам",
+    text: "Освоите профессию с нуля или прокачаете навыки, если уже работаете",
+  },
+  {
+    icon: TrendingUp,
+    title: "Рост чека и клиентов",
+    text: "Научитесь поднимать средний чек и находить новых клиентов",
+  },
+];
+
+const STEPS = [
+  { title: "Выберите курс", text: "Сравните программы и тарифы" },
+  { title: "Оплатите онлайн", text: "Доступ откроется сразу после оплаты" },
+  { title: "Учитесь в своём темпе", text: "С телефона или компьютера — прогресс сохраняется" },
+  { title: "Получите сертификат", text: "С QR-кодом для проверки подлинности" },
+];
+
+// ─── UI-кирпичики ───────────────────────────────────────────────────────────
+
+/** Плавное появление блока при прокрутке. Учитывает prefers-reduced-motion. */
+function Reveal({
+  children,
+  delay = 0,
+  className = "",
+}: {
+  children: ReactNode;
+  delay?: number;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (
+      typeof IntersectionObserver === "undefined" ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setVisible(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -10% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`transition-all duration-700 ease-out motion-reduce:transition-none ${
+        visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+function SectionTitle({
+  top,
+  accent,
+  lead,
+  dark = false,
+  compact = false,
+}: {
+  top: string;
+  accent: string;
+  lead?: string;
+  dark?: boolean;
+  compact?: boolean;
+}) {
+  return (
+    <Reveal className={`${compact ? "mb-6 md:mb-10" : "mb-10 md:mb-14"} max-w-3xl`}>
+      <h2
+        className={`${compact ? "text-2xl md:text-4xl" : "text-3xl md:text-5xl"} font-extrabold uppercase tracking-tight leading-[1.05] ${
+          dark ? "text-white" : "text-landing-plum"
+        }`}
+      >
+        {top}
+        <br />
+        <span className="text-landing-pink">{accent}</span>
+      </h2>
+      {lead && (
+        <p
+          className={`mt-4 text-base md:text-lg ${
+            dark ? "text-white/80" : "text-landing-plum/80"
+          }`}
+        >
+          {lead}
+        </p>
+      )}
+    </Reveal>
+  );
+}
+
+function PinkButton({
+  href,
+  children,
+  className = "",
+}: {
+  href: string;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`${pinkButtonCls} ${className}`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+function PhotoCredits({ srcs }: { srcs: (string | null | undefined)[] }) {
+  const seen = new Set<string>();
+  const credits = srcs
+    .map((src) => (src ? PHOTO_CREDITS[src] : undefined))
+    .filter((c): c is Credit => {
+      if (!c || seen.has(c.url)) return false;
+      seen.add(c.url);
+      return true;
+    });
+  if (credits.length === 0) return null;
+  return (
+    <p className="mt-6 text-xs text-landing-plum/60">
+      Фото:{" "}
+      {credits.map((c, i) => (
+        <span key={c.url}>
+          {i > 0 && ", "}
+          <a
+            href={c.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-landing-pink"
+          >
+            {c.author}
+          </a>{" "}
+          (
+          <a
+            href={LICENSE_URLS[c.license]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-landing-pink"
+          >
+            {c.license}
+          </a>
+          )
+        </span>
+      ))}
+    </p>
+  );
+}
+
+/** Горизонтальная карусель работ: свайп на мобильных, стрелки на десктопе. */
+function WorksCarousel({ works }: { works: WorkPhoto[] }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(true);
+
+  const updateArrows = () => {
+    const el = trackRef.current;
+    if (!el) return;
+    setCanPrev(el.scrollLeft > 4);
+    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+
+  useEffect(() => {
+    updateArrows();
+    window.addEventListener("resize", updateArrows);
+    return () => window.removeEventListener("resize", updateArrows);
+  }, []);
+
+  const scrollBy = (dir: 1 | -1) => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
+  };
+
+  const arrow = (dir: 1 | -1, enabled: boolean) => (
+    <button
+      type="button"
+      onClick={() => scrollBy(dir)}
+      disabled={!enabled}
+      aria-label={dir === 1 ? "Следующие работы" : "Предыдущие работы"}
+      className={`hidden h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-landing-pink shadow-md ring-1 ring-landing-plum/10 transition-all hover:bg-landing-pink hover:text-white disabled:pointer-events-none disabled:opacity-30 md:flex ${focusRing}`}
+    >
+      {dir === 1 ? (
+        <ChevronRight className="h-6 w-6" aria-hidden />
+      ) : (
+        <ChevronLeft className="h-6 w-6" aria-hidden />
+      )}
+    </button>
+  );
+
+  return (
+    <div className="rounded-[28px] bg-white p-4 ring-1 ring-landing-plum/10 md:p-6">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <p className="text-sm md:text-base font-extrabold uppercase tracking-widest">
+          Галерея работ
+        </p>
+        <div className="flex gap-2">
+          {arrow(-1, canPrev)}
+          {arrow(1, canNext)}
+        </div>
+      </div>
+      <div
+        ref={trackRef}
+        onScroll={updateArrows}
+        className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-2 [scrollbar-width:none] md:-mx-6 md:scroll-px-6 md:px-6 [&::-webkit-scrollbar]:hidden"
+        role="region"
+        aria-label="Галерея работ учениц"
+        tabIndex={0}
+      >
+        {works.map((w) => (
+          <img
+            key={w.src}
+            src={w.src}
+            alt={w.alt}
+            loading="lazy"
+            className="aspect-[4/3] w-[80%] shrink-0 snap-start rounded-2xl object-cover sm:w-[45%] lg:w-[calc((100%-2rem)/3)]"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CourseCard({ course, index }: { course: CourseDTO; index: number }) {
+  const plans = activePlans(course);
+  const cheapest = minPlan(course);
+  const lessons = lessonCount(course);
+
+  return (
+    <article className="group flex h-full flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_20px_50px_-25px_rgba(86,62,79,0.35)] ring-1 ring-landing-plum/5 transition-shadow hover:shadow-[0_30px_60px_-25px_rgba(86,62,79,0.45)]">
+      <div className="relative aspect-[16/10] overflow-hidden bg-gradient-to-br from-landing-blush via-white to-pink-100">
+        {course.thumbnailUrl ? (
+          <img
+            src={course.thumbnailUrl}
+            alt={course.title}
+            loading="lazy"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <Gem className="h-16 w-16 text-landing-pink/60" aria-hidden />
+          </div>
+        )}
+        <span className="absolute left-4 top-4 rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider text-landing-pink shadow-sm">
+          {course.isFree ? "бесплатно" : "онлайн"}
+        </span>
+        <span className="absolute right-4 top-4 rounded-full bg-white/90 px-2.5 py-1 text-xs font-bold text-landing-plum">
+          {num(index)}
+        </span>
+      </div>
+
+      <div className="flex flex-1 flex-col p-6 md:p-7">
+        <h3 className="mb-3 text-xl md:text-2xl font-extrabold uppercase leading-tight text-landing-plum">
+          {course.title}
+        </h3>
+        <p className="mb-5 line-clamp-3 text-sm md:text-base text-landing-plum/80">
+          {course.description}
+        </p>
+
+        <div className="mb-5 flex flex-wrap gap-2 text-xs font-semibold text-landing-plum">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-landing-blush px-3 py-1.5">
+            <BookOpen className="h-3.5 w-3.5" aria-hidden />
+            {course.modules.length}{" "}
+            {plural(course.modules.length, "модуль", "модуля", "модулей")}
+          </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-landing-blush px-3 py-1.5">
+            <Video className="h-3.5 w-3.5" aria-hidden />
+            {lessons} {plural(lessons, "урок", "урока", "уроков")}
+          </span>
+        </div>
+
+        {plans.length > 0 && (
+          <ul className="mb-6 space-y-2" aria-label="Тарифы">
+            {plans.map((plan) => (
+              <li
+                key={plan.id}
+                className={`flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm ${
+                  plan.isRecommended
+                    ? "bg-landing-blush ring-2 ring-landing-pink"
+                    : "bg-gray-50"
+                }`}
+              >
+                <span className="flex items-center gap-2 font-semibold text-landing-plum">
+                  {plan.name}
+                  {plan.isRecommended && (
+                    <span className="rounded-full bg-landing-pink px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                      популярный
+                    </span>
+                  )}
+                </span>
+                <span className="whitespace-nowrap font-bold text-landing-plum">
+                  {formatPrice(plan.price, plan.currency)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="mt-auto">
+          {course.isFree ? (
+            <p className="mb-4 text-2xl font-extrabold text-landing-pink">Бесплатно</p>
+          ) : (
+            cheapest && (
+              <p className="mb-4 text-sm text-landing-plum/80">
+                от{" "}
+                <span className="text-2xl font-extrabold text-landing-pink">
+                  {formatPrice(cheapest.price, cheapest.currency)}
+                </span>
+              </p>
+            )
+          )}
+          <PinkButton href={`/course/${course.id}`} className="w-full">
+            {course.isFree
+              ? "Начать бесплатно"
+              : cheapest
+                ? "Выбрать тариф"
+                : "Подробнее о курсе"}{" "}
+            <ArrowRight className="h-4 w-4" aria-hidden />
+          </PinkButton>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function FaqItem({
+  q,
+  a,
+  open,
+  onToggle,
+}: {
+  q: string;
+  a: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const id = useId();
+  return (
+    <div className="border-b border-landing-plum/15">
+      <h3>
+        <button
+          id={`${id}-q`}
+          onClick={onToggle}
+          aria-expanded={open}
+          aria-controls={`${id}-a`}
+          className={`flex w-full min-h-[64px] items-center justify-between gap-4 rounded-xl py-5 text-left transition-colors hover:text-landing-pink ${focusRing}`}
+        >
+          <span className="text-base md:text-xl font-bold">{q}</span>
+          <span
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
+              open
+                ? "rotate-180 bg-landing-pink text-white"
+                : "bg-landing-blush text-landing-pink"
+            }`}
+            aria-hidden
+          >
+            <ChevronDown className="h-5 w-5" />
+          </span>
+        </button>
+      </h3>
+      <div
+        id={`${id}-a`}
+        role="region"
+        aria-labelledby={`${id}-q`}
+        className={`grid transition-all duration-300 motion-reduce:transition-none ${
+          open ? "grid-rows-[1fr] pb-6 opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <p className="overflow-hidden text-sm md:text-base text-landing-plum/80">
+          {a}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Страница ───────────────────────────────────────────────────────────────
 
 export default function WelcomePage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const { courses } = useCourses();
-  const totalCourses = courses.length;
-  const totalLessons = courses.reduce(
-    (sum, course) =>
-      sum +
-      course.modules.reduce((mSum, module) => mSum + module.lessons.length, 0),
-    0,
-  );
+  const { courses, isLoading } = useCourses();
+  const [openFaq, setOpenFaq] = useState(0);
+  // Контент, который автор редактирует в админке (Админка → Главная)
+  const [content, setContent] = useState<LandingContentData | null>(null);
 
-  // Топ-3 курса для превью на главной (с активными тарифами и хотя бы одним разделом)
-  const previewCourses = courses
-    .filter(
-      (c) =>
-        c.modules.length > 0 &&
-        c.pricingPlans?.some((p) => p.isActive),
-    )
-    .slice(0, 3);
+  useEffect(() => {
+    let cancel = false;
+    fetch("/api/site-content/public")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => !cancel && d && setContent(d.content))
+      .catch(() => {});
+    return () => {
+      cancel = true;
+    };
+  }, []);
+  const author = content && (content.authorName || content.authorPhoto) ? content : null;
+  const [showStickyCta, setShowStickyCta] = useState(false);
+  const heroRef = useRef<HTMLElement>(null);
+  const coursesRef = useRef<HTMLElement>(null);
+
+  // Все опубликованные курсы с программой: платные, бесплатные и без тарифов
+  const saleCourses = courses.filter((c) => c.modules.length > 0);
+  const featured = saleCourses[0];
+  const featuredMin = featured ? minPlan(featured) : null;
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -62,210 +494,402 @@ export default function WelcomePage() {
     }
   }, [isAuthenticated, router]);
 
+  // Мобильная плавающая кнопка: видна, когда hero ушёл за экран,
+  // и прячется, пока на экране сам блок с ценами — чтобы не дублировать CTA.
+  useEffect(() => {
+    const hero = heroRef.current;
+    const pricing = coursesRef.current;
+    if (!hero || !pricing || typeof IntersectionObserver === "undefined") return;
+    const state = { heroVisible: true, pricingVisible: false };
+    const update = () =>
+      setShowStickyCta(!state.heroVisible && !state.pricingVisible);
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.target === hero) state.heroVisible = e.isIntersecting;
+        if (e.target === pricing) state.pricingVisible = e.isIntersecting;
+      }
+      update();
+    });
+    io.observe(hero);
+    io.observe(pricing);
+    return () => io.disconnect();
+  }, [isAuthenticated]);
+
   if (isAuthenticated) {
     return null;
   }
 
+
   return (
     <>
       <Header />
-      <div className="min-h-screen w-full flex flex-col">
-        {/* Hero Section */}
-        <section className="px-4 md:px-6 lg:px-8 py-10 md:py-16 lg:py-20 xl:py-24 animate-fade-in">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-              {/* Левая колонка: текст + CTA */}
-              <div className="text-center lg:text-left">
-                {/* Title */}
-                <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold mb-4 md:mb-6 text-primary-600">
-                  KursGalaxy.kz
-                </h1>
+      <main className={`${manrope.className} w-full bg-white text-landing-plum`}>
+        {/* ── Hero ─────────────────────────────────────────────── */}
+        <section
+          ref={heroRef}
+          className="relative overflow-hidden bg-gradient-to-b from-landing-blush to-white"
+        >
+          <div className="pointer-events-none absolute -right-32 -top-32 h-[28rem] w-[28rem] rounded-full bg-landing-pink/15 blur-3xl" />
+          <div className="pointer-events-none absolute -left-24 bottom-0 h-72 w-72 rounded-full bg-pink-200/40 blur-3xl" />
 
-              {/* Subtitle */}
-              <p className="text-lg md:text-xl lg:text-2xl xl:text-2xl text-dark-600 mb-8 md:mb-10 max-w-2xl mx-auto lg:mx-0">
-                Профессиональное онлайн-обучение
-                <br className="hidden md:block" />
-                <span className="text-primary-600 font-semibold">
-                  для специалистов beauty-индустрии
-                </span>
+          <div className="relative mx-auto max-w-5xl px-4 pb-16 pt-14 text-center md:px-6 md:pb-24 md:pt-24 lg:px-8">
+            <div className="animate-fade-in motion-reduce:animate-none">
+              <h1 className="mb-6 text-[2.6rem] leading-[0.95] md:text-7xl lg:text-[5.5rem] font-extrabold uppercase tracking-tight text-landing-plum">
+                Курсы
+                <br />
+                <span className="text-landing-pink">по бровям</span>
+              </h1>
+              <p className="mx-auto mb-8 max-w-2xl text-base md:text-xl text-landing-plum/80">
+                Натуральные брови хной и краской, колористика и перманент — от
+                первой клиентки до высокого чека. Учитесь в своём темпе и
+                получите сертификат.
               </p>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto lg:mx-0">
+              <div className="flex flex-col justify-center gap-3 sm:flex-row">
+                <PinkButton href="#courses">
+                  Выбрать курс <ArrowRight className="h-4 w-4" aria-hidden />
+                </PinkButton>
                 <Link
-                  href="/courses"
-                  className="btn btn-primary flex-1 flex items-center justify-center animate-scale-in"
+                  href="#how"
+                  className={`inline-flex min-h-[52px] items-center justify-center rounded-full border-2 border-landing-plum/20 bg-white/60 px-8 py-4 text-sm md:text-base font-bold uppercase tracking-wide text-landing-plum transition-colors hover:border-landing-pink hover:text-landing-pink ${focusRing}`}
                 >
-                  Посмотреть курсы
-                </Link>
-                <Link
-                  href="/auth/login"
-                  className="btn btn-secondary flex-1 flex items-center justify-center animate-scale-in"
-                  style={{ animationDelay: "0.1s" }}
-                >
-                  Войти
+                  Как проходит обучение
                 </Link>
               </div>
             </div>
 
-            {/* Правая колонка: декоративный визуал (на lg+) */}
-            <div className="hidden lg:flex items-center justify-center">
-              <div className="relative w-full max-w-md aspect-square">
-                {/* Карточка-превью */}
-                <div className="relative bg-white rounded-2xl shadow-soft border border-gray-100 p-8 h-full flex flex-col justify-center items-center gap-6">
-                  <div className="w-24 h-24 bg-primary-600 rounded-2xl flex items-center justify-center">
-                    <BookOpen className="w-12 h-12 text-white" />
-                  </div>
-                  <div className="text-center">
-                    <div className="text-3xl xl:text-4xl font-bold text-dark-900 mb-1">
-                      {totalCourses} {pluralCourse(totalCourses)}
-                    </div>
-                    <div className="text-base text-dark-600">
-                      {totalLessons} {pluralLesson(totalLessons)} в каталоге
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-primary-50 rounded-full">
-                    <Star className="w-4 h-4 text-primary-600 fill-primary-600" />
-                    <span className="text-sm font-semibold text-primary-700">
-                      С сертификатом
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
+        </section>
 
-          {/* Features (только мобильно/планшет) */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-12 lg:hidden">
-            <div className="card animate-slide-up">
-              <div className="flex flex-col items-center text-center">
-                <BookOpen className="w-8 h-8 md:w-10 md:h-10 text-primary-500 mb-3" />
-                <h3 className="text-base md:text-lg font-semibold mb-2">
-                  {totalCourses} {pluralCourse(totalCourses)}
-                </h3>
-                <p className="text-sm md:text-base text-dark-600">
-                  Профессиональные программы обучения
-                </p>
-              </div>
-            </div>
-            <div className="card animate-slide-up">
-              <div className="flex flex-col items-center text-center">
-                <CheckCircle2 className="w-8 h-8 md:w-10 md:h-10 text-primary-500 mb-3" />
-                <h3 className="text-base md:text-lg font-semibold mb-2">
-                  {totalLessons} {pluralLesson(totalLessons)}
-                </h3>
-                <p className="text-sm md:text-base text-dark-600">
-                  Пошаговые видео-инструкции
-                </p>
-              </div>
-            </div>
-            <div className="card animate-slide-up">
-              <div className="flex flex-col items-center text-center">
-                <Star className="w-8 h-8 md:w-10 md:h-10 text-primary-500 mb-3" />
-                <h3 className="text-base md:text-lg font-semibold mb-2">
-                  Сертификат
-                </h3>
-                <p className="text-sm md:text-base text-dark-600">
-                  После завершения каждого курса
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Course Preview Section */}
-      {previewCourses.length > 0 && (
-        <section className="px-4 md:px-6 lg:px-8 py-12 md:py-16 lg:py-20 bg-white/50 backdrop-blur-sm border-y border-gray-200">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8 md:mb-10 lg:mb-12">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-dark-900 mb-2 md:mb-3">
-                Наши курсы
-              </h2>
-              <p className="text-base md:text-lg lg:text-xl text-dark-600">
-                Выберите курс и начните обучение сегодня
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-8 lg:mb-10">
-              {previewCourses.map((course, index) => {
-                const lessonCount = course.modules.reduce(
-                  (sum, m) => sum + m.lessons.length,
-                  0,
-                );
-                const activePlans = (course.pricingPlans ?? []).filter(
-                  (p) => p.isActive,
-                );
-                const minPrice =
-                  activePlans.length > 0
-                    ? Math.min(...activePlans.map((p) => p.price))
-                    : null;
-                const currency = activePlans[0]?.currency ?? "₸";
-
-                return (
-                  <Link
-                    key={course.id}
-                    href={`/course/${course.id}`}
-                    className="card card-hover group flex flex-col animate-slide-up"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="w-full h-40 bg-primary-50 rounded-xl flex items-center justify-center mb-4 overflow-hidden group-hover:bg-primary-100 transition-colors">
-                      {course.thumbnailUrl ? (
-                        <img
-                          src={course.thumbnailUrl}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <BookOpen className="w-16 h-16 text-primary-600" />
+        {/* ── Об авторе ────────────────────────────────────────── */}
+        {author && (
+        <section id="author" className="scroll-mt-20 px-4 py-16 md:px-6 md:py-24 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <SectionTitle top="Об авторе" accent="курсов" />
+            <div
+              className={`grid gap-5 ${
+                author.authorFacts.length > 0 ? "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]" : ""
+              }`}
+            >
+              <Reveal>
+                <figure
+                  className={`relative h-full overflow-hidden rounded-[28px] bg-landing-plum ${
+                    author.authorPhoto ? "min-h-[360px] md:min-h-[460px]" : "min-h-[200px]"
+                  }`}
+                >
+                  {author.authorPhoto && (
+                    <img
+                      src={author.authorPhoto}
+                      alt={author.authorName || "Автор курсов"}
+                      loading="lazy"
+                      className="absolute inset-0 h-full w-full object-cover object-[60%_30%]"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-landing-plum/90 via-landing-plum/10 to-transparent" />
+                  {(author.authorName || author.authorRole) && (
+                    <figcaption className="absolute inset-x-0 bottom-0 p-6 md:p-8">
+                      {author.authorName && (
+                        <p className="text-2xl md:text-4xl font-extrabold uppercase text-white">
+                          {author.authorName}
+                        </p>
                       )}
+                      {author.authorRole && (
+                        <p className="mt-1 text-sm md:text-base font-semibold uppercase tracking-widest text-landing-pink">
+                          {author.authorRole}
+                        </p>
+                      )}
+                    </figcaption>
+                  )}
+                </figure>
+              </Reveal>
+              {author.authorFacts.length > 0 && (
+                <div className="flex flex-col gap-5">
+                  {author.authorFacts.map((f, i) => (
+                    <Reveal key={i} delay={i * 100} className="flex-1">
+                      <div className="grid h-full gap-2 rounded-[28px] border-2 border-landing-blush p-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] sm:items-center sm:gap-6 md:p-8">
+                        <p className="text-lg md:text-xl font-extrabold uppercase">{f.title}</p>
+                        <p className="whitespace-pre-line text-sm md:text-base text-landing-plum/80">{f.text}</p>
+                      </div>
+                    </Reveal>
+                  ))}
+                </div>
+              )}
+            </div>
+            {author.authorBio && (
+              <Reveal>
+                <p className="mt-8 max-w-3xl whitespace-pre-line text-base md:text-lg text-landing-plum/80">
+                  {author.authorBio}
+                </p>
+              </Reveal>
+            )}
+          </div>
+        </section>
+        )}
+
+        {/* ── Кому подойдёт ────────────────────────────────────── */}
+        <section id="for-whom" className="scroll-mt-20 px-4 py-12 md:px-6 md:py-20 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <SectionTitle compact top="Почему" accent="наши курсы" />
+            <Reveal>
+              <ul className="grid divide-y divide-landing-pink/15 rounded-[28px] bg-landing-blush px-5 md:grid-cols-3 md:divide-x md:divide-y-0 md:px-0 md:py-8">
+                {BENEFITS.map(({ icon: Icon, title, text }) => (
+                  <li key={title} className="flex gap-4 py-5 md:flex-col md:gap-4 md:px-8 md:py-0">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-landing-pink shadow-[0_8px_20px_-8px_rgba(245,73,160,0.8)]">
+                      <Icon className="h-5 w-5 text-white" aria-hidden />
+                    </span>
+                    <div>
+                      <h3 className="text-base md:text-lg font-extrabold leading-snug">{title}</h3>
+                      <p className="mt-1 text-sm md:text-base text-landing-plum/75">{text}</p>
                     </div>
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          </div>
+        </section>
 
-                    <h3 className="text-lg font-bold text-dark-900 mb-2 group-hover:text-primary-600 transition-colors line-clamp-2">
-                      {course.title}
-                    </h3>
-                    <p className="text-sm text-dark-600 mb-4 line-clamp-2 flex-1">
-                      {course.description}
-                    </p>
-
-                    <div className="flex items-center gap-4 mb-4 text-sm text-dark-500">
-                      <div className="flex items-center gap-1.5">
-                        <Layers className="w-4 h-4" />
-                        <span>{course.modules.length} разд.</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Video className="w-4 h-4" />
-                        <span>{lessonCount} ур.</span>
-                      </div>
-                    </div>
-
-                    {minPrice !== null && (
-                      <div className="flex items-baseline justify-between pt-3 border-t border-gray-200">
-                        <span className="text-sm text-dark-500">От</span>
-                        <span className="text-xl font-bold text-primary-600">
-                          {minPrice.toLocaleString()} {currency}
-                        </span>
-                      </div>
+        {/* ── Как проходит обучение ────────────────────────────── */}
+        <section id="how" className="scroll-mt-20 px-4 pb-12 md:px-6 md:pb-20 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <SectionTitle compact top="Как проходит" accent="обучение" />
+            <Reveal>
+              {/* Таймлайн: вертикальный на телефоне, горизонтальный на десктопе */}
+              <ol className="grid gap-6 md:grid-cols-4">
+                {STEPS.map(({ title, text }, i) => (
+                  <li key={title} className="relative flex gap-4 md:flex-col md:gap-5">
+                    {/* Линия к следующему шагу */}
+                    {i < STEPS.length - 1 && (
+                      <span
+                        className="absolute left-5 top-10 -bottom-6 w-0.5 -translate-x-1/2 bg-landing-pink/40 md:left-10 md:-right-6 md:top-5 md:bottom-auto md:h-0.5 md:w-auto md:translate-x-0"
+                        aria-hidden
+                      />
                     )}
-                  </Link>
-                );
-              })}
+                    <span
+                      className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-base font-extrabold ring-4 ring-white ${
+                        i === STEPS.length - 1
+                          ? "bg-landing-pink text-white"
+                          : "bg-landing-plum text-white"
+                      }`}
+                    >
+                      {i + 1}
+                    </span>
+                    <div className="pt-1.5 md:pt-0">
+                      <h3 className="text-base md:text-lg font-extrabold leading-snug">{title}</h3>
+                      <p className="mt-1 text-sm md:text-base text-landing-plum/75">{text}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ── Работы учениц ────────────────────────────────────── */}
+        {content && (content.works.length > 0 || content.results.length > 0) && (
+        <section
+          id="results"
+          className="scroll-mt-20 bg-landing-cream px-4 py-16 md:px-6 md:py-24 lg:px-8"
+        >
+          <div className="mx-auto max-w-7xl">
+            <SectionTitle top="Работы учениц" accent="до и после курса" />
+
+            {content.works.length > 0 && (
+              <Reveal className="mb-6">
+                <WorksCarousel works={content.works} />
+              </Reveal>
+            )}
+
+            <div className="space-y-6">
+              {content.results.map((r, i) => (
+                <Reveal key={i}>
+                  <article className="grid overflow-hidden rounded-[28px] bg-white ring-1 ring-landing-plum/10 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+                    <div className="relative aspect-[4/3] md:aspect-auto md:min-h-[320px]">
+                      <img
+                        src={r.photo}
+                        alt={r.tag ? `Работа ученицы: ${r.tag.toLowerCase()}` : "Работа ученицы"}
+                        loading="lazy"
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    </div>
+                    <div className="p-6 md:p-10">
+                      <div className="mb-6 flex items-center justify-between gap-4">
+                        <h3 className="text-xl md:text-2xl font-extrabold uppercase">
+                          {r.tag}
+                        </h3>
+                        <span className="text-sm font-bold text-landing-plum/60">{num(i)}</span>
+                      </div>
+                      <div className="grid gap-6 sm:grid-cols-2">
+                        <div>
+                          <p className="mb-3 text-xs font-extrabold uppercase tracking-widest text-landing-plum/70">
+                            До:
+                          </p>
+                          <ul className="space-y-2 text-sm md:text-base text-landing-plum/80">
+                            {r.before.map((b) => (
+                              <li key={b} className="flex gap-2">
+                                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-landing-plum/40" aria-hidden />
+                                {b}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="rounded-2xl bg-landing-blush p-5">
+                          <p className="mb-3 text-xs font-extrabold uppercase tracking-widest text-landing-pink">
+                            После:
+                          </p>
+                          <ul className="space-y-2 text-sm md:text-base font-semibold">
+                            {r.after.map((a) => (
+                              <li key={a} className="flex gap-2">
+                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-landing-pink" aria-hidden />
+                                {a}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                </Reveal>
+              ))}
             </div>
 
-            <div className="text-center">
+          </div>
+        </section>
+        )}
+
+        {/* ── Отзывы ───────────────────────────────────────────── */}
+        {content && content.reviews.length > 0 && (
+        <section
+          id="reviews"
+          className="scroll-mt-20 bg-landing-plum px-4 py-16 md:px-6 md:py-24 lg:px-8"
+        >
+          <div className="mx-auto max-w-7xl">
+            <SectionTitle top="Что говорят" accent="наши ученицы" dark />
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {content.reviews.map((r, i) => (
+                <Reveal key={i} delay={(i % 3) * 100}>
+                  <figure className="flex h-full flex-col justify-between rounded-[28px] bg-white/5 p-7 ring-1 ring-white/10 transition-colors hover:bg-white/10">
+                    <blockquote className="mb-6 text-lg md:text-xl font-bold leading-snug text-white">
+                      «{r.text}»
+                    </blockquote>
+                    <figcaption className="text-sm font-bold text-landing-pink">
+                      {r.name || num(i)}
+                    </figcaption>
+                  </figure>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+        )}
+
+        {/* ── FAQ ──────────────────────────────────────────────── */}
+        {content && content.faq.length > 0 && (
+        <section id="faq" className="scroll-mt-20 px-4 py-16 md:px-6 md:py-24 lg:px-8">
+          <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[1fr_1.5fr] lg:gap-10">
+            <SectionTitle
+              top="Вопрос /"
+              accent="ответ"
+              lead="Не нашли ответ? Напишите нам — контакты внизу страницы."
+            />
+            <div>
+              {content.faq.map((item, i) => (
+                <FaqItem
+                  key={i}
+                  {...item}
+                  open={openFaq === i}
+                  onToggle={() => setOpenFaq(openFaq === i ? -1 : i)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+        )}
+
+        {/* ── Цены на курсы ────────────────────────────────────── */}
+        <section
+          id="courses"
+          ref={coursesRef}
+          className="scroll-mt-20 bg-landing-cream px-4 py-16 md:px-6 md:py-24 lg:px-8"
+        >
+          <div className="mx-auto max-w-7xl">
+            <SectionTitle
+              top="Цены"
+              accent="на курсы"
+              lead="Выберите программу и тариф — доступ откроется сразу после оплаты."
+            />
+            {isLoading ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3" aria-busy="true">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className="h-[520px] animate-pulse rounded-[28px] bg-white ring-1 ring-landing-plum/5"
+                  />
+                ))}
+              </div>
+            ) : saleCourses.length > 0 ? (
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {saleCourses.map((course, i) => (
+                  <Reveal key={course.id} delay={i * 100}>
+                    <CourseCard course={course} index={i} />
+                  </Reveal>
+                ))}
+              </div>
+            ) : (
+              <p className="text-landing-plum/80">
+                Курсы скоро появятся — следите за обновлениями.
+              </p>
+            )}
+            <PhotoCredits srcs={saleCourses.map((c) => c.thumbnailUrl)} />
+            <div className="mt-10">
               <Link
                 href="/courses"
-                className="btn btn-secondary inline-flex items-center gap-2"
+                className={`inline-flex min-h-[44px] items-center gap-2 rounded-full font-bold uppercase tracking-wide text-landing-pink hover:underline ${focusRing}`}
               >
-                Смотреть все курсы
-                <ArrowRight className="w-4 h-4" />
+                Весь каталог <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
             </div>
           </div>
         </section>
-      )}
 
-        <SiteFooter />
+        {/* ── Финальный CTA ────────────────────────────────────── */}
+        <section className="px-4 pb-16 md:px-6 md:pb-24 lg:px-8">
+          <Reveal>
+            <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[40px] bg-gradient-to-br from-landing-pink to-pink-400 px-6 py-14 text-center md:px-12 md:py-20">
+              <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/15 blur-2xl" />
+              <h2 className="relative mb-4 text-3xl md:text-5xl font-extrabold uppercase leading-tight text-white">
+                Готовы начать?
+              </h2>
+              <p className="relative mx-auto mb-8 max-w-xl text-base md:text-lg text-white">
+                Зарегистрируйтесь и начните обучение уже сегодня
+              </p>
+              <Link
+                href="/auth/register"
+                className={`relative inline-flex min-h-[52px] items-center gap-2 rounded-full bg-white px-8 py-4 text-sm md:text-base font-bold uppercase tracking-wide text-landing-pink transition-transform hover:-translate-y-0.5 active:scale-95 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/60`}
+              >
+                Зарегистрироваться <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </div>
+          </Reveal>
+        </section>
+      </main>
+
+      <div className={manrope.className}>
+        <LandingFooter />
+      </div>
+      {/* Отступ, чтобы плавающая кнопка не перекрывала низ футера на мобильных */}
+      <div className="h-24 bg-landing-pink-dark md:hidden" aria-hidden />
+
+      {/* ── Плавающая CTA-кнопка (только мобильные) ──────────── */}
+      <div
+        className={`${manrope.className} fixed inset-x-0 bottom-0 z-30 border-t border-landing-plum/10 bg-white/95 p-3 backdrop-blur transition-all duration-300 md:hidden ${
+          showStickyCta ? "visible translate-y-0" : "invisible translate-y-full"
+        }`}
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      >
+        <PinkButton href="#courses" className="w-full">
+          {featuredMin
+            ? `Выбрать курс · от ${formatPrice(featuredMin.price, featuredMin.currency)}`
+            : "Выбрать курс"}
+        </PinkButton>
       </div>
     </>
   );

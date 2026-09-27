@@ -348,3 +348,30 @@ model Certificate {
   @@index([userId])
   @@index([courseId])
 }
+
+// Заявка с формы «Остались вопросы?» на главной
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  handled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// Редактируемый из админки контент главной страницы (одна запись id="default").
+// Списки хранятся JSON-массивами — их форма описана в lib/landingContent.ts.
+model LandingContent {
+  id          String   @id @default("default")
+  authorName  String?
+  authorRole  String?
+  authorPhoto String?
+  authorBio   String?
+  authorFacts Json     @default("[]") // [{ title, text }]
+  works       Json     @default("[]") // [{ src, alt }]
+  results     Json     @default("[]") // [{ photo, tag, before: string[], after: string[] }]
+  reviews     Json     @default("[]") // [{ text, name }]
+  faq         Json     @default("[]") // [{ q, a }]
+  updatedAt   DateTime @updatedAt
+}

@@ -5,6 +5,7 @@ import {
   COURSE_THUMBNAIL_DIR_PATH,
   LESSON_COVER_DIR_PATH,
   LESSON_PHOTOS_DIR_PATH,
+  SITE_CONTENT_DIR_PATH,
 } from '@/lib/uploads';
 
 export const dynamic = 'force-dynamic';
@@ -18,6 +19,7 @@ const DIRS: Record<string, string> = {
   'course-thumbnails': COURSE_THUMBNAIL_DIR_PATH,
   'lesson-covers': LESSON_COVER_DIR_PATH,
   'certificate-assets': CERTIFICATE_DIR_PATH,
+  'site-content': SITE_CONTENT_DIR_PATH,
 };
 
 const MIME: Record<string, string> = {
