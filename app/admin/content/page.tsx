@@ -109,7 +109,7 @@ export default function LandingContentPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in pb-28 max-w-5xl">
+    <div className="space-y-6 animate-fade-in pb-40 md:pb-28 max-w-5xl">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-3">
@@ -348,17 +348,17 @@ export default function LandingContentPage() {
         </Card>
       )}
 
-      {/* Панель сохранения всегда под рукой */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur px-4 py-3">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
-          <p className="text-sm text-gray-600">
+      {/* Панель сохранения всегда под рукой. На телефоне — над нижним меню админки (77px) */}
+      <div className="fixed inset-x-0 bottom-[calc(77px+env(safe-area-inset-bottom))] z-30 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.15)] backdrop-blur md:bottom-0">
+        <div className="mx-auto flex max-w-5xl flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <p className={`text-center text-sm sm:text-left ${dirty ? 'font-semibold text-amber-700' : 'text-gray-600'}`}>
             {dirty ? 'Есть несохранённые изменения' : 'Все изменения сохранены'}
           </p>
           <button
             type="button"
             onClick={save}
             disabled={saving || !dirty}
-            className="flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold disabled:opacity-50"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold disabled:opacity-50"
           >
             {saving ? (
               <Loader2 className="w-5 h-5 animate-spin" />
