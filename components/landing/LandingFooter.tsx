@@ -30,7 +30,6 @@ const EMPTY: PublicSiteSettings = {
 const MENU = [
   { href: '/#author', label: 'Об авторе' },
   { href: '/#my-works', label: 'Мои работы' },
-  { href: '/#for-whom', label: 'Почему наши курсы' },
   { href: '/#results', label: 'Работы учениц' },
   { href: '/#reviews', label: 'Отзывы' },
   { href: '/#courses', label: 'Курсы' },
