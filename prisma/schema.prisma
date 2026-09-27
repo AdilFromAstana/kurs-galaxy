@@ -369,6 +369,7 @@ model LandingContent {
   authorPhoto String?
   authorBio   String?
   authorFacts Json     @default("[]") // [{ title, text }]
+  authorWorks Json     @default("[]") // работы самого автора: [{ src, alt }]
   works       Json     @default("[]") // [{ src, alt }]
   results     Json     @default("[]") // [{ photo, tag, before: string[], after: string[] }]
   reviews     Json     @default("[]") // [{ text, name }]

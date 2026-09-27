@@ -37,3 +37,6 @@ CREATE TABLE IF NOT EXISTS "LandingContent" (
   "faq"         JSONB NOT NULL DEFAULT '[]',
   "updatedAt"   TIMESTAMP(3) NOT NULL
 );
+
+-- 2026-09: LandingContent.authorWorks — галерея «Мои работы» (работы автора курсов).
+ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "authorWorks" JSONB NOT NULL DEFAULT '[]';

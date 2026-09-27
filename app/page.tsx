@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Users,
   Video,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCourses, type CourseDTO } from "@/components/providers/CoursesProvider";
@@ -232,6 +233,134 @@ function PhotoCredits({ srcs }: { srcs: (string | null | undefined)[] }) {
 }
 
 /** Горизонтальная карусель работ: свайп на мобильных, стрелки на десктопе. */
+/** Галерея «Мои работы»: сетка + просмотр на весь экран (стрелки, свайп, Esc). */
+function AuthorGallery({ photos }: { photos: WorkPhoto[] }) {
+  const [open, setOpen] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const touchX = useRef<number | null>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const LIMIT = 8;
+  const visible = showAll ? photos : photos.slice(0, LIMIT);
+
+  const go = (d: number) =>
+    setOpen((i) => (i === null ? i : (i + d + photos.length) % photos.length));
+
+  useEffect(() => {
+    if (open === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(null);
+      if (e.key === "ArrowRight") go(1);
+      if (e.key === "ArrowLeft") go(-1);
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    closeRef.current?.focus();
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open === null]);
+
+  const current = open === null ? null : photos[open];
+
+  return (
+    <>
+      <ul className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+        {visible.map((p, i) => (
+          <li key={p.src} className={i === 0 ? "col-span-2 row-span-2" : ""}>
+            <button
+              type="button"
+              onClick={() => setOpen(i)}
+              className={`group relative block aspect-square w-full overflow-hidden rounded-2xl bg-landing-blush md:rounded-3xl ${focusRing}`}
+              aria-label={`Открыть фото ${i + 1}${p.alt ? `: ${p.alt}` : ""}`}
+            >
+              <img
+                src={p.src}
+                alt={p.alt}
+                loading="lazy"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none"
+              />
+              {p.alt && (
+                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-landing-plum/80 to-transparent p-3 pt-8 text-left text-xs md:text-sm font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100">
+                  {p.alt}
+                </span>
+              )}
+            </button>
+          </li>
+        ))}
+      </ul>
+      {photos.length > LIMIT && (
+        <div className="mt-6 text-center">
+          <button
+            type="button"
+            onClick={() => setShowAll((v) => !v)}
+            className={`inline-flex min-h-[48px] items-center justify-center rounded-full border-2 border-landing-plum/20 px-7 text-sm font-bold uppercase tracking-wide transition-colors hover:border-landing-pink hover:text-landing-pink ${focusRing}`}
+          >
+            {showAll ? "Свернуть" : `Показать все · ${photos.length}`}
+          </button>
+        </div>
+      )}
+
+      {current && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-landing-plum/95 p-4 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Просмотр фото"
+          onClick={() => setOpen(null)}
+          onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
+          onTouchEnd={(e) => {
+            if (touchX.current === null) return;
+            const dx = e.changedTouches[0].clientX - touchX.current;
+            if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+            touchX.current = null;
+          }}
+        >
+          <figure className="max-h-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={current.src}
+              alt={current.alt}
+              className="max-h-[80vh] w-auto rounded-2xl object-contain"
+            />
+            <figcaption className="mt-3 text-center text-sm text-white/85">
+              {current.alt && <span className="font-semibold text-white">{current.alt} · </span>}
+              {open! + 1} из {photos.length}
+            </figcaption>
+          </figure>
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={() => setOpen(null)}
+            aria-label="Закрыть"
+            className="absolute right-4 top-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/60"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          {photos.length > 1 &&
+            ([-1, 1] as const).map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  go(d);
+                }}
+                aria-label={d < 0 ? "Предыдущее фото" : "Следующее фото"}
+                className={`absolute top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/60 sm:flex ${
+                  d < 0 ? "left-4" : "right-4"
+                }`}
+              >
+                {d < 0 ? <ChevronLeft className="h-6 w-6" /> : <ChevronRight className="h-6 w-6" />}
+              </button>
+            ))}
+        </div>
+      )}
+    </>
+  );
+}
+
 function WorksCarousel({ works }: { works: WorkPhoto[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [canPrev, setCanPrev] = useState(false);
@@ -682,6 +811,18 @@ export default function WelcomePage() {
             </Reveal>
           </div>
         </section>
+
+        {/* ── Мои работы (портфолио автора) ────────────────────── */}
+        {content && content.authorWorks.length > 0 && (
+          <section id="my-works" className="scroll-mt-20 px-4 pb-12 md:px-6 md:pb-20 lg:px-8">
+            <div className="mx-auto max-w-7xl">
+              <SectionTitle compact top="Мои" accent="работы" />
+              <Reveal>
+                <AuthorGallery photos={content.authorWorks} />
+              </Reveal>
+            </div>
+          </section>
+        )}
 
         {/* ── Работы учениц ────────────────────────────────────── */}
         {content && (content.works.length > 0 || content.results.length > 0) && (

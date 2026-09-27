@@ -17,6 +17,7 @@ export interface LandingContentData {
   authorPhoto: string;
   authorBio: string;
   authorFacts: AuthorFact[];
+  authorWorks: WorkPhoto[];
   works: WorkPhoto[];
   results: ResultCard[];
   reviews: Review[];
@@ -36,6 +37,7 @@ const DEFAULTS: LandingContentData = {
       text: 'Натуральные брови, которые стоят дорого и которым может научиться каждый',
     },
   ],
+  authorWorks: [],
   works: [
     { src: '/landing/works/brows-1.jpg', alt: 'Брови до и после окрашивания' },
     { src: '/landing/works/brows-2.jpg', alt: 'Натуральные брови до и после' },
@@ -97,6 +99,14 @@ function lines(v: unknown): string[] {
 type Obj = Record<string, unknown>;
 const obj = (v: unknown): Obj => (v && typeof v === 'object' ? (v as Obj) : {});
 
+// Галереи фото: до 60 штук — автору удобно выложить портфолио целиком
+function photos(v: unknown): WorkPhoto[] {
+  return (Array.isArray(v) ? v.slice(0, 60) : [])
+    .map(obj)
+    .map((w) => ({ src: imgPath(w.src), alt: str(w.alt, LIMITS.short) }))
+    .filter((w) => w.src);
+}
+
 export function sanitizeLandingContent(input: unknown): LandingContentData {
   const b = obj(input);
   return {
@@ -108,10 +118,8 @@ export function sanitizeLandingContent(input: unknown): LandingContentData {
       .map(obj)
       .map((f) => ({ title: str(f.title, LIMITS.short), text: str(f.text, LIMITS.text) }))
       .filter((f) => f.title || f.text),
-    works: arr(b.works)
-      .map(obj)
-      .map((w) => ({ src: imgPath(w.src), alt: str(w.alt, LIMITS.short) }))
-      .filter((w) => w.src),
+    authorWorks: photos(b.authorWorks),
+    works: photos(b.works),
     results: arr(b.results)
       .map(obj)
       .map((r) => ({
