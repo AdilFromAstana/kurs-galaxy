@@ -80,11 +80,43 @@ const BENEFITS = [
   },
 ];
 
+// План обучения по дням (текст автора курсов)
 const STEPS = [
-  { title: "Выберите курс", text: "Сравните программы и тарифы" },
-  { title: "Оплатите онлайн", text: "Доступ откроется сразу после оплаты" },
-  { title: "Учитесь в своём темпе", text: "С телефона или компьютера — прогресс сохраняется" },
-  { title: "Получите сертификат", text: "С QR-кодом для проверки подлинности" },
+  {
+    days: "1–7 день",
+    format: "онлайн",
+    title: "Онлайн-подготовка",
+    points: [
+      "Уроки на сайте: мои показы на моделях и вся теория по перманенту",
+      "Материалы остаются с вами и после обучения",
+      "Домашнее задание",
+    ],
+  },
+  {
+    days: "8 день",
+    format: "очно",
+    title: "Знакомство и постановка руки",
+    points: [
+      "Разбираем пройденный материал",
+      "Ставим руку и тренируем штрихи на латексе",
+      "Строим эскиз на манекене",
+    ],
+  },
+  {
+    days: "9 день",
+    format: "очно",
+    title: "Мой показ на модели",
+    points: [
+      "Показываю работу на модели — брови или губы на выбор",
+      "Вы работаете с моделью на зоне бровей",
+    ],
+  },
+  {
+    days: "10 день",
+    format: "очно",
+    title: "Практика и сертификат",
+    points: ["Две модели: зона бровей и зона губ", "Вручение сертификата"],
+  },
 ];
 
 // ─── UI-кирпичики ───────────────────────────────────────────────────────────
@@ -814,34 +846,62 @@ export default function WelcomePage() {
         {/* ── Как проходит обучение ────────────────────────────── */}
         <section id="how" className="scroll-mt-20 px-4 pb-12 md:px-6 md:pb-20 lg:px-8">
           <div className="mx-auto max-w-7xl">
-            <SectionTitle compact top="Как проходит" accent="обучение" />
+            <SectionTitle
+              compact
+              top="Как проходит"
+              accent="обучение"
+              lead="10 дней: неделя онлайн-подготовки и 3 дня практики на моделях"
+            />
             <Reveal>
               {/* Таймлайн: вертикальный на телефоне, горизонтальный на десктопе */}
-              <ol className="grid gap-6 md:grid-cols-4">
-                {STEPS.map(({ title, text }, i) => (
-                  <li key={title} className="relative flex gap-4 md:flex-col md:gap-5">
-                    {/* Линия к следующему шагу */}
-                    {i < STEPS.length - 1 && (
+              <ol className="grid gap-8 md:grid-cols-2 md:gap-x-6 md:gap-y-10 lg:grid-cols-4">
+                {STEPS.map(({ days, format, title, points }, i) => {
+                  const last = i === STEPS.length - 1;
+                  return (
+                    <li key={days} className="relative flex gap-4 lg:flex-col lg:gap-5">
+                      {/* Линия к следующему шагу */}
+                      {!last && (
+                        <span
+                          className="absolute left-5 top-12 -bottom-8 w-0.5 -translate-x-1/2 bg-landing-pink/40 md:hidden lg:block lg:left-12 lg:-right-6 lg:top-5 lg:bottom-auto lg:h-0.5 lg:w-auto lg:translate-x-0"
+                          aria-hidden
+                        />
+                      )}
                       <span
-                        className="absolute left-5 top-10 -bottom-6 w-0.5 -translate-x-1/2 bg-landing-pink/40 md:left-10 md:-right-6 md:top-5 md:bottom-auto md:h-0.5 md:w-auto md:translate-x-0"
+                        className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-base font-extrabold text-white ring-4 ring-white ${
+                          last ? "bg-landing-pink" : "bg-landing-plum"
+                        }`}
                         aria-hidden
-                      />
-                    )}
-                    <span
-                      className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-base font-extrabold ring-4 ring-white ${
-                        i === STEPS.length - 1
-                          ? "bg-landing-pink text-white"
-                          : "bg-landing-plum text-white"
-                      }`}
-                    >
-                      {i + 1}
-                    </span>
-                    <div className="pt-1.5 md:pt-0">
-                      <h3 className="text-base md:text-lg font-extrabold leading-snug">{title}</h3>
-                      <p className="mt-1 text-sm md:text-base text-landing-plum/75">{text}</p>
-                    </div>
-                  </li>
-                ))}
+                      >
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-extrabold uppercase tracking-wider text-landing-pink">
+                            {days}
+                          </span>
+                          <span
+                            className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
+                              format === "онлайн"
+                                ? "bg-landing-blush text-landing-pink"
+                                : "bg-landing-plum/10 text-landing-plum"
+                            }`}
+                          >
+                            {format}
+                          </span>
+                        </p>
+                        <h3 className="mt-2 text-lg font-extrabold leading-snug">{title}</h3>
+                        <ul className="mt-3 space-y-2">
+                          {points.map((pt) => (
+                            <li key={pt} className="flex gap-2 text-sm md:text-base text-landing-plum/80">
+                              <Check className="mt-0.5 h-4 w-4 shrink-0 text-landing-pink" aria-hidden />
+                              <span>{pt}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </li>
+                  );
+                })}
               </ol>
             </Reveal>
           </div>
