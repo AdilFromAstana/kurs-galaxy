@@ -13,6 +13,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { hasSection, sectionFromHref, useLandingContent } from "@/hooks/useLandingContent";
 import SideDrawer from "./SideDrawer";
 
 export default function Header() {
@@ -42,6 +43,8 @@ export default function Header() {
     };
   }, [isUserMenuOpen]);
 
+  // Пункты главной: скрываем ссылки на пустые разделы (заполняются в админке)
+  const landing = useLandingContent();
   const navLinks = isAuthenticated
     ? [
         { name: "Мои курсы", href: "/dashboard" },
@@ -49,11 +52,15 @@ export default function Header() {
       ]
     : [
         { name: "Об авторе", href: "/#author" },
+        { name: "Мои работы", href: "/#my-works" },
         { name: "Работы учениц", href: "/#results" },
         { name: "Отзывы", href: "/#reviews" },
-        { name: "Вопросы", href: "/#faq" },
         { name: "Курсы", href: "/#courses" },
-      ];
+        { name: "Вопросы", href: "/#faq" },
+      ].filter((l) => {
+        const section = sectionFromHref(l.href);
+        return !section || hasSection(landing, section);
+      });
 
   const initial = (user?.name || user?.email || "?").trim().charAt(0).toUpperCase();
 
@@ -72,7 +79,7 @@ export default function Header() {
             <div className="flex items-center gap-2 md:gap-4">
               <button
                 onClick={() => setIsDrawerOpen(true)}
-                className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 aria-label="Открыть меню"
               >
                 <Menu className="w-6 h-6 text-dark-700" />
@@ -92,7 +99,7 @@ export default function Header() {
             </div>
 
             {/* Десктоп-навигация */}
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden lg:flex items-center gap-0.5">
               {navLinks.map((link) => {
                 // Якорные ссылки лендинга не подсвечиваем как активные
                 const isActive =
@@ -101,7 +108,7 @@ export default function Header() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`whitespace-nowrap px-3 xl:px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       isActive
                         ? "bg-primary-100 text-primary-700"
                         : "text-dark-600 hover:bg-gray-100"

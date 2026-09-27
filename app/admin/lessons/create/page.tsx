@@ -18,6 +18,7 @@ import LessonVideosManager from '@/components/admin/LessonVideosManager';
 import { persistVideoDrafts, type VideoDraft } from '@/lib/lessonVideos';
 import { LessonPhotoGallery, type LessonPhotoItem } from '@/components/admin/LessonPhotoGallery';
 import { compressImage } from '@/lib/compressImage';
+import { LessonPreviewButton } from '@/components/admin/LessonPreviewButton';
 
 type CourseLite = {
   id: string;
@@ -267,6 +268,16 @@ export default function CreateLessonPage() {
             ? `Добавить новый урок в раздел "${selectedModule.title}"`
             : 'Добавить новый урок'}
         </p>
+        <div className="mt-3">
+          <LessonPreviewButton
+            title={title}
+            duration={duration}
+            content={content}
+            coverUrl={null}
+            videos={videos}
+            photos={pendingPhotos}
+          />
+        </div>
       </div>
 
       {/* Breadcrumbs */}
@@ -391,9 +402,20 @@ export default function CreateLessonPage() {
             <Images className="w-5 h-5" />
             Фото урока
           </h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Референсы, примеры работ или шаги — необязательно
-          </p>
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <p className="text-sm text-gray-500">
+              Референсы, примеры работ или шаги — необязательно
+            </p>
+            <LessonPreviewButton
+              label="Как увидит ученица"
+              title={title}
+              duration={duration}
+              content={content}
+              coverUrl={null}
+              videos={videos}
+              photos={pendingPhotos}
+            />
+          </div>
 
           <LessonPhotoGallery
             photos={pendingPhotos}

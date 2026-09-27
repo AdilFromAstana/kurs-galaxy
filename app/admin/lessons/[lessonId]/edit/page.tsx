@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 import { confirmToast } from '@/lib/toastConfirm';
 import LessonVideosManager from '@/components/admin/LessonVideosManager';
 import LessonCoverManager from '@/components/admin/LessonCoverManager';
+import { LessonPreviewButton } from '@/components/admin/LessonPreviewButton';
 import {
   fromDTO,
   type LessonVideoDTO,
@@ -276,6 +277,17 @@ export default function EditLessonPage() {
           Редактирование урока
         </h1>
         <p className="text-gray-600 mt-1 text-sm md:text-base">ID: {lesson.id}</p>
+        <div className="mt-3">
+          <LessonPreviewButton
+            title={title}
+            duration={duration}
+            content={content}
+            coverUrl={coverUrl}
+            videoUrl={lesson.videoUrl}
+            videos={videos}
+            photos={photos}
+          />
+        </div>
       </div>
 
       {submitError && (
@@ -368,9 +380,21 @@ export default function EditLessonPage() {
             <Images className="w-5 h-5" />
             Фото урока
           </h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Референсы, примеры работ или шаги — сохраняются сразу при добавлении
-          </p>
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <p className="text-sm text-gray-500">
+              Референсы, примеры работ или шаги — сохраняются сразу при добавлении
+            </p>
+            <LessonPreviewButton
+              label="Как увидит ученица"
+              title={title}
+              duration={duration}
+              content={content}
+              coverUrl={coverUrl}
+              videoUrl={lesson.videoUrl}
+              videos={videos}
+              photos={photos}
+            />
+          </div>
 
           <LessonPhotoGallery
             photos={photos}

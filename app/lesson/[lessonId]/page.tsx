@@ -10,8 +10,6 @@ import {
   Lock,
 } from "lucide-react";
 import Link from "next/link";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { useAuth } from "@/hooks/useAuth";
 import { useProgress } from "@/hooks/useProgress";
 import { usePurchase } from "@/hooks/usePurchase";
@@ -20,7 +18,7 @@ import Header from "@/components/layout/Header";
 import LessonVideoPlaylist from "@/components/lesson/LessonVideoPlaylist";
 import PurchaseModal from "@/components/modals/PurchaseModal";
 import LessonMobileNav from "@/components/lesson/LessonMobileNav";
-import LessonPhotoGrid from "@/components/lesson/LessonPhotoGrid";
+import { LessonContentCard, LessonPhotosCard, LessonTitle } from "@/components/lesson/LessonParts";
 import { resolveLessonCover } from "@/lib/lessonCover";
 
 export default function LessonPage() {
@@ -196,29 +194,12 @@ export default function LessonPage() {
             {/* Основной контент */}
             <div className="space-y-6 md:space-y-8 min-w-0">
               {/* Lesson Header */}
-              <div className="animate-slide-up">
-                <div className="flex items-start gap-4 mb-3">
-                  {cover && (
-                    <img
-                      src={cover}
-                      alt=""
-                      className="flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-xl md:rounded-2xl object-cover bg-gray-100 shadow-soft"
-                    />
-                  )}
-                  <h1 className="flex-1 min-w-0 text-2xl md:text-3xl lg:text-4xl">
-                    {lesson.title}
-                  </h1>
-                  {completed && (
-                    <div className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                      <CheckCircle2 className="w-4 h-4" />
-                      <span className="hidden sm:inline">Завершено</span>
-                    </div>
-                  )}
-                </div>
-                <p className="text-base md:text-lg text-dark-600">
-                  Длительность: {lesson.duration}
-                </p>
-              </div>
+              <LessonTitle
+                title={lesson.title}
+                duration={lesson.duration}
+                cover={cover}
+                completed={completed}
+              />
 
               {/* Video Player */}
               <div className="animate-slide-up">
@@ -229,43 +210,9 @@ export default function LessonPage() {
                 />
               </div>
 
-              {/* Lesson Content — блок скрыт, если текст урока не заполнен */}
-              {lesson.content?.trim() && (
-              <div className="card animate-slide-up">
-                <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">
-                  Конспект урока
-                </h2>
-                <div className="lesson-content prose prose-lg max-w-none prose-headings:text-dark-900 prose-a:text-primary-600 hover:prose-a:text-primary-700 prose-img:rounded-xl prose-img:shadow-md prose-blockquote:border-primary-500 prose-blockquote:bg-primary-50/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      a: ({ href, children, ...props }) => (
-                        <a
-                          href={href}
-                          target={href?.startsWith('http') ? '_blank' : undefined}
-                          rel={href?.startsWith('http') ? 'noopener noreferrer' : undefined}
-                          {...props}
-                        >
-                          {children}
-                        </a>
-                      ),
-                    }}
-                  >
-                    {lesson.content}
-                  </ReactMarkdown>
-                </div>
-              </div>
-              )}
-
-              {/* Photos */}
-              {lesson.photos.length > 0 && (
-                <div className="card animate-slide-up">
-                  <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">
-                    Фото урока
-                  </h2>
-                  <LessonPhotoGrid photos={lesson.photos} />
-                </div>
-              )}
+              {/* Конспект и фото урока — блоки скрыты, если не заполнены */}
+              <LessonContentCard content={lesson.content} />
+              <LessonPhotosCard photos={lesson.photos} />
 
               {/* Materials */}
               {lesson.materials.length > 0 && (

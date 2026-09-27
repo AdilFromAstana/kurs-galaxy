@@ -23,6 +23,8 @@ import {
   User,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { DevicePreviewModal, PreviewButton } from '@/components/admin/DevicePreviewModal';
+import { invalidateLandingContent } from '@/hooks/useLandingContent';
 import type {
   AuthorFact,
   FaqItem,
@@ -42,6 +44,16 @@ const TABS = [
 ] as const;
 type TabId = (typeof TABS)[number]['id'];
 
+// Какой раздел главной показывать в предпросмотре для каждой вкладки
+const TAB_ANCHOR: Record<TabId, string> = {
+  author: 'author',
+  authorWorks: 'my-works',
+  works: 'results',
+  results: 'results',
+  reviews: 'reviews',
+  faq: 'faq',
+};
+
 const inputCls =
   'w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500';
 
@@ -51,6 +63,7 @@ export default function LandingContentPage() {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -88,6 +101,7 @@ export default function LandingContentPage() {
       if (!res.ok) throw new Error(data.message || 'Не удалось сохранить');
       setContent(data.content);
       setDirty(false);
+      invalidateLandingContent();
       toast.success('Сохранено — изменения уже на сайте');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить');
@@ -121,15 +135,18 @@ export default function LandingContentPage() {
             показываются.
           </p>
         </div>
-        <a
-          href="/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-lg"
-        >
-          <ExternalLink className="w-4 h-4" />
-          Открыть сайт
-        </a>
+        <div className="flex flex-wrap gap-2">
+          <PreviewButton onClick={() => setPreviewOpen(true)} />
+          <a
+            href="/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-primary-700 bg-primary-50 hover:bg-primary-100 rounded-lg"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Открыть сайт
+          </a>
+        </div>
       </div>
 
       <div className="flex gap-1 border-b border-gray-200 overflow-x-auto" role="tablist">
@@ -348,17 +365,30 @@ export default function LandingContentPage() {
         </Card>
       )}
 
+      <DevicePreviewModal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        kind="landing"
+        draft={content}
+        views={[
+          { label: 'Этот раздел', url: `/?preview=1#${TAB_ANCHOR[tab]}` },
+          { label: 'Вся главная', url: '/?preview=1' },
+        ]}
+      />
+
       {/* Панель сохранения всегда под рукой. На телефоне — над нижним меню админки (77px) */}
       <div className="fixed inset-x-0 bottom-[calc(77px+env(safe-area-inset-bottom))] z-30 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.15)] backdrop-blur md:bottom-0">
         <div className="mx-auto flex max-w-5xl flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <p className={`text-center text-sm sm:text-left ${dirty ? 'font-semibold text-amber-700' : 'text-gray-600'}`}>
             {dirty ? 'Есть несохранённые изменения' : 'Все изменения сохранены'}
           </p>
+          <div className="flex gap-2">
+          <PreviewButton onClick={() => setPreviewOpen(true)} className="flex-1 sm:flex-none" />
           <button
             type="button"
             onClick={save}
             disabled={saving || !dirty}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold disabled:opacity-50"
+            className="flex flex-1 items-center justify-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold disabled:opacity-50 sm:flex-none"
           >
             {saving ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -369,6 +399,7 @@ export default function LandingContentPage() {
             )}
             {saving ? 'Сохранение…' : dirty ? 'Сохранить' : 'Сохранено'}
           </button>
+          </div>
         </div>
       </div>
     </div>

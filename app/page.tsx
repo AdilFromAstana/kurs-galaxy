@@ -20,6 +20,8 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useCourses, type CourseDTO } from "@/components/providers/CoursesProvider";
 import type { LandingContentData, WorkPhoto } from "@/lib/landingContent";
+import { hasSection, useLandingContent } from "@/hooks/useLandingContent";
+import { PREVIEW_DRAFT_COURSE_ID, isPreviewFrame, usePreviewDraft } from "@/lib/preview";
 import Header from "@/components/layout/Header";
 import LandingFooter from "@/components/landing/LandingFooter";
 import { focusRing, formatPrice, manrope, pinkButtonCls, plural } from "@/components/landing/shared";
@@ -595,30 +597,36 @@ export default function WelcomePage() {
   const { courses, isLoading } = useCourses();
   const [openFaq, setOpenFaq] = useState(0);
   // Контент, который автор редактирует в админке (Админка → Главная)
-  const [content, setContent] = useState<LandingContentData | null>(null);
+  // Черновик из окна предпросмотра админки важнее сохранённого контента
+  const saved = useLandingContent();
+  const draft = usePreviewDraft<LandingContentData>("landing");
+  const content = draft ?? saved;
+  const author = hasSection(content, "author") ? content : null;
 
+  // В предпросмотре прокручиваем к разделу, который редактируют (#my-works и т.п.)
+  const scrolledToHash = useRef(false);
   useEffect(() => {
-    let cancel = false;
-    fetch("/api/site-content/public")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => !cancel && d && setContent(d.content))
-      .catch(() => {});
-    return () => {
-      cancel = true;
-    };
-  }, []);
-  const author = content && (content.authorName || content.authorPhoto) ? content : null;
+    if (!draft || scrolledToHash.current || !window.location.hash) return;
+    scrolledToHash.current = true;
+    requestAnimationFrame(() =>
+      document.querySelector(window.location.hash)?.scrollIntoView({ block: "start" }),
+    );
+  }, [draft]);
   const [showStickyCta, setShowStickyCta] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
   const coursesRef = useRef<HTMLElement>(null);
 
   // Все опубликованные курсы с программой: платные, бесплатные и без тарифов
-  const saleCourses = courses.filter((c) => c.modules.length > 0);
+  // + черновик нового курса из предпросмотра админки (у него ещё нет разделов)
+  const saleCourses = courses.filter(
+    (c) => c.modules.length > 0 || c.id === PREVIEW_DRAFT_COURSE_ID,
+  );
   const featured = saleCourses[0];
   const featuredMin = featured ? minPlan(featured) : null;
 
   useEffect(() => {
-    if (isAuthenticated) {
+    // Внутри предпросмотра админки показываем главную как гостю
+    if (isAuthenticated && !isPreviewFrame()) {
       router.push("/dashboard");
     }
   }, [isAuthenticated, router]);
@@ -644,7 +652,7 @@ export default function WelcomePage() {
     return () => io.disconnect();
   }, [isAuthenticated]);
 
-  if (isAuthenticated) {
+  if (isAuthenticated && !isPreviewFrame()) {
     return null;
   }
 
@@ -691,67 +699,94 @@ export default function WelcomePage() {
 
         {/* ── Об авторе ────────────────────────────────────────── */}
         {author && (
-        <section id="author" className="scroll-mt-20 px-4 py-16 md:px-6 md:py-24 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SectionTitle top="Об авторе" accent="курсов" />
+          <section id="author" className="scroll-mt-20 overflow-hidden px-4 py-12 md:px-6 md:py-20 lg:px-8">
             <div
-              className={`grid gap-5 ${
-                author.authorFacts.length > 0 ? "lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]" : ""
+              className={`mx-auto grid max-w-7xl items-center gap-10 md:gap-14 ${
+                author.authorPhoto ? "lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]" : ""
               }`}
             >
-              <Reveal>
-                <figure
-                  className={`relative h-full overflow-hidden rounded-[28px] bg-landing-plum ${
-                    author.authorPhoto ? "min-h-[360px] md:min-h-[460px]" : "min-h-[200px]"
-                  }`}
-                >
-                  {author.authorPhoto && (
+              {author.authorPhoto && (
+                <Reveal>
+                  <div className="relative mx-auto max-w-md lg:max-w-none">
+                    <div
+                      className="pointer-events-none absolute -inset-3 -rotate-2 rounded-[40px] bg-landing-blush"
+                      aria-hidden
+                    />
                     <img
                       src={author.authorPhoto}
                       alt={author.authorName || "Автор курсов"}
                       loading="lazy"
-                      className="absolute inset-0 h-full w-full object-cover object-[60%_30%]"
+                      className="relative aspect-[4/5] w-full rounded-[32px] object-cover object-[60%_30%] shadow-[0_30px_70px_-30px_rgba(86,62,79,0.6)]"
                     />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-landing-plum/90 via-landing-plum/10 to-transparent" />
-                  {(author.authorName || author.authorRole) && (
-                    <figcaption className="absolute inset-x-0 bottom-0 p-6 md:p-8">
-                      {author.authorName && (
-                        <p className="text-2xl md:text-4xl font-extrabold uppercase text-white">
-                          {author.authorName}
-                        </p>
-                      )}
-                      {author.authorRole && (
-                        <p className="mt-1 text-sm md:text-base font-semibold uppercase tracking-widest text-landing-pink">
-                          {author.authorRole}
-                        </p>
-                      )}
-                    </figcaption>
-                  )}
-                </figure>
-              </Reveal>
-              {author.authorFacts.length > 0 && (
-                <div className="flex flex-col gap-5">
-                  {author.authorFacts.map((f, i) => (
-                    <Reveal key={i} delay={i * 100} className="flex-1">
-                      <div className="grid h-full gap-2 rounded-[28px] border-2 border-landing-blush p-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] sm:items-center sm:gap-6 md:p-8">
-                        <p className="text-lg md:text-xl font-extrabold uppercase">{f.title}</p>
-                        <p className="whitespace-pre-line text-sm md:text-base text-landing-plum/80">{f.text}</p>
-                      </div>
-                    </Reveal>
-                  ))}
-                </div>
+                  </div>
+                </Reveal>
               )}
-            </div>
-            {author.authorBio && (
-              <Reveal>
-                <p className="mt-8 max-w-3xl whitespace-pre-line text-base md:text-lg text-landing-plum/80">
-                  {author.authorBio}
-                </p>
+              <Reveal delay={100}>
+                {author.authorName ? (
+                  <>
+                    <p className="mb-3 text-xs md:text-sm font-extrabold uppercase tracking-widest text-landing-pink">
+                      Об авторе курсов
+                    </p>
+                    <h2 className="text-3xl md:text-5xl font-extrabold uppercase leading-[1.05] tracking-tight">
+                      {author.authorName}
+                    </h2>
+                  </>
+                ) : (
+                  <h2 className="text-3xl md:text-5xl font-extrabold uppercase leading-[1.05] tracking-tight">
+                    Об авторе <span className="text-landing-pink">курсов</span>
+                  </h2>
+                )}
+                {author.authorRole && (
+                  <p className="mt-3 text-base md:text-lg font-semibold text-landing-plum/70">
+                    {author.authorRole}
+                  </p>
+                )}
+                {author.authorBio && (
+                  <p className="mt-6 whitespace-pre-line text-base md:text-lg text-landing-plum/80">
+                    {author.authorBio}
+                  </p>
+                )}
+                {author.authorFacts.length > 0 && (
+                  <dl
+                    className={`mt-8 grid gap-3 ${author.authorFacts.length > 1 ? "sm:grid-cols-2" : ""}`}
+                  >
+                    {author.authorFacts.map((f, i) => (
+                      <div key={i} className="rounded-3xl bg-landing-blush p-5 md:p-6">
+                        {f.title && (
+                          <dt className="text-xs md:text-sm font-extrabold uppercase tracking-widest text-landing-pink">
+                            {f.title}
+                          </dt>
+                        )}
+                        <dd className="mt-1.5 whitespace-pre-line text-base font-semibold leading-snug">
+                          {f.text}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+                {hasSection(content, "my-works") && (
+                  <a
+                    href="#my-works"
+                    className={`mt-8 inline-flex items-center gap-2 rounded text-sm md:text-base font-bold uppercase tracking-wide text-landing-pink hover:underline ${focusRing}`}
+                  >
+                    Смотреть мои работы <ArrowRight className="h-4 w-4" aria-hidden />
+                  </a>
+                )}
               </Reveal>
-            )}
-          </div>
-        </section>
+            </div>
+          </section>
+        )}
+
+        {/* ── Мои работы (портфолио автора) ────────────────────── */}
+        {content && content.authorWorks.length > 0 && (
+          <section id="my-works" className="scroll-mt-20 px-4 pb-12 md:px-6 md:pb-20 lg:px-8">
+            <div className="mx-auto max-w-7xl">
+              <SectionTitle compact top="Мои" accent="работы" />
+              <Reveal>
+                <AuthorGallery photos={content.authorWorks} />
+              </Reveal>
+            </div>
+          </section>
         )}
 
         {/* ── Кому подойдёт ────────────────────────────────────── */}
@@ -811,18 +846,6 @@ export default function WelcomePage() {
             </Reveal>
           </div>
         </section>
-
-        {/* ── Мои работы (портфолио автора) ────────────────────── */}
-        {content && content.authorWorks.length > 0 && (
-          <section id="my-works" className="scroll-mt-20 px-4 pb-12 md:px-6 md:pb-20 lg:px-8">
-            <div className="mx-auto max-w-7xl">
-              <SectionTitle compact top="Мои" accent="работы" />
-              <Reveal>
-                <AuthorGallery photos={content.authorWorks} />
-              </Reveal>
-            </div>
-          </section>
-        )}
 
         {/* ── Работы учениц ────────────────────────────────────── */}
         {content && (content.works.length > 0 || content.results.length > 0) && (
@@ -922,29 +945,6 @@ export default function WelcomePage() {
         </section>
         )}
 
-        {/* ── FAQ ──────────────────────────────────────────────── */}
-        {content && content.faq.length > 0 && (
-        <section id="faq" className="scroll-mt-20 px-4 py-16 md:px-6 md:py-24 lg:px-8">
-          <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[1fr_1.5fr] lg:gap-10">
-            <SectionTitle
-              top="Вопрос /"
-              accent="ответ"
-              lead="Не нашли ответ? Напишите нам — контакты внизу страницы."
-            />
-            <div>
-              {content.faq.map((item, i) => (
-                <FaqItem
-                  key={i}
-                  {...item}
-                  open={openFaq === i}
-                  onToggle={() => setOpenFaq(openFaq === i ? -1 : i)}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-        )}
-
         {/* ── Цены на курсы ────────────────────────────────────── */}
         <section
           id="courses"
@@ -990,6 +990,29 @@ export default function WelcomePage() {
             </div>
           </div>
         </section>
+
+        {/* ── FAQ ──────────────────────────────────────────────── */}
+        {content && content.faq.length > 0 && (
+        <section id="faq" className="scroll-mt-20 px-4 py-16 md:px-6 md:py-24 lg:px-8">
+          <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[1fr_1.5fr] lg:gap-10">
+            <SectionTitle
+              top="Вопрос /"
+              accent="ответ"
+              lead="Не нашли ответ? Напишите нам — контакты внизу страницы."
+            />
+            <div>
+              {content.faq.map((item, i) => (
+                <FaqItem
+                  key={i}
+                  {...item}
+                  open={openFaq === i}
+                  onToggle={() => setOpenFaq(openFaq === i ? -1 : i)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+        )}
 
         {/* ── Финальный CTA ────────────────────────────────────── */}
         <section className="px-4 pb-16 md:px-6 md:pb-24 lg:px-8">

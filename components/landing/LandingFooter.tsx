@@ -3,6 +3,7 @@
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { CheckCircle2, Instagram, Loader2, MessageCircle, Send } from 'lucide-react';
+import { hasSection, sectionFromHref, useLandingContent } from '@/hooks/useLandingContent';
 
 interface PublicSiteSettings {
   contactPhone: string | null;
@@ -29,11 +30,11 @@ const EMPTY: PublicSiteSettings = {
 const MENU = [
   { href: '/#author', label: 'Об авторе' },
   { href: '/#my-works', label: 'Мои работы' },
-  { href: '/#for-whom', label: 'Кому подойдёт' },
+  { href: '/#for-whom', label: 'Почему наши курсы' },
   { href: '/#results', label: 'Работы учениц' },
   { href: '/#reviews', label: 'Отзывы' },
-  { href: '/#faq', label: 'Вопрос / ответ' },
   { href: '/#courses', label: 'Курсы' },
+  { href: '/#faq', label: 'Вопрос / ответ' },
 ];
 
 const LEGAL = [
@@ -214,6 +215,12 @@ export default function LandingFooter() {
     s.contactWhatsapp && { href: s.contactWhatsapp, label: 'WhatsApp', icon: MessageCircle },
   ].filter(Boolean) as { href: string; label: string; icon: typeof Send }[];
 
+  const landing = useLandingContent();
+  const menu = MENU.filter((m) => {
+    const section = sectionFromHref(m.href);
+    return !section || hasSection(landing, section);
+  });
+
   const hasContacts = s.contactPhone || s.contactEmail || socials.length > 0;
   const year = new Date().getFullYear();
 
@@ -282,7 +289,7 @@ export default function LandingFooter() {
               <div>
                 <p className="mb-4 text-2xl font-extrabold uppercase">Меню</p>
                 <ul className="grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-1">
-                  {MENU.map((m) => (
+                  {menu.map((m) => (
                     <li key={m.href}>
                       <a
                         href={m.href}
