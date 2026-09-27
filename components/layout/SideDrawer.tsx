@@ -18,6 +18,7 @@ import {
   HelpCircle,
   Images,
   Phone,
+  Camera,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect } from "react";
@@ -60,6 +61,7 @@ export default function SideDrawer({ isOpen, onClose }: SideDrawerProps) {
   const publicNav = [
     { name: "Главная", href: "/", icon: Home },
     { name: "Об авторе", href: "/#author", icon: User },
+    { name: "Мои работы", href: "/#my-works", icon: Camera },
     { name: "Как проходит обучение", href: "/#how", icon: ListChecks },
     { name: "Работы учениц", href: "/#results", icon: Images },
     { name: "Отзывы", href: "/#reviews", icon: MessageSquare },

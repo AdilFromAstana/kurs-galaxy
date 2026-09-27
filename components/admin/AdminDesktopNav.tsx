@@ -26,7 +26,7 @@ export function AdminDesktopNav() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
               active ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-100'
             }`}
           >

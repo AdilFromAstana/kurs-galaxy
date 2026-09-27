@@ -5,6 +5,9 @@ import {
   AlertCircle,
   ArrowDown,
   ArrowUp,
+  ArrowLeft,
+  ArrowRight,
+  Camera,
   Check,
   ExternalLink,
   HelpCircle,
@@ -31,6 +34,7 @@ import type {
 
 const TABS = [
   { id: 'author', name: 'Об авторе', icon: User },
+  { id: 'authorWorks', name: 'Мои работы', icon: Camera },
   { id: 'works', name: 'Работы учениц', icon: Images },
   { id: 'results', name: 'Результаты', icon: Sparkles },
   { id: 'reviews', name: 'Отзывы', icon: MessageSquare },
@@ -228,31 +232,21 @@ export default function LandingContentPage() {
         </Card>
       )}
 
+      {tab === 'authorWorks' && (
+        <Card
+          title="Мои работы"
+          hint="Ваше портфолио — галерея на главной под блоком «Как проходит обучение». Можно выбрать сразу несколько фото."
+        >
+          <GalleryEditor items={content.authorWorks} onChange={(authorWorks) => patch({ authorWorks })} />
+        </Card>
+      )}
+
       {tab === 'works' && (
         <Card
           title="Работы учениц — карусель фото"
-          hint="Фото «до/после» в карусели блока «Работы учениц». Лучше квадратные или вертикальные."
+          hint="Фото «до/после» в карусели блока «Работы учениц». Можно выбрать сразу несколько фото."
         >
-          <ListEditor<WorkPhoto>
-            items={content.works}
-            onChange={(works) => patch({ works })}
-            empty={{ src: '', alt: '' }}
-            addLabel="Добавить фото"
-            render={(w, set) => (
-              <div className="grid gap-4 sm:grid-cols-[160px_1fr] items-start">
-                <ImageField value={w.src} onChange={(src) => set({ ...w, src })} aspect="aspect-square" />
-                <Field label="Подпись к фото (для незрячих и поисковиков)">
-                  <input
-                    className={inputCls}
-                    value={w.alt}
-                    onChange={(e) => set({ ...w, alt: e.target.value })}
-                    placeholder="Брови хной до и после"
-                    maxLength={120}
-                  />
-                </Field>
-              </div>
-            )}
-          />
+          <GalleryEditor items={content.works} onChange={(works) => patch({ works })} />
         </Card>
       )}
 
@@ -383,6 +377,137 @@ export default function LandingContentPage() {
 
 // ─── Кирпичики редактора ────────────────────────────────────────────────────
 
+async function uploadImage(file: File): Promise<string> {
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch('/api/admin/site-content/upload', {
+    method: 'POST',
+    credentials: 'include',
+    body: fd,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.message || 'Не удалось загрузить фото');
+  return data.url as string;
+}
+
+/** Галерея фото: загрузка пачкой, подписи, перестановка, удаление. */
+function GalleryEditor({
+  items,
+  onChange,
+}: {
+  items: WorkPhoto[];
+  onChange: (items: WorkPhoto[]) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  // Актуальный список — загрузка идёт асинхронно, а пользователь может править подписи
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+
+  const addFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+    setProgress({ done: 0, total: files.length });
+    let failed = 0;
+    for (const [i, file] of files.entries()) {
+      try {
+        const src = await uploadImage(file);
+        itemsRef.current = [...itemsRef.current, { src, alt: '' }];
+        onChange(itemsRef.current);
+      } catch (e) {
+        failed++;
+        toast.error(`${file.name}: ${e instanceof Error ? e.message : 'ошибка загрузки'}`);
+      }
+      setProgress({ done: i + 1, total: files.length });
+    }
+    setProgress(null);
+    if (inputRef.current) inputRef.current.value = '';
+    if (files.length - failed > 0) toast.success(`Загружено фото: ${files.length - failed}. Не забудьте сохранить`);
+  };
+
+  const setAt = (i: number, item: WorkPhoto) => onChange(items.map((x, k) => (k === i ? item : x)));
+  const move = (i: number, d: -1 | 1) => {
+    const j = i + d;
+    if (j < 0 || j >= items.length) return;
+    const next = [...items];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={!!progress}
+        className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 py-8 text-primary-700 hover:bg-primary-50 disabled:opacity-70"
+      >
+        {progress ? (
+          <>
+            <Loader2 className="w-8 h-8 animate-spin" />
+            <span className="font-semibold">
+              Загружаем {progress.done} из {progress.total}…
+            </span>
+          </>
+        ) : (
+          <>
+            <ImagePlus className="w-8 h-8" />
+            <span className="font-semibold">Загрузить фото</span>
+            <span className="text-xs text-gray-500">JPG, PNG или WEBP до 8 МБ · можно выбрать сразу несколько</span>
+          </>
+        )}
+      </button>
+      <input
+        ref={inputRef}
+        type="file"
+        multiple
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => addFiles(Array.from(e.target.files ?? []))}
+      />
+
+      {items.length === 0 ? (
+        <p className="mt-4 text-center text-sm text-gray-500">Пока нет фото — этот блок на сайте не показывается</p>
+      ) : (
+        <ul className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {items.map((w, i) => (
+            <li key={w.src} className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+              <div className="relative aspect-square bg-gray-100">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={w.src} alt="" className="h-full w-full object-cover" />
+                <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-bold text-white">
+                  {i + 1}
+                </span>
+              </div>
+              <div className="space-y-2 p-2">
+                <input
+                  className="w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm focus:ring-2 focus:ring-primary-500"
+                  value={w.alt}
+                  onChange={(e) => setAt(i, { ...w, alt: e.target.value })}
+                  placeholder="Подпись (необязательно)"
+                  maxLength={120}
+                />
+                <div className="flex justify-between">
+                  <div className="flex">
+                    <IconBtn label="Левее" onClick={() => move(i, -1)} disabled={i === 0}>
+                      <ArrowLeft className="w-4 h-4" />
+                    </IconBtn>
+                    <IconBtn label="Правее" onClick={() => move(i, 1)} disabled={i === items.length - 1}>
+                      <ArrowRight className="w-4 h-4" />
+                    </IconBtn>
+                  </div>
+                  <IconBtn label="Удалить" onClick={() => onChange(items.filter((_, k) => k !== i))} danger>
+                    <Trash2 className="w-4 h-4" />
+                  </IconBtn>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 function Card({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
   return (
     <section className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
@@ -445,16 +570,7 @@ function ImageField({
   const upload = async (file: File) => {
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      const res = await fetch('/api/admin/site-content/upload', {
-        method: 'POST',
-        credentials: 'include',
-        body: fd,
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.message || 'Не удалось загрузить фото');
-      onChange(data.url);
+      onChange(await uploadImage(file));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Не удалось загрузить фото');
     } finally {
