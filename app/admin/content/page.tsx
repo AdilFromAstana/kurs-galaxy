@@ -9,6 +9,7 @@ import {
   ArrowRight,
   Camera,
   Check,
+  Crop,
   ExternalLink,
   HelpCircle,
   ImagePlus,
@@ -24,6 +25,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { DevicePreviewModal, PreviewButton } from '@/components/admin/DevicePreviewModal';
+import { CROP, useImageCropper, type CropOptions } from '@/components/admin/ImageCropper';
 import { invalidateLandingContent } from '@/hooks/useLandingContent';
 import type {
   AuthorFact,
@@ -186,7 +188,12 @@ export default function LandingContentPage() {
               label="Фото"
               value={content.authorPhoto}
               onChange={(v) => patch({ authorPhoto: v })}
-              aspect="aspect-[4/5]"
+              aspect="aspect-[4/3]"
+              crop={{
+                title: 'Фото автора',
+                aspects: [CROP.landscape],
+                previewLabel: 'Блок «Об авторе» на главной — лицо лучше держать ближе к центру',
+              }}
             />
             <div className="space-y-4">
               <Field label="Имя и фамилия">
@@ -254,7 +261,15 @@ export default function LandingContentPage() {
           title="Мои работы"
           hint="Ваше портфолио — галерея на главной под блоком «Как проходит обучение». Можно выбрать сразу несколько фото."
         >
-          <GalleryEditor items={content.authorWorks} onChange={(authorWorks) => patch({ authorWorks })} />
+          <GalleryEditor
+            items={content.authorWorks}
+            onChange={(authorWorks) => patch({ authorWorks })}
+            crop={{
+              title: 'Моя работа',
+              aspects: [CROP.square, CROP.portrait, CROP.landscape, CROP.original],
+              previewLabel: 'Плитка в галерее «Мои работы» — по клику фото открывается целиком',
+            }}
+          />
         </Card>
       )}
 
@@ -263,7 +278,15 @@ export default function LandingContentPage() {
           title="Работы учениц — карусель фото"
           hint="Фото «до/после» в карусели блока «Работы учениц». Можно выбрать сразу несколько фото."
         >
-          <GalleryEditor items={content.works} onChange={(works) => patch({ works })} />
+          <GalleryEditor
+            items={content.works}
+            onChange={(works) => patch({ works })}
+            crop={{
+              title: 'Работа ученицы',
+              aspects: [CROP.landscape, CROP.square, CROP.original],
+              previewLabel: 'Фото в карусели «Работы учениц»',
+            }}
+          />
         </Card>
       )}
 
@@ -279,7 +302,16 @@ export default function LandingContentPage() {
             addLabel="Добавить карточку"
             render={(r, set) => (
               <div className="grid gap-4 sm:grid-cols-[160px_1fr] items-start">
-                <ImageField value={r.photo} onChange={(photo) => set({ ...r, photo })} aspect="aspect-[4/5]" />
+                <ImageField
+                  value={r.photo}
+                  onChange={(photo) => set({ ...r, photo })}
+                  aspect="aspect-[4/3]"
+                  crop={{
+                    title: 'Фото для карточки «до / после»',
+                    aspects: [CROP.landscape, CROP.square, CROP.portrait],
+                    previewLabel: 'Карточка в блоке «Работы учениц»',
+                  }}
+                />
                 <div className="space-y-3">
                   <Field label="Метка">
                     <input
@@ -425,18 +457,30 @@ async function uploadImage(file: File): Promise<string> {
 function GalleryEditor({
   items,
   onChange,
+  crop,
 }: {
   items: WorkPhoto[];
   onChange: (items: WorkPhoto[]) => void;
+  crop: CropOptions;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const [busyIdx, setBusyIdx] = useState<number | null>(null);
+  const { cropImage, cropper } = useImageCropper();
   // Актуальный список — загрузка идёт асинхронно, а пользователь может править подписи
   const itemsRef = useRef(items);
   itemsRef.current = items;
 
-  const addFiles = async (files: File[]) => {
-    if (files.length === 0) return;
+  const addFiles = async (picked: File[]) => {
+    if (inputRef.current) inputRef.current.value = '';
+    if (picked.length === 0) return;
+    // Одно фото — сразу даём выбрать кадр; пачку грузим как есть, кадр можно поправить потом
+    let files = picked;
+    if (picked.length === 1) {
+      const cropped = await cropImage(picked[0], crop);
+      if (!cropped) return;
+      files = [cropped];
+    }
     setProgress({ done: 0, total: files.length });
     let failed = 0;
     for (const [i, file] of files.entries()) {
@@ -451,7 +495,6 @@ function GalleryEditor({
       setProgress({ done: i + 1, total: files.length });
     }
     setProgress(null);
-    if (inputRef.current) inputRef.current.value = '';
     if (files.length - failed > 0) toast.success(`Загружено фото: ${files.length - failed}. Не забудьте сохранить`);
   };
 
@@ -464,8 +507,28 @@ function GalleryEditor({
     onChange(next);
   };
 
+  /** Изменить кадр уже загруженного фото — режем и грузим как новое */
+  const recrop = async (i: number) => {
+    const old = items[i];
+    const cropped = await cropImage(old.src, crop);
+    if (!cropped) return;
+    setBusyIdx(i);
+    try {
+      const src = await uploadImage(cropped);
+      // Ищем по src: пока грузили, фото могли переставить
+      itemsRef.current = itemsRef.current.map((x) => (x.src === old.src ? { ...x, src } : x));
+      onChange(itemsRef.current);
+      toast.success('Кадр обновлён. Не забудьте сохранить');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Не удалось загрузить фото');
+    } finally {
+      setBusyIdx(null);
+    }
+  };
+
   return (
     <div>
+      {cropper}
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
@@ -502,13 +565,29 @@ function GalleryEditor({
         <ul className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {items.map((w, i) => (
             <li key={w.src} className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-              <div className="relative aspect-square bg-gray-100">
+              <button
+                type="button"
+                onClick={() => recrop(i)}
+                disabled={busyIdx !== null}
+                className="group relative block aspect-square w-full bg-gray-100"
+                aria-label={`Изменить кадр фото ${i + 1}`}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={w.src} alt="" className="h-full w-full object-cover" />
                 <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-bold text-white">
                   {i + 1}
                 </span>
-              </div>
+                {busyIdx === i ? (
+                  <span className="absolute inset-0 flex items-center justify-center bg-white/70">
+                    <Loader2 className="w-7 h-7 animate-spin text-primary-600" />
+                  </span>
+                ) : (
+                  <span className="absolute inset-x-2 bottom-2 inline-flex items-center justify-center gap-1.5 rounded-lg bg-black/60 py-1.5 text-xs font-semibold text-white md:opacity-0 md:transition-opacity md:group-hover:opacity-100 md:group-focus-visible:opacity-100">
+                    <Crop className="w-3.5 h-3.5" />
+                    Изменить кадр
+                  </span>
+                )}
+              </button>
               <div className="space-y-2 p-2">
                 <input
                   className="w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm focus:ring-2 focus:ring-primary-500"
@@ -589,16 +668,23 @@ function ImageField({
   value,
   onChange,
   aspect,
+  crop,
 }: {
   label?: string;
   value: string;
   onChange: (url: string) => void;
   aspect: string;
+  crop: CropOptions;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const { cropImage, cropper } = useImageCropper();
 
-  const upload = async (file: File) => {
+  /** Новый файл или уже загруженное фото → выбор кадра → загрузка */
+  const edit = async (src: File | string) => {
+    if (inputRef.current) inputRef.current.value = '';
+    const file = await cropImage(src, crop);
+    if (!file) return;
     setUploading(true);
     try {
       onChange(await uploadImage(file));
@@ -606,17 +692,25 @@ function ImageField({
       toast.error(e instanceof Error ? e.message : 'Не удалось загрузить фото');
     } finally {
       setUploading(false);
-      if (inputRef.current) inputRef.current.value = '';
     }
   };
 
+  const pick = () => inputRef.current?.click();
+  const smallBtn =
+    'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors disabled:opacity-50';
+
   return (
     <div>
+      {cropper}
       {label && <span className="block text-sm font-medium text-gray-700 mb-2">{label}</span>}
       <button
         type="button"
-        onClick={() => inputRef.current?.click()}
-        className={`group relative w-full ${aspect} overflow-hidden rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:border-primary-400`}
+        onClick={() => (value ? edit(value) : pick())}
+        disabled={uploading}
+        aria-label={value ? 'Изменить кадр' : 'Загрузить фото'}
+        className={`group relative w-full ${aspect} overflow-hidden rounded-xl border-2 ${
+          value ? 'border-transparent' : 'border-dashed border-gray-300'
+        } bg-gray-50 hover:border-primary-400`}
       >
         {value ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -628,8 +722,9 @@ function ImageField({
           </span>
         )}
         {value && !uploading && (
-          <span className="absolute inset-x-0 bottom-0 bg-black/55 py-1.5 text-xs font-semibold text-white opacity-0 group-hover:opacity-100 transition-opacity">
-            Заменить фото
+          <span className="absolute inset-x-0 bottom-0 inline-flex items-center justify-center gap-1.5 bg-black/55 py-1.5 text-xs font-semibold text-white md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+            <Crop className="w-3.5 h-3.5" />
+            Изменить кадр
           </span>
         )}
         {uploading && (
@@ -643,16 +738,21 @@ function ImageField({
         type="file"
         accept="image/jpeg,image/png,image/webp"
         className="hidden"
-        onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
+        onChange={(e) => e.target.files?.[0] && edit(e.target.files[0])}
       />
-      {value && label && (
-        <button
-          type="button"
-          onClick={() => onChange('')}
-          className="mt-2 text-sm text-red-600 hover:underline"
-        >
-          Убрать фото
-        </button>
+      {value && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          <button type="button" onClick={pick} disabled={uploading} className={`${smallBtn} text-primary-700 hover:bg-primary-50`}>
+            <ImagePlus className="w-4 h-4" />
+            Заменить
+          </button>
+          {label && (
+            <button type="button" onClick={() => onChange('')} disabled={uploading} className={`${smallBtn} text-red-600 hover:bg-red-50`}>
+              <Trash2 className="w-4 h-4" />
+              Убрать
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
