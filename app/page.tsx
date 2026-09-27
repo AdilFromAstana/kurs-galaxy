@@ -734,21 +734,18 @@ export default function WelcomePage() {
           <section id="author" className="scroll-mt-20 overflow-hidden px-4 py-12 md:px-6 md:py-20 lg:px-8">
             <div
               className={`mx-auto grid max-w-7xl items-center gap-10 md:gap-14 ${
-                author.authorPhoto ? "lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]" : ""
+                author.authorPhoto ? "lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]" : ""
               }`}
             >
               {author.authorPhoto && (
                 <Reveal>
-                  <div className="relative mx-auto max-w-md lg:max-w-none">
-                    <div
-                      className="pointer-events-none absolute -inset-3 -rotate-2 rounded-[40px] bg-landing-blush"
-                      aria-hidden
-                    />
+                  <div className="relative mx-auto max-w-2xl lg:max-w-none">
+                    {/* Фото автора горизонтальное — показываем 4:3, без обрезки лица */}
                     <img
                       src={author.authorPhoto}
                       alt={author.authorName || "Автор курсов"}
                       loading="lazy"
-                      className="relative aspect-[4/5] w-full rounded-[32px] object-cover object-[60%_30%] shadow-[0_30px_70px_-30px_rgba(86,62,79,0.6)]"
+                      className="aspect-[4/3] w-full rounded-[32px] object-cover object-[40%_35%] shadow-[0_30px_70px_-30px_rgba(86,62,79,0.6)] ring-1 ring-landing-plum/5"
                     />
                   </div>
                 </Reveal>
