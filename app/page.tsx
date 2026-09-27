@@ -11,9 +11,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Gem,
-  Sparkles,
-  TrendingUp,
-  Users,
   Video,
   X,
 } from "lucide-react";
@@ -62,24 +59,6 @@ const num = (i: number) => `(${String(i + 1).padStart(2, "0")})`;
 // Единый видимый фокус для клавиатурной навигации
 
 // ─── Статичный контент лендинга ────────────────────────────────────────────
-const BENEFITS = [
-  {
-    icon: Sparkles,
-    title: "Без лишней теории",
-    text: "Только то, что работает на практике: форма, хна, краска, колористика",
-  },
-  {
-    icon: Users,
-    title: "Новичкам и мастерам",
-    text: "Освоите профессию с нуля или прокачаете навыки, если уже работаете",
-  },
-  {
-    icon: TrendingUp,
-    title: "Рост чека и клиентов",
-    text: "Научитесь поднимать средний чек и находить новых клиентов",
-  },
-];
-
 // План обучения по дням (текст автора курсов)
 const STEPS = [
   {
@@ -817,28 +796,6 @@ export default function WelcomePage() {
             </div>
           </section>
         )}
-
-        {/* ── Кому подойдёт ────────────────────────────────────── */}
-        <section id="for-whom" className="scroll-mt-20 px-4 py-12 md:px-6 md:py-20 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SectionTitle compact top="Почему" accent="наши курсы" />
-            <Reveal>
-              <ul className="grid divide-y divide-landing-pink/15 rounded-[28px] bg-landing-blush px-5 md:grid-cols-3 md:divide-x md:divide-y-0 md:px-0 md:py-8">
-                {BENEFITS.map(({ icon: Icon, title, text }) => (
-                  <li key={title} className="flex gap-4 py-5 md:flex-col md:gap-4 md:px-8 md:py-0">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-landing-pink shadow-[0_8px_20px_-8px_rgba(245,73,160,0.8)]">
-                      <Icon className="h-5 w-5 text-white" aria-hidden />
-                    </span>
-                    <div>
-                      <h3 className="text-base md:text-lg font-extrabold leading-snug">{title}</h3>
-                      <p className="mt-1 text-sm md:text-base text-landing-plum/75">{text}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          </div>
-        </section>
 
         {/* ── Как проходит обучение ────────────────────────────── */}
         <section id="how" className="scroll-mt-20 px-4 pb-12 md:px-6 md:pb-20 lg:px-8">

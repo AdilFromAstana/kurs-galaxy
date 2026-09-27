@@ -19,7 +19,6 @@ import {
   Images,
   Phone,
   Camera,
-  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { hasSection, sectionFromHref, useLandingContent } from "@/hooks/useLandingContent";
@@ -65,7 +64,6 @@ export default function SideDrawer({ isOpen, onClose }: SideDrawerProps) {
     { name: "Главная", href: "/", icon: Home },
     { name: "Об авторе", href: "/#author", icon: User },
     { name: "Мои работы", href: "/#my-works", icon: Camera },
-    { name: "Почему наши курсы", href: "/#for-whom", icon: Sparkles },
     { name: "Как проходит обучение", href: "/#how", icon: ListChecks },
     { name: "Работы учениц", href: "/#results", icon: Images },
     { name: "Отзывы", href: "/#reviews", icon: MessageSquare },
