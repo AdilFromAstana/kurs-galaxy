@@ -1,11 +1,19 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Image as ImageIcon, Upload, Trash2, AlertCircle } from 'lucide-react';
+import { Image as ImageIcon, Upload, Trash2, AlertCircle, Crop } from 'lucide-react';
+import { CROP, useImageCropper, type CropOptions } from '@/components/admin/ImageCropper';
 import toast from 'react-hot-toast';
 import { confirmToast } from '@/lib/toastConfirm';
 import { youtubeCoverFor } from '@/lib/lessonCover';
 import { compressImage } from '@/lib/compressImage';
+
+// Обложка урока показывается квадратной плашкой рядом с названием
+const COVER_CROP: CropOptions = {
+  title: 'Обложка урока',
+  aspects: [CROP.square],
+  previewLabel: 'Значок рядом с названием урока',
+};
 
 interface Props {
   lessonId: string;
@@ -27,12 +35,16 @@ export default function LessonCoverManager({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { cropImage, cropper } = useImageCropper();
 
   const isBusy = disabled || busy;
   const auto = youtubeCoverFor({ videos, videoUrl });
   const shown = coverUrl || auto;
 
-  const handleFile = async (file: File) => {
+  const handleFile = async (src: File | string) => {
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    const file = await cropImage(src, COVER_CROP);
+    if (!file) return;
     setError(null);
     setBusy(true);
     try {
@@ -54,7 +66,6 @@ export default function LessonCoverManager({
       setError('Не удалось загрузить обложку');
     } finally {
       setBusy(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -86,6 +97,7 @@ export default function LessonCoverManager({
 
   return (
     <div className="bg-white rounded-2xl p-5 md:p-6 shadow-soft border border-gray-100">
+      {cropper}
       <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
         <ImageIcon className="w-5 h-5" />
         Обложка урока
@@ -119,6 +131,18 @@ export default function LessonCoverManager({
               <Upload className="w-4 h-4" />
               {busy ? 'Загружаю…' : coverUrl ? 'Заменить' : 'Загрузить'}
             </button>
+
+            {shown && (
+              <button
+                type="button"
+                onClick={() => handleFile(shown)}
+                disabled={isBusy}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <Crop className="w-4 h-4" />
+                Изменить кадр
+              </button>
+            )}
 
             {coverUrl && (
               <button

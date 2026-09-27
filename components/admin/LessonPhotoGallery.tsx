@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { ImagePlus, Loader2, Trash2 } from 'lucide-react';
+import { CROP, useImageCropper, type CropOptions } from '@/components/admin/ImageCropper';
 
 export type LessonPhotoItem = {
   /** Стабильный ключ: id фото на сервере, либо локальный id ещё не загруженного файла */
@@ -16,6 +17,12 @@ export type LessonPhotoItem = {
 
 const ACCEPTED_TYPES = ['image/png', 'image/jpeg'];
 const MAX_SIZE = 5 * 1024 * 1024; // 5 МБ
+
+const PHOTO_CROP: CropOptions = {
+  title: 'Фото к уроку',
+  aspects: [CROP.original, CROP.square, CROP.portrait, CROP.landscape],
+  previewLabel: 'Фото в уроке — по клику ученица откроет его целиком',
+};
 
 type Props = {
   photos: LessonPhotoItem[];
@@ -46,14 +53,22 @@ export function LessonPhotoGallery({
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { cropImage, cropper } = useImageCropper();
 
   const remainingSlots = Math.max(0, maxCount - photos.length);
   const canAdd = !disabled && remainingSlots > 0;
 
-  const pickFiles = (fileList: FileList | File[] | null) => {
+  const pickFiles = async (fileList: FileList | File[] | null) => {
     if (!fileList || disabled) return;
     const incoming = Array.from(fileList);
     if (incoming.length === 0) return;
+
+    // Одно фото — сначала выбор кадра; пачку добавляем как есть
+    if (incoming.length === 1 && ACCEPTED_TYPES.includes(incoming[0].type)) {
+      const cropped = await cropImage(incoming[0], PHOTO_CROP);
+      if (!cropped) return;
+      incoming[0] = cropped;
+    }
 
     const valid: File[] = [];
     let rejectedType = false;
@@ -109,6 +124,7 @@ export function LessonPhotoGallery({
 
   return (
     <div>
+      {cropper}
       {photos.length === 0 ? (
         <div
           onClick={() => canAdd && inputRef.current?.click()}
@@ -207,8 +223,9 @@ export function LessonPhotoGallery({
         multiple
         className="hidden"
         onChange={(e) => {
-          pickFiles(e.target.files);
+          const files = Array.from(e.target.files ?? []);
           e.target.value = '';
+          pickFiles(files);
         }}
       />
 
