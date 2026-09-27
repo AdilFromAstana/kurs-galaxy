@@ -19,8 +19,10 @@ import {
   Images,
   Phone,
   Camera,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { hasSection, sectionFromHref, useLandingContent } from "@/hooks/useLandingContent";
 import { useEffect } from "react";
 
 interface SideDrawerProps {
@@ -58,18 +60,24 @@ export default function SideDrawer({ isOpen, onClose }: SideDrawerProps) {
   const initial = (user?.name || user?.email || "?").trim().charAt(0).toUpperCase();
 
   // Навигация для неавторизованных
+  const landing = useLandingContent();
   const publicNav = [
     { name: "Главная", href: "/", icon: Home },
     { name: "Об авторе", href: "/#author", icon: User },
     { name: "Мои работы", href: "/#my-works", icon: Camera },
+    { name: "Почему наши курсы", href: "/#for-whom", icon: Sparkles },
     { name: "Как проходит обучение", href: "/#how", icon: ListChecks },
     { name: "Работы учениц", href: "/#results", icon: Images },
     { name: "Отзывы", href: "/#reviews", icon: MessageSquare },
-    { name: "Контакты и заявка", href: "/#contacts", icon: Phone },
-    { name: "Вопросы и ответы", href: "/#faq", icon: HelpCircle },
     { name: "Цены на курсы", href: "/#courses", icon: Tag },
+    { name: "Вопросы и ответы", href: "/#faq", icon: HelpCircle },
+    { name: "Контакты и заявка", href: "/#contacts", icon: Phone },
     { name: "Каталог", href: "/courses", icon: BookOpen },
-  ];
+  ].filter((item) => {
+    // Пустые разделы главной (не заполнены в админке) в меню не показываем
+    const section = sectionFromHref(item.href);
+    return !section || hasSection(landing, section);
+  });
 
   const navigation = isAuthenticated ? authenticatedNav : publicNav;
 

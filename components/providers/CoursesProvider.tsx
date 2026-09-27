@@ -1,5 +1,6 @@
 'use client';
 
+import { PREVIEW_DRAFT_COURSE_ID, usePreviewDraft, type CoursePreviewDraft } from '@/lib/preview';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 export type CourseMaterial = { id: string; title: string; url: string; type: 'PDF' | 'LINK' | 'PRODUCT' };
@@ -67,8 +68,29 @@ type Ctx = {
 const CoursesContext = createContext<Ctx | null>(null);
 
 export function CoursesProvider({ children }: { children: ReactNode }) {
-  const [courses, setCourses] = useState<CourseDTO[]>([]);
+  const [loaded, setLoaded] = useState<CourseDTO[]>([]);
   const [isLoading, setLoading] = useState(true);
+
+  // Предпросмотр из админки: черновик курса поверх данных API
+  const draft = usePreviewDraft<CoursePreviewDraft>('course');
+  const courses = useMemo(() => {
+    if (!draft) return loaded;
+    const patch = {
+      title: draft.title,
+      description: draft.description,
+      thumbnailUrl: draft.thumbnailUrl,
+    };
+    if (draft.id) return loaded.map((c) => (c.id === draft.id ? { ...c, ...patch } : c));
+    const synthetic: CourseDTO = {
+      id: PREVIEW_DRAFT_COURSE_ID,
+      slug: PREVIEW_DRAFT_COURSE_ID,
+      isFree: false,
+      modules: [],
+      pricingPlans: [],
+      ...patch,
+    };
+    return [synthetic, ...loaded];
+  }, [loaded, draft]);
 
   const refresh = useCallback(async () => {
     const res = await fetch('/api/courses');
@@ -77,7 +99,7 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
       return;
     }
     const data = await res.json();
-    setCourses(data.courses ?? []);
+    setLoaded(data.courses ?? []);
     setLoading(false);
   }, []);
 

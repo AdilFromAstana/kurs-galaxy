@@ -11,6 +11,7 @@ import Header from '@/components/layout/Header';
 import LandingFooter from '@/components/landing/LandingFooter';
 import PurchaseModal from '@/components/modals/PurchaseModal';
 import { focusRing, formatPrice, manrope, pinkButtonCls, plural } from '@/components/landing/shared';
+import { PREVIEW_DRAFT_COURSE_ID } from '@/lib/preview';
 
 export default function CoursesPage() {
   const { isAuthenticated } = useAuth();
@@ -19,7 +20,10 @@ export default function CoursesPage() {
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
   // Только курсы с реальным контентом (фильтрует тестовый мусор без разделов)
-  const visibleCourses = courses.filter((c) => c.modules.length > 0);
+  // Черновик нового курса из предпросмотра админки показываем, хотя разделов ещё нет
+  const visibleCourses = courses.filter(
+    (c) => c.modules.length > 0 || c.id === PREVIEW_DRAFT_COURSE_ID,
+  );
 
   const totalLessons = visibleCourses.reduce(
     (sum, c) => sum + c.modules.reduce((s, m) => s + m.lessons.length, 0),

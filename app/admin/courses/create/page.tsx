@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { CourseLogoUpload } from "@/components/admin/CourseLogoUpload";
+import { CoursePreviewButton } from "@/components/admin/CoursePreviewButton";
 import { compressImage } from '@/lib/compressImage';
 
 function slugify(s: string) {
@@ -138,6 +139,15 @@ export default function CreateCoursePage() {
             <p className="text-sm text-gray-500 mt-1">
               Логотип необязателен — можно добавить позже
             </p>
+            <div className="mt-3">
+              <CoursePreviewButton
+                courseId={null}
+                title={formData.title}
+                description={formData.description}
+                savedUrl={null}
+                file={logoFile}
+              />
+            </div>
           </div>
         </div>
       </div>

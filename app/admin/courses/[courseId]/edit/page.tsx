@@ -7,6 +7,7 @@ import { useRouter, useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { confirmToast } from "@/lib/toastConfirm";
 import { CourseLogoUpload } from "@/components/admin/CourseLogoUpload";
+import { CoursePreviewButton } from "@/components/admin/CoursePreviewButton";
 import { compressImage } from '@/lib/compressImage';
 
 type AdminCourse = {
@@ -219,6 +220,15 @@ export default function EditCoursePage() {
             <p className="text-gray-600 mt-1 text-sm md:text-base">
               {course.title}
             </p>
+            <div className="mt-3">
+              <CoursePreviewButton
+                courseId={course.id}
+                title={formData.title}
+                description={formData.description}
+                savedUrl={thumbnailUrl}
+                file={logoFile}
+              />
+            </div>
           </div>
         </div>
       </div>
