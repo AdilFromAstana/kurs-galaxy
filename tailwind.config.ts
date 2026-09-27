@@ -9,6 +9,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Палитра лендинга (главная страница)
+        landing: {
+          plum: '#563e4f',
+          pink: '#f549a0',
+          'pink-dark': '#e34494',
+          blush: '#fdf0f6',
+          cream: '#fff8fb',
+        },
         primary: {
           50: '#fdf2f8',
           100: '#fce7f3',

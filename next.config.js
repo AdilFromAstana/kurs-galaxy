@@ -10,7 +10,7 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/:dir(lesson-photos|course-thumbnails|lesson-covers|certificate-assets)/:file',
+        source: '/:dir(lesson-photos|course-thumbnails|lesson-covers|certificate-assets|site-content)/:file',
         destination: '/api/public-files/:dir/:file',
       },
     ];

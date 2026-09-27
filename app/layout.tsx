@@ -6,9 +6,9 @@ import AppProviders from "@/components/providers/AppProviders";
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 export const metadata: Metadata = {
-  title: "KursGalaxy.kz - Профессиональные онлайн-курсы",
+  title: "Курсы по бровям — KursGalaxy.kz",
   description:
-    "Получите доступ к качественным онлайн-курсам и станьте профессионалом в своей области",
+    "Онлайн-курсы для бровистов: натуральные брови хной и краской, колористика и перманент — с нуля до высокого чека",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
   themeColor: "#ec4899",
 };

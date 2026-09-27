@@ -361,3 +361,24 @@ export async function deleteLessonVideoIfLocal(
     }
   }
 }
+
+// ─── Контент главной (фото автора, работ учениц) ─────────────────────────────
+// Публичные по URL, лежат в /public/site-content/.
+const SITE_CONTENT_DIR = path.join(process.cwd(), 'public', 'site-content');
+
+export const SITE_CONTENT_URL_PREFIX = '/site-content';
+export const SITE_CONTENT_DIR_PATH = SITE_CONTENT_DIR;
+export const ALLOWED_SITE_CONTENT_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+export const MAX_SITE_CONTENT_SIZE = 8 * 1024 * 1024; // 8 МБ — фото с телефона
+
+export async function saveSiteContentImage(file: File): Promise<string> {
+  const extByMime: Record<string, string> = {
+    'image/png': '.png',
+    'image/jpeg': '.jpg',
+    'image/webp': '.webp',
+  };
+  const filename = `img-${crypto.randomBytes(8).toString('hex')}${extByMime[file.type] ?? '.jpg'}`;
+  await fs.mkdir(SITE_CONTENT_DIR, { recursive: true });
+  await fs.writeFile(path.join(SITE_CONTENT_DIR, filename), Buffer.from(await file.arrayBuffer()));
+  return `${SITE_CONTENT_URL_PREFIX}/${filename}`;
+}

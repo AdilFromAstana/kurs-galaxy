@@ -48,8 +48,11 @@ export default function Header() {
         { name: "Каталог", href: "/courses" },
       ]
     : [
-        { name: "Главная", href: "/" },
-        { name: "Курсы", href: "/courses" },
+        { name: "Об авторе", href: "/#author" },
+        { name: "Работы учениц", href: "/#results" },
+        { name: "Отзывы", href: "/#reviews" },
+        { name: "Вопросы", href: "/#faq" },
+        { name: "Курсы", href: "/#courses" },
       ];
 
   const initial = (user?.name || user?.email || "?").trim().charAt(0).toUpperCase();
@@ -91,10 +94,9 @@ export default function Header() {
             {/* Десктоп-навигация */}
             <nav className="hidden md:flex items-center gap-1">
               {navLinks.map((link) => {
+                // Якорные ссылки лендинга не подсвечиваем как активные
                 const isActive =
-                  link.href === "/"
-                    ? pathname === "/"
-                    : pathname.startsWith(link.href);
+                  !link.href.includes("#") && pathname.startsWith(link.href);
                 return (
                   <Link
                     key={link.href}

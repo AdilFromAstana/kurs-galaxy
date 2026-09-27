@@ -58,7 +58,7 @@ say "3/6  миграции схемы (idempotent DDL)"
 ssh "$SERVER" "sudo -u ${DB_USER} psql ${DB_NAME} -v ON_ERROR_STOP=1 -f -" < "$ROOT/scripts/prod-migrations.sql"
 
 # --- 4. выкатка кода ------------------------------------------------------
-# ВНИМАНИЕ: public/{course-thumbnails,lesson-photos,lesson-covers,certificate-assets}
+# ВНИМАНИЕ: public/{course-thumbnails,lesson-photos,lesson-covers,certificate-assets,site-content}
 # и uploads/ — симлинки в /var/lib/kurs-galaxy (загруженные видео, обложки, ассеты
 # сертификата). Они в --exclude, иначе --delete их снесёт.
 say "4/6  rsync standalone"
@@ -73,7 +73,7 @@ rsync -az --delete --rsync-path="$RSYNC_AS_SVC" \
 say "4/6  rsync public (без ассет-симлинков)"
 rsync -az --rsync-path="$RSYNC_AS_SVC" \
   --exclude '/certificate-assets' --exclude '/lesson-photos' \
-  --exclude '/course-thumbnails' --exclude '/lesson-covers' \
+  --exclude '/course-thumbnails' --exclude '/lesson-covers' --exclude '/site-content' \
   "$ROOT/public/" "$SERVER:$APP_DIR/public/"
 
 # --- 5. рестарт -------------------------------------------------------------

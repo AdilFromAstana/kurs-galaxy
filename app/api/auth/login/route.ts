@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { verifyPassword } from '@/lib/auth/password';
-import { createUserSession } from '@/lib/auth/session';
+import { createAdminSession, createUserSession } from '@/lib/auth/session';
 import { rateLimit, rateLimitReset, getClientIp } from '@/lib/rateLimit';
 
 const MAX_ATTEMPTS = 10;
@@ -30,12 +30,21 @@ export async function POST(req: Request) {
   }
 
   const user = await prisma.user.findUnique({ where: { email } });
-  if (!user) {
-    return NextResponse.json({ error: 'Неверный email или пароль' }, { status: 401 });
-  }
-
-  const ok = await verifyPassword(password, user.passwordHash);
-  if (!ok) {
+  const ok = user ? await verifyPassword(password, user.passwordHash) : false;
+  if (!user || !ok) {
+    // Единая форма входа: данные администратора тоже подходят —
+    // тогда открываем админскую сессию и отправляем в админку
+    const admin = await prisma.admin.findUnique({ where: { email } });
+    if (admin && (await verifyPassword(password, admin.passwordHash))) {
+      rateLimitReset(key);
+      await createAdminSession({
+        id: admin.id,
+        email: admin.email,
+        name: admin.name,
+        role: admin.role,
+      });
+      return NextResponse.json({ admin: true, redirect: '/admin' });
+    }
     return NextResponse.json({ error: 'Неверный email или пароль' }, { status: 401 });
   }
 

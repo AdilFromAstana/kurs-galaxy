@@ -63,4 +63,7 @@ next-env.d.ts
 
 # обложки уроков
 /public/lesson-covers/
+
+# фото, загруженные в админке для главной (автор, работы учениц)
+/public/site-content/
 /backups/
