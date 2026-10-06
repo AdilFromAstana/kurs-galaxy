@@ -38,8 +38,8 @@ import type {
 
 const TABS = [
   { id: 'author', name: 'Об авторе', icon: User },
-  { id: 'authorWorks', name: 'Мои работы', icon: Camera },
-  { id: 'works', name: 'Работы учениц', icon: Images },
+  { id: 'brow', name: 'Бровист с 0', icon: Images },
+  { id: 'permanent', name: 'Натуральный перманент', icon: Camera },
   { id: 'results', name: 'Результаты', icon: Sparkles },
   { id: 'reviews', name: 'Отзывы', icon: MessageSquare },
   { id: 'faq', name: 'Вопросы', icon: HelpCircle },
@@ -49,9 +49,9 @@ type TabId = (typeof TABS)[number]['id'];
 // Какой раздел главной показывать в предпросмотре для каждой вкладки
 const TAB_ANCHOR: Record<TabId, string> = {
   author: 'author',
-  authorWorks: 'my-works',
-  works: 'results',
-  results: 'results',
+  brow: 'brow',
+  permanent: 'permanent',
+  results: 'permanent',
   reviews: 'reviews',
   faq: 'faq',
 };
@@ -256,44 +256,127 @@ export default function LandingContentPage() {
         </Card>
       )}
 
-      {tab === 'authorWorks' && (
-        <Card
-          title="Мои работы"
-          hint="Ваше портфолио — галерея на главной под блоком «Как проходит обучение». Можно выбрать сразу несколько фото."
-        >
-          <GalleryEditor
-            items={content.authorWorks}
-            onChange={(authorWorks) => patch({ authorWorks })}
-            crop={{
-              title: 'Моя работа',
-              aspects: [CROP.square, CROP.portrait, CROP.landscape, CROP.original],
-              previewLabel: 'Плитка в галерее «Мои работы» — по клику фото открывается целиком',
-            }}
-          />
-        </Card>
+      {tab === 'brow' && (
+        <>
+          <Card
+            title="Бровист с 0 — мои работы"
+            hint="Вкладка «Бровист с 0» на главной: ваши работы по бровям. Можно выбрать сразу несколько фото."
+          >
+            <GalleryEditor
+              items={content.browAuthorWorks}
+              onChange={(browAuthorWorks) => patch({ browAuthorWorks })}
+              crop={{
+                title: 'Моя работа — брови',
+                aspects: [CROP.square, CROP.portrait, CROP.landscape, CROP.original],
+                previewLabel: 'Плитка в галерее «Мои работы» — по клику фото открывается целиком',
+              }}
+            />
+          </Card>
+          <Card
+            title="Бровист с 0 — работы учениц"
+            hint="Фото «до/после» учениц курса по бровям, карусель под вашими работами."
+          >
+            <GalleryEditor
+              items={content.browWorks}
+              onChange={(browWorks) => patch({ browWorks })}
+              crop={{
+                title: 'Работа ученицы — брови',
+                aspects: [CROP.landscape, CROP.square, CROP.original],
+                previewLabel: 'Фото в карусели «Работы учениц»',
+              }}
+            />
+          </Card>
+          <Card
+            title="Бровист с 0 — разделы и цена"
+            hint="Названия разделов берутся из курса (Курсы → редактирование). Цена — из тарифов курса; если тарифов нет, показываем цену, указанную здесь."
+          >
+            <Field label="Цена, если у курса нет тарифов">
+              <input
+                className={inputCls}
+                value={content.browPrice}
+                onChange={(e) => patch({ browPrice: e.target.value })}
+                placeholder="Например: 49 000 ₸"
+                maxLength={120}
+              />
+            </Field>
+          </Card>
+        </>
       )}
 
-      {tab === 'works' && (
-        <Card
-          title="Работы учениц — карусель фото"
-          hint="Фото «до/после» в карусели блока «Работы учениц». Можно выбрать сразу несколько фото."
-        >
-          <GalleryEditor
-            items={content.works}
-            onChange={(works) => patch({ works })}
-            crop={{
-              title: 'Работа ученицы',
-              aspects: [CROP.landscape, CROP.square, CROP.original],
-              previewLabel: 'Фото в карусели «Работы учениц»',
-            }}
-          />
-        </Card>
+      {tab === 'permanent' && (
+        <>
+          <Card
+            title="Натуральный перманент — мои работы"
+            hint="Вкладка «Натуральный перманент» на главной: ваше портфолио. Можно выбрать сразу несколько фото."
+          >
+            <GalleryEditor
+              items={content.authorWorks}
+              onChange={(authorWorks) => patch({ authorWorks })}
+              crop={{
+                title: 'Моя работа — перманент',
+                aspects: [CROP.square, CROP.portrait, CROP.landscape, CROP.original],
+                previewLabel: 'Плитка в галерее «Мои работы» — по клику фото открывается целиком',
+              }}
+            />
+          </Card>
+          <Card
+            title="Натуральный перманент — работы учениц"
+            hint="Фото «до/после» учениц курса по перманенту. Карточки с описанием — во вкладке «Результаты»."
+          >
+            <GalleryEditor
+              items={content.works}
+              onChange={(works) => patch({ works })}
+              crop={{
+                title: 'Работа ученицы — перманент',
+                aspects: [CROP.landscape, CROP.square, CROP.original],
+                previewLabel: 'Фото в карусели «Работы учениц»',
+              }}
+            />
+          </Card>
+          <Card
+            title="Цена обучения и запись"
+            hint="Под ценой — кнопка «Написать в WhatsApp». Без номера кнопка не показывается."
+          >
+            <div className="space-y-4">
+              <Field label="Цена обучения">
+                <input
+                  className={inputCls}
+                  value={content.permanentPrice}
+                  onChange={(e) => patch({ permanentPrice: e.target.value })}
+                  placeholder="Например: 350 000 ₸"
+                  maxLength={120}
+                />
+              </Field>
+              <Field label="Пояснение под ценой (необязательно)">
+                <textarea
+                  className={inputCls}
+                  rows={3}
+                  value={content.permanentNote}
+                  onChange={(e) => patch({ permanentNote: e.target.value })}
+                  placeholder="Например: стартовый набор в подарок, возможна рассрочка"
+                  maxLength={600}
+                />
+              </Field>
+              <Field label="Номер WhatsApp для записи">
+                <input
+                  className={inputCls}
+                  type="tel"
+                  inputMode="tel"
+                  value={content.whatsapp}
+                  onChange={(e) => patch({ whatsapp: e.target.value })}
+                  placeholder="+7 708 855 64 04"
+                  maxLength={30}
+                />
+              </Field>
+            </div>
+          </Card>
+        </>
       )}
 
       {tab === 'results' && (
         <Card
           title="Результаты учениц — карточки «до / после»"
-          hint="Карточки под каруселью: фото ученицы и что изменилось после курса. Карточка без фото не сохранится."
+          hint="Карточки во вкладке «Натуральный перманент» под каруселью работ учениц: фото и что изменилось после курса. Карточка без фото не сохранится."
         >
           <ListEditor<ResultCard>
             items={content.results}

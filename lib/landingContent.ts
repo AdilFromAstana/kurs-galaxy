@@ -22,6 +22,13 @@ export interface LandingContentData {
   results: ResultCard[];
   reviews: Review[];
   faq: FaqItem[];
+  // Вкладка «Бровист с 0»; authorWorks/works выше — вкладка «Натуральный перманент»
+  browAuthorWorks: WorkPhoto[];
+  browWorks: WorkPhoto[];
+  browPrice: string;
+  permanentPrice: string;
+  permanentNote: string;
+  whatsapp: string;
 }
 
 // Начальное наполнение при первом открытии: реальные фото работ и базовый FAQ.
@@ -47,6 +54,12 @@ const DEFAULTS: LandingContentData = {
   ],
   results: [],
   reviews: [],
+  browAuthorWorks: [],
+  browWorks: [],
+  browPrice: '',
+  permanentPrice: '',
+  permanentNote: '',
+  whatsapp: '',
   faq: [
     {
       q: 'Подойдёт ли мне курс, если я обучаюсь с 0?',
@@ -137,6 +150,13 @@ export function sanitizeLandingContent(input: unknown): LandingContentData {
       .map(obj)
       .map((f) => ({ q: str(f.q, LIMITS.short * 2), a: str(f.a, LIMITS.bio) }))
       .filter((f) => f.q && f.a),
+    browAuthorWorks: photos(b.browAuthorWorks),
+    browWorks: photos(b.browWorks),
+    browPrice: str(b.browPrice, LIMITS.short),
+    permanentPrice: str(b.permanentPrice, LIMITS.short),
+    permanentNote: str(b.permanentNote, LIMITS.text),
+    // Только цифры номера — из них собираем ссылку wa.me
+    whatsapp: str(b.whatsapp, 30).replace(/\D/g, ''),
   };
 }
 

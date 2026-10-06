@@ -374,5 +374,14 @@ model LandingContent {
   results     Json     @default("[]") // [{ photo, tag, before: string[], after: string[] }]
   reviews     Json     @default("[]") // [{ text, name }]
   faq         Json     @default("[]") // [{ q, a }]
+  // Главная разделена на два курса: «Бровист с 0» (онлайн, покупка на сайте)
+  // и «Натуральный перманент» (запись через WhatsApp). authorWorks/works —
+  // работы перманента, brow* — работы бровиста.
+  browAuthorWorks Json    @default("[]") // [{ src, alt }]
+  browWorks       Json    @default("[]") // [{ src, alt }]
+  browPrice       String? // цена текстом, если у курса нет тарифов
+  permanentPrice  String? // «Цена обучения» перманента, текстом
+  permanentNote   String? // пояснение под ценой (что входит, рассрочка…)
+  whatsapp        String? // номер для записи на перманент
   updatedAt   DateTime @updatedAt
 }
