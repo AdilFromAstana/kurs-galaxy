@@ -495,6 +495,23 @@ function CourseCard({ course, index }: { course: CourseDTO; index: number }) {
           </span>
         </div>
 
+        {/* Названия разделов — чтобы перед ценой было видно, что входит в обучение */}
+        {course.modules.length > 0 && (
+          <div className="mb-6">
+            <p className="mb-3 text-xs font-extrabold uppercase tracking-widest text-landing-plum/70">
+              Что входит в обучение
+            </p>
+            <ol className="space-y-2" aria-label="Разделы курса">
+              {course.modules.map((m) => (
+                <li key={m.id} className="flex gap-2 text-sm font-semibold text-landing-plum">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-landing-pink" aria-hidden />
+                  {m.title}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
+
         {plans.length > 0 && (
           <ul className="mb-6 space-y-2" aria-label="Тарифы">
             {plans.map((plan) => (
