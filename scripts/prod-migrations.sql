@@ -40,3 +40,11 @@ CREATE TABLE IF NOT EXISTS "LandingContent" (
 
 -- 2026-09: LandingContent.authorWorks — галерея «Мои работы» (работы автора курсов).
 ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "authorWorks" JSONB NOT NULL DEFAULT '[]';
+
+-- 2026-10: главная из двух вкладок — «Бровист с 0» и «Натуральный перманент».
+ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "browAuthorWorks" JSONB NOT NULL DEFAULT '[]';
+ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "browWorks"       JSONB NOT NULL DEFAULT '[]';
+ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "browPrice"       TEXT;
+ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "permanentPrice"  TEXT;
+ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "permanentNote"   TEXT;
+ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "whatsapp"        TEXT;

@@ -29,10 +29,9 @@ const EMPTY: PublicSiteSettings = {
 
 const MENU = [
   { href: '/#author', label: 'Об авторе' },
-  { href: '/#my-works', label: 'Мои работы' },
-  { href: '/#results', label: 'Работы учениц' },
+  { href: '/#brow', label: 'Бровист с 0' },
+  { href: '/#permanent', label: 'Натуральный перманент' },
   { href: '/#reviews', label: 'Отзывы' },
-  { href: '/#courses', label: 'Курсы' },
   { href: '/#faq', label: 'Вопрос / ответ' },
 ];
 

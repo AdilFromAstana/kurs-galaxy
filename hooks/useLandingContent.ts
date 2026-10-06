@@ -37,17 +37,13 @@ export function useLandingContent(): LandingContentData | null {
 }
 
 /** Разделы главной, которые показываются только когда заполнены в админке. */
-export type OptionalSection = 'author' | 'my-works' | 'results' | 'reviews' | 'faq';
+export type OptionalSection = 'author' | 'reviews' | 'faq';
 
 export function hasSection(c: LandingContentData | null, id: OptionalSection): boolean {
   if (!c) return false;
   switch (id) {
     case 'author':
       return !!(c.authorName || c.authorPhoto);
-    case 'my-works':
-      return c.authorWorks.length > 0;
-    case 'results':
-      return c.works.length > 0 || c.results.length > 0;
     case 'reviews':
       return c.reviews.length > 0;
     case 'faq':
@@ -59,7 +55,14 @@ export function hasSection(c: LandingContentData | null, id: OptionalSection): b
 export function sectionFromHref(href: string): OptionalSection | null {
   const m = href.match(/#([\w-]+)$/);
   const id = m?.[1];
-  return id === 'author' || id === 'my-works' || id === 'results' || id === 'reviews' || id === 'faq'
+  return id === 'author' || id === 'reviews' || id === 'faq'
     ? id
     : null;
 }
+
+/** Вкладки курсов на главной: /#brow и /#permanent открывают нужную. */
+export type CourseTab = 'brow' | 'permanent';
+export const COURSE_TABS: { id: CourseTab; name: string }[] = [
+  { id: 'brow', name: 'Бровист с 0' },
+  { id: 'permanent', name: 'Натуральный перманент' },
+];

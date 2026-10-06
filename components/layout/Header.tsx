@@ -52,10 +52,9 @@ export default function Header() {
       ]
     : [
         { name: "Об авторе", href: "/#author" },
-        { name: "Мои работы", href: "/#my-works" },
-        { name: "Работы учениц", href: "/#results" },
+        { name: "Бровист с 0", href: "/#brow" },
+        { name: "Натуральный перманент", href: "/#permanent" },
         { name: "Отзывы", href: "/#reviews" },
-        { name: "Курсы", href: "/#courses" },
         { name: "Вопросы", href: "/#faq" },
       ].filter((l) => {
         const section = sectionFromHref(l.href);
