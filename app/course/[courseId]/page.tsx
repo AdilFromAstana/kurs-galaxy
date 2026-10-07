@@ -221,13 +221,21 @@ export default function CoursePage() {
               )}
 
               <dl className="mt-8 grid max-w-lg grid-cols-3 gap-4 border-t border-landing-plum/10 pt-6">
-                {[
+                {([
                   { value: totalModules, label: plural(totalModules, "раздел", "раздела", "разделов") },
                   { value: total, label: plural(total, "урок", "урока", "уроков") },
+                  // «0 бесплатно» у платного курса читалось как цена — без пробных уроков пункт не нужен
                   courseIsFree
                     ? { value: "0 ₸", label: "бесплатно" }
-                    : { value: freeLessonsCount, label: "бесплатно" },
-                ].map((s, i) => (
+                    : freeLessonsCount > 0
+                      ? {
+                          value: freeLessonsCount,
+                          label: plural(freeLessonsCount, "урок бесплатно", "урока бесплатно", "уроков бесплатно"),
+                        }
+                      : null,
+                ] as ({ value: string | number; label: string } | null)[])
+                  .filter((s): s is { value: string | number; label: string } => s !== null)
+                  .map((s, i) => (
                   <div key={i}>
                     <dt className="sr-only">{s.label}</dt>
                     <dd className="text-3xl md:text-4xl font-extrabold">{s.value}</dd>

@@ -216,7 +216,7 @@ export default function CertificateSettingsPage() {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-6">
         {/* Левая колонка — форма */}
         <div className="space-y-6">
           {/* Выбор шаблона */}

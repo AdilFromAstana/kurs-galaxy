@@ -52,10 +52,9 @@ test.describe('Часть III: Курсы (админ)', () => {
     // Берём только видимые на текущем viewport (desktop) элементы.
     const titleInput = page.locator('input#title').filter({ visible: true });
     const descTextarea = page.locator('textarea#description').filter({ visible: true });
-    const priceInput = page.locator('input#price').filter({ visible: true });
     await titleInput.fill(title);
     await descTextarea.fill('UI desc');
-    await priceInput.fill('1500');
+    // Цена задаётся тарифами (отдельная страница), в форме курса её нет
     await page
       .getByRole('button', { name: /Создать|Сохранить/i })
       .filter({ visible: true })

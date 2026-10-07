@@ -21,7 +21,7 @@ export default function LegalPage({ title, body }: Props) {
 
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 md:p-10">
         <h1 className="sr-only">{title}</h1>
-        <div className="prose prose-lg max-w-none prose-headings:text-dark-900 prose-a:text-primary-600 hover:prose-a:text-primary-700 prose-strong:text-dark-900">
+        <div className="prose prose-lg max-w-none break-words [hyphens:auto] prose-h1:text-3xl md:prose-h1:text-5xl prose-headings:text-dark-900 prose-a:text-primary-600 hover:prose-a:text-primary-700 prose-strong:text-dark-900">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{body}</ReactMarkdown>
         </div>
       </div>

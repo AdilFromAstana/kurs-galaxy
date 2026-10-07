@@ -61,6 +61,9 @@ const inputCls =
 
 export default function LandingContentPage() {
   const [content, setContent] = useState<LandingContentData | null>(null);
+  // Версия, которую редактируем: сервер не даст сохранить поверх более новой
+  const [version, setVersion] = useState<string | null>(null);
+  const [conflict, setConflict] = useState(false);
   const [tab, setTab] = useState<TabId>('author');
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -70,7 +73,11 @@ export default function LandingContentPage() {
   useEffect(() => {
     (async () => {
       const res = await fetch('/api/admin/site-content', { credentials: 'include' });
-      if (res.ok) setContent((await res.json()).content);
+      if (res.ok) {
+        const data = await res.json();
+        setContent(data.content);
+        setVersion(data.version);
+      }
       else setError('Не удалось загрузить контент');
     })();
   }, []);
@@ -97,11 +104,13 @@ export default function LandingContentPage() {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(content),
+        body: JSON.stringify({ content, version }),
       });
       const data = await res.json().catch(() => ({}));
+      if (res.status === 409) setConflict(true);
       if (!res.ok) throw new Error(data.message || 'Не удалось сохранить');
       setContent(data.content);
+      setVersion(data.version);
       setDirty(false);
       invalidateLandingContent();
       toast.success('Сохранено — изменения уже на сайте');
@@ -174,14 +183,25 @@ export default function LandingContentPage() {
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-700">{error}</p>
+          <div className="text-sm text-red-700">
+            <p>{error}</p>
+            {conflict && (
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="mt-2 font-semibold underline"
+              >
+                Обновить страницу
+              </button>
+            )}
+          </div>
         </div>
       )}
 
       {tab === 'author' && (
         <Card
           title="Об авторе курсов"
-          hint="Блок идёт на главной сразу после первого экрана. Если не заполнены ни имя, ни фото — блок скрыт."
+          hint="Самый верх главной: фото и информация о вас, под ними — вкладки курсов."
         >
           <div className="grid gap-6 md:grid-cols-[240px_1fr]">
             <ImageField

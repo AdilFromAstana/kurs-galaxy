@@ -49,7 +49,7 @@ export function LessonContentCard({ content }: { content: string | null | undefi
   return (
     <div className="card animate-slide-up">
       <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Конспект урока</h2>
-      <div className="lesson-content prose prose-lg max-w-none prose-headings:text-dark-900 prose-a:text-primary-600 hover:prose-a:text-primary-700 prose-img:rounded-xl prose-img:shadow-md prose-blockquote:border-primary-500 prose-blockquote:bg-primary-50/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
+      <div className="lesson-content prose prose-lg max-w-none break-words [hyphens:auto] prose-h1:text-3xl md:prose-h1:text-5xl prose-headings:text-dark-900 prose-a:text-primary-600 hover:prose-a:text-primary-700 prose-img:rounded-xl prose-img:shadow-md prose-blockquote:border-primary-500 prose-blockquote:bg-primary-50/50 prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-lg prose-code:text-primary-700 prose-code:bg-primary-50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
