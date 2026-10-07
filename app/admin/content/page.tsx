@@ -40,14 +40,14 @@ import {
   type CourseTabId,
   type LandingLayout,
   type Step,
-} from '@/lib/landingContent';
+} from '@/lib/landingContentShared';
 import type {
   FaqItem,
   LandingContentData,
   ResultCard,
   Review,
   WorkPhoto,
-} from '@/lib/landingContent';
+} from '@/lib/landingContentShared';
 
 const TABS = [
   { id: 'author', name: 'Об авторе', icon: User },
@@ -1324,6 +1324,18 @@ function PhotoLibrary({
 /** Поля вкладки «Тексты и кнопки»: [ключ, подпись, широкое поле]. */
 const TEXT_GROUPS: { title: string; hint?: string; fields: [TextKey, string, boolean?][] }[] = [
   {
+    title: 'Сайт целиком',
+    hint: 'Название — в шапке, в меню и внизу сайта. Заголовок и описание видны во вкладке браузера, в Google и в превью ссылки в мессенджерах (обновляются в течение 5 минут).',
+    fields: [
+      ['siteName', 'Название сайта'],
+      ['seoTitle', 'Заголовок вкладки браузера'],
+      ['seoDescription', 'Описание для поиска и превью ссылки', true],
+      ['navAuthor', 'Пункт меню «Об авторе»'],
+      ['navReviews', 'Пункт меню «Отзывы»'],
+      ['navFaq', 'Пункт меню «Вопросы»'],
+    ],
+  },
+  {
     title: 'Названия вкладок курсов',
     hint: 'Так вкладки называются на главной и в меню сайта.',
     fields: [
@@ -1360,6 +1372,40 @@ const TEXT_GROUPS: { title: string; hint?: string; fields: [TextKey, string, boo
       ['permanentPriceLabel', 'Надпись над ценой перманента'],
       ['permanentNoPrice', 'Если цена перманента не указана'],
       ['permanentButton', 'Кнопка WhatsApp во вкладке перманента'],
+    ],
+  },
+  {
+    title: 'Форма заявки внизу сайта',
+    fields: [
+      ['footerFormTitle', 'Заголовок формы'],
+      ['footerFormLead', 'Подпись под заголовком', true],
+      ['footerSuccessTitle', 'После отправки — заголовок'],
+      ['footerSuccessText', 'После отправки — текст', true],
+    ],
+  },
+  {
+    title: 'Каталог курсов',
+    fields: [
+      ['catalogTop', 'Заголовок — тёмная строка'],
+      ['catalogAccent', 'Заголовок — розовая строка'],
+      ['catalogLead', 'Подпись под заголовком', true],
+    ],
+  },
+  {
+    title: 'Страница курса',
+    hint: 'Преимущество можно скрыть: впишите в поле «-».',
+    fields: [
+      ['coursePerk1', 'Преимущество 1'],
+      ['coursePerk2', 'Преимущество 2'],
+      ['coursePerk3', 'Преимущество 3'],
+      ['courseBuy', 'Кнопка покупки (ученица вошла в кабинет)'],
+      ['courseEnroll', 'Кнопка покупки (гость)'],
+      ['courseWatchFree', 'Кнопка бесплатного урока'],
+      ['courseProgramTop', '«Программа курса» — тёмная строка'],
+      ['courseProgramAccent', '«Программа курса» — розовая строка'],
+      ['courseNoPriceTitle', 'Если у курса нет цены — заголовок'],
+      ['courseNoPriceButton', 'Если у курса нет цены — кнопка'],
+      ['courseNoPriceText', 'Если у курса нет цены — текст', true],
     ],
   },
   {

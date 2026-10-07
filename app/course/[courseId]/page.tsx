@@ -20,6 +20,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useSiteTexts } from "@/hooks/useLandingContent";
 import { useProgress } from "@/hooks/useProgress";
 import { usePurchase } from "@/hooks/usePurchase";
 import { useCourses, type CourseModule } from "@/components/providers/CoursesProvider";
@@ -44,11 +45,8 @@ const ACCESS_LABEL: Record<string, string> = {
   UNLIMITED: "бессрочный доступ",
 };
 
-const PERKS = [
-  { icon: Smartphone, text: "Смотрите с телефона и компьютера" },
-  { icon: Clock, text: "Учитесь в своём темпе" },
-  { icon: ShieldCheck, text: "Безопасная оплата картой" },
-];
+// Тексты преимуществ меняются в админке («Тексты и кнопки» → «Страница курса»)
+const PERK_ICONS = [Smartphone, Clock, ShieldCheck];
 
 const num = (i: number) => String(i + 1).padStart(2, "0");
 
@@ -73,6 +71,10 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 export default function CoursePage() {
   const params = useParams();
+  const t = useSiteTexts();
+  const perks = [t.coursePerk1, t.coursePerk2, t.coursePerk3]
+    .map((text, i) => ({ icon: PERK_ICONS[i], text }))
+    .filter((p) => p.text.trim() && p.text.trim() !== "-");
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { getCourseById, getAllLessons, isLoading: coursesLoading } = useCourses();
   const slugOrId = params.courseId as string;
@@ -399,30 +401,30 @@ export default function CoursePage() {
                   )}
 
                   <button type="button" onClick={handlePurchaseClick} className={`${pinkButtonCls} mt-6 w-full`}>
-                    {isAuthenticated ? "Купить курс" : "Записаться на курс"}
+                    {isAuthenticated ? t.courseBuy : t.courseEnroll}
                     <ArrowRight className="h-4 w-4" aria-hidden />
                   </button>
                   {firstFreeLesson && (
                     <Link href={`/lesson/${firstFreeLesson.id}`} className={`${outlineButtonCls} mt-3 w-full`}>
                       <PlayCircle className="h-5 w-5" aria-hidden />
-                      Смотреть бесплатно
+                      {t.courseWatchFree}
                     </Link>
                   )}
                 </>
               ) : (
                 <>
-                  <p className="text-2xl font-extrabold uppercase">Запись открыта</p>
+                  <p className="text-2xl font-extrabold uppercase">{t.courseNoPriceTitle}</p>
                   <p className="mt-2 text-landing-plum/75">
-                    Оставьте заявку — расскажем о программе, тарифах и стоимости обучения.
+                    {t.courseNoPriceText}
                   </p>
                   <a href="#contacts" className={`${pinkButtonCls} mt-6 w-full`}>
-                    Узнать стоимость
+                    {t.courseNoPriceButton}
                     <ArrowRight className="h-4 w-4" aria-hidden />
                   </a>
                   {firstFreeLesson && (
                     <Link href={`/lesson/${firstFreeLesson.id}`} className={`${outlineButtonCls} mt-3 w-full`}>
                       <PlayCircle className="h-5 w-5" aria-hidden />
-                      Смотреть бесплатно
+                      {t.courseWatchFree}
                     </Link>
                   )}
                 </>
@@ -436,7 +438,7 @@ export default function CoursePage() {
                     посмотреть бесплатно
                   </li>
                 )}
-                {PERKS.map(({ icon: Icon, text }) => (
+                {perks.map(({ icon: Icon, text }) => (
                   <li key={text} className="flex items-center gap-3">
                     <Icon className="h-5 w-5 shrink-0 text-landing-pink" aria-hidden />
                     {text}
@@ -450,9 +452,9 @@ export default function CoursePage() {
           <div className="lg:col-start-1 lg:row-start-1">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <h2 className="text-3xl md:text-5xl font-extrabold uppercase tracking-tight leading-[1.05]">
-                Программа
+                {t.courseProgramTop}
                 <br />
-                <span className="text-landing-pink">курса</span>
+                <span className="text-landing-pink">{t.courseProgramAccent}</span>
               </h2>
               {course.modules.length > 1 && (
                 <button

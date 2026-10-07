@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCourses, type CourseDTO } from "@/components/providers/CoursesProvider";
-import type { BlockId, LandingContentData, LandingTexts, ResultCard, Step, WorkPhoto } from "@/lib/landingContent";
+import type { BlockId, LandingContentData, LandingTexts, ResultCard, Step, WorkPhoto } from "@/lib/landingContentShared";
 import { COURSE_TABS, hasSection, useLandingContent, type CourseTab } from "@/hooks/useLandingContent";
 import { PREVIEW_DRAFT_COURSE_ID, isPreviewFrame, usePreviewDraft } from "@/lib/preview";
 import Header from "@/components/layout/Header";

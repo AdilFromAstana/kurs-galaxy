@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Phone, Mail, Send, Instagram } from 'lucide-react';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { instagramHref, telegramHref, whatsappHref } from '@/lib/contactLinks';
+import { useSiteTexts } from '@/hooks/useLandingContent';
 
 interface PublicSiteSettings {
   contactPhone: string | null;
@@ -50,6 +51,7 @@ export default function SiteFooter() {
   }, []);
 
   const year = new Date().getFullYear();
+  const t = useSiteTexts();
   const hasContacts =
     s.contactPhone ||
     s.contactEmail ||
@@ -64,7 +66,7 @@ export default function SiteFooter() {
           {/* Бренд + юр-инфо */}
           <div>
             <p className="font-bold text-lg text-dark-900 mb-3">
-              KursGalaxy.kz
+              {t.siteName}
             </p>
             <p className="text-sm text-dark-600 leading-relaxed">
               Профессиональное онлайн-обучение для специалистов
@@ -204,7 +206,7 @@ export default function SiteFooter() {
         </div>
 
         <div className="mt-10 pt-6 border-t border-gray-100 text-center text-xs text-dark-400">
-          © {year} KursGalaxy.kz · Все права защищены
+          © {year} {t.siteName} · Все права защищены
         </div>
       </div>
     </footer>
