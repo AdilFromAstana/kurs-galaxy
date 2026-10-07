@@ -162,23 +162,45 @@ export function sanitizeLandingContent(input: unknown): LandingContentData {
 
 // ─── Чтение / запись ────────────────────────────────────────────────────────
 
-export async function loadLandingContent(): Promise<LandingContentData> {
-  let row = await prisma.landingContent.findUnique({ where: { id: SINGLETON_ID } });
-  if (!row) {
-    row = await prisma.landingContent.upsert({
-      where: { id: SINGLETON_ID },
-      create: { id: SINGLETON_ID, ...DEFAULTS },
-      update: {},
-    });
-  }
-  // Прогоняем через санитайзер — на случай ручных правок в БД
-  return sanitizeLandingContent(row);
+async function loadRow() {
+  const row = await prisma.landingContent.findUnique({ where: { id: SINGLETON_ID } });
+  if (row) return row;
+  return prisma.landingContent.upsert({
+    where: { id: SINGLETON_ID },
+    create: { id: SINGLETON_ID, ...DEFAULTS },
+    update: {},
+  });
 }
 
-export async function saveLandingContent(data: LandingContentData): Promise<void> {
-  await prisma.landingContent.upsert({
-    where: { id: SINGLETON_ID },
-    create: { id: SINGLETON_ID, ...data },
-    update: data,
+export async function loadLandingContent(): Promise<LandingContentData> {
+  // Прогоняем через санитайзер — на случай ручных правок в БД
+  return sanitizeLandingContent(await loadRow());
+}
+
+/** Контент + версия (время последнего сохранения) — для редактора в админке. */
+export async function loadLandingContentWithVersion(): Promise<{
+  content: LandingContentData;
+  version: string;
+}> {
+  const row = await loadRow();
+  return { content: sanitizeLandingContent(row), version: row.updatedAt.toISOString() };
+}
+
+/**
+ * Сохраняет контент, только если с момента загрузки (baseVersion) его никто
+ * не менял. Иначе старая вкладка админки молча затёрла бы чужие правки —
+ * так 29.09 из «Моих работ» пропали фото автора.
+ */
+export async function saveLandingContent(
+  data: LandingContentData,
+  baseVersion: string | null,
+): Promise<'ok' | 'conflict'> {
+  await loadRow(); // запись должна существовать
+  const base = baseVersion ? new Date(baseVersion) : null;
+  if (!base || Number.isNaN(base.getTime())) return 'conflict';
+  const { count } = await prisma.landingContent.updateMany({
+    where: { id: SINGLETON_ID, updatedAt: base },
+    data,
   });
+  return count === 1 ? 'ok' : 'conflict';
 }

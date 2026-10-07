@@ -13,10 +13,13 @@ test.describe('Часть I: Гость', () => {
   test('1.1 Лендинг показывает CTA', async ({ page }) => {
     await page.context().clearCookies();
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'KursGalaxy.kz' })).toBeVisible();
-    await expect(
-      page.getByRole('link', { name: /Посмотреть курсы|Смотреть все курсы/ }).first(),
-    ).toBeVisible();
+    // Главная: автор сверху и вкладки двух курсов
+    await expect(page.getByRole('tab', { name: 'Бровист с 0' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Натуральный перманент' })).toBeVisible();
+    await page.getByRole('tab', { name: 'Натуральный перманент' }).click();
+    await expect(page.getByText('Цена обучения')).toBeVisible();
+    await page.getByRole('tab', { name: 'Бровист с 0' }).click();
+    await expect(page.getByRole('link', { name: /Купить и начать обучение|Начать бесплатно/ })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Войти' }).first()).toBeVisible();
   });
 
@@ -35,8 +38,8 @@ test.describe('Часть I: Гость', () => {
     const c = courses[0];
     await page.goto(`/course/${c.slug}`);
     await expect(page.getByRole('heading', { name: c.title })).toBeVisible();
-    await expect(page.getByText('Программа курса')).toBeVisible();
-    await expect(page.getByText(/Доступные тарифы|Выберите тарифный план/)).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Программа/ }).first()).toBeVisible();
+    await expect(page.getByRole('list', { name: 'Тарифы' }).or(page.getByText(/Оставьте заявку/)).first()).toBeVisible();
   });
 
   test('1.4 Страница курса по id (без сессии)', async ({ request }) => {
