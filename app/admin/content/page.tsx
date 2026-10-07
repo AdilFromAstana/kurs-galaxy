@@ -246,33 +246,6 @@ export default function LandingContentPage() {
               </Field>
             </div>
           </div>
-
-          <h3 className="mt-8 mb-3 font-bold text-gray-900">Факты о вас</h3>
-          <ListEditor<AuthorFact>
-            items={content.authorFacts}
-            onChange={(authorFacts) => patch({ authorFacts })}
-            empty={{ title: '', text: '' }}
-            addLabel="Добавить факт"
-            render={(f, set) => (
-              <div className="grid gap-3 md:grid-cols-[200px_1fr]">
-                <input
-                  className={inputCls}
-                  value={f.title}
-                  onChange={(e) => set({ ...f, title: e.target.value })}
-                  placeholder="Заголовок: Опыт"
-                  maxLength={120}
-                />
-                <textarea
-                  className={inputCls}
-                  rows={2}
-                  value={f.text}
-                  onChange={(e) => set({ ...f, text: e.target.value })}
-                  placeholder="Текст: 7 лет в профессии, средний чек 15 000 ₸"
-                  maxLength={600}
-                />
-              </div>
-            )}
-          />
         </Card>
       )}
 
@@ -325,6 +298,36 @@ export default function LandingContentPage() {
 
       {tab === 'permanent' && (
         <>
+          <Card
+            title="Натуральный перманент — почему этот курс"
+            hint="Карточки в начале вкладки «Натуральный перманент»: Техника, Прайс, Продвижение, Закуп материалов и т.п."
+          >
+            <ListEditor<AuthorFact>
+              items={content.authorFacts}
+              onChange={(authorFacts) => patch({ authorFacts })}
+              empty={{ title: '', text: '' }}
+              addLabel="Добавить карточку"
+              render={(f, set) => (
+                <div className="grid gap-3 md:grid-cols-[200px_1fr]">
+                  <input
+                    className={inputCls}
+                    value={f.title}
+                    onChange={(e) => set({ ...f, title: e.target.value })}
+                    placeholder="Заголовок: Техника"
+                    maxLength={120}
+                  />
+                  <textarea
+                    className={inputCls}
+                    rows={2}
+                    value={f.text}
+                    onChange={(e) => set({ ...f, text: e.target.value })}
+                    placeholder="Текст: процедура, на которую не нужно искать клиентов"
+                    maxLength={600}
+                  />
+                </div>
+              )}
+            />
+          </Card>
           <Card
             title="Натуральный перманент — мои работы"
             hint="Вкладка «Натуральный перманент» на главной: ваше портфолио. Можно выбрать сразу несколько фото."
