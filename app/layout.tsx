@@ -25,18 +25,9 @@ export async function generateMetadata(): Promise<Metadata> {
   // Сборка идёт без БД (прод собирается локально) — не пытаемся к ней ходить
   if (!process.env.DATABASE_URL) return fallback;
   try {
-    const { texts, authorPhoto } = await loadLandingContent();
-    return {
-      ...base,
-      title: texts.seoTitle,
-      description: texts.seoDescription,
-      openGraph: {
-        title: texts.seoTitle,
-        description: texts.seoDescription,
-        images: authorPhoto ? [authorPhoto] : undefined,
-        type: 'website',
-      },
-    };
+    // Превью с фото — у страниц, которыми делятся (lib/courseLinkMetadata), там же полный адрес картинки
+    const { texts } = await loadLandingContent();
+    return { ...base, title: texts.seoTitle, description: texts.seoDescription };
   } catch {
     return fallback;
   }
