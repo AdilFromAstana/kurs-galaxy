@@ -767,24 +767,6 @@ export default function WelcomePage() {
                     {author.authorBio}
                   </p>
                 )}
-                {author.authorFacts.length > 0 && (
-                  <dl
-                    className={`mt-8 grid gap-3 ${author.authorFacts.length > 1 ? "sm:grid-cols-2" : ""}`}
-                  >
-                    {author.authorFacts.map((f, i) => (
-                      <div key={i} className="rounded-3xl bg-white/80 p-5 ring-1 ring-landing-plum/5 md:p-6">
-                        {f.title && (
-                          <dt className="text-xs md:text-sm font-extrabold uppercase tracking-widest text-landing-pink">
-                            {f.title}
-                          </dt>
-                        )}
-                        <dd className="mt-1.5 whitespace-pre-line text-base font-semibold leading-snug">
-                          {f.text}
-                        </dd>
-                      </div>
-                    ))}
-                  </dl>
-                )}
               </div>
             </div>
           ) : (
@@ -867,6 +849,25 @@ export default function WelcomePage() {
 
             {content && tab === "permanent" && (
               <div id="panel-permanent" role="tabpanel" aria-labelledby="tab-permanent">
+                {/* Карточки о курсе (Техника, Прайс, Продвижение…) — про перманент, поэтому здесь */}
+                {content.authorFacts.length > 0 && (
+                  <TabBlock top="Почему" accent="натуральный перманент">
+                    <dl className={`grid gap-3 ${content.authorFacts.length > 1 ? "sm:grid-cols-2" : ""}`}>
+                      {content.authorFacts.map((f, i) => (
+                        <div key={i} className="rounded-3xl bg-landing-blush p-5 md:p-6">
+                          {f.title && (
+                            <dt className="text-xs md:text-sm font-extrabold uppercase tracking-widest text-landing-pink">
+                              {f.title}
+                            </dt>
+                          )}
+                          <dd className="mt-1.5 whitespace-pre-line text-base font-semibold leading-snug">
+                            {f.text}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </TabBlock>
+                )}
                 <TabBlock
                   top="Как проходит"
                   accent="обучение"
