@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Phone, Mail, MessageCircle, Send, Instagram } from 'lucide-react';
+import { Phone, Mail, Send, Instagram } from 'lucide-react';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
+import { instagramHref, telegramHref, whatsappHref } from '@/lib/contactLinks';
 
 interface PublicSiteSettings {
   contactPhone: string | null;
@@ -153,23 +155,23 @@ export default function SiteFooter() {
                     </a>
                   </li>
                 )}
-                {s.contactWhatsapp && (
+                {whatsappHref(s.contactWhatsapp) && (
                   <li>
                     <a
-                      href={s.contactWhatsapp}
+                      href={whatsappHref(s.contactWhatsapp)!}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-dark-600 hover:text-primary-600 inline-flex items-center gap-2 transition-colors"
                     >
-                      <MessageCircle className="w-4 h-4" />
+                      <WhatsAppIcon className="w-4 h-4 text-[#25D366]" />
                       WhatsApp
                     </a>
                   </li>
                 )}
-                {s.contactTelegram && (
+                {telegramHref(s.contactTelegram) && (
                   <li>
                     <a
-                      href={s.contactTelegram}
+                      href={telegramHref(s.contactTelegram)!}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-dark-600 hover:text-primary-600 inline-flex items-center gap-2 transition-colors"
@@ -179,10 +181,10 @@ export default function SiteFooter() {
                     </a>
                   </li>
                 )}
-                {s.contactInstagram && (
+                {instagramHref(s.contactInstagram) && (
                   <li>
                     <a
-                      href={s.contactInstagram}
+                      href={instagramHref(s.contactInstagram)!}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-dark-600 hover:text-primary-600 inline-flex items-center gap-2 transition-colors"

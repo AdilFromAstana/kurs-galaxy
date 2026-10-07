@@ -2,7 +2,9 @@
 
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Instagram, Loader2, MessageCircle, Send } from 'lucide-react';
+import { CheckCircle2, Instagram, Loader2, Send } from 'lucide-react';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
+import { instagramHref, telegramHref, whatsappHref, whatsappLabel } from '@/lib/contactLinks';
 import { hasSection, sectionFromHref, useLandingContent } from '@/hooks/useLandingContent';
 
 interface PublicSiteSettings {
@@ -207,10 +209,11 @@ export default function LandingFooter() {
     };
   }, []);
 
+  // В настройках может стоять номер, @ник или ссылка — собираем рабочие адреса
+  const wa = whatsappHref(s.contactWhatsapp);
   const socials = [
-    s.contactTelegram && { href: s.contactTelegram, label: 'Telegram', icon: Send },
-    s.contactInstagram && { href: s.contactInstagram, label: 'Instagram', icon: Instagram },
-    s.contactWhatsapp && { href: s.contactWhatsapp, label: 'WhatsApp', icon: MessageCircle },
+    telegramHref(s.contactTelegram) && { href: telegramHref(s.contactTelegram)!, label: 'Telegram', icon: Send },
+    instagramHref(s.contactInstagram) && { href: instagramHref(s.contactInstagram)!, label: 'Instagram', icon: Instagram },
   ].filter(Boolean) as { href: string; label: string; icon: typeof Send }[];
 
   const landing = useLandingContent();
@@ -219,7 +222,7 @@ export default function LandingFooter() {
     return !section || hasSection(landing, section);
   });
 
-  const hasContacts = s.contactPhone || s.contactEmail || socials.length > 0;
+  const hasContacts = s.contactPhone || s.contactEmail || wa || socials.length > 0;
   const year = new Date().getFullYear();
 
   return (
@@ -251,6 +254,25 @@ export default function LandingFooter() {
                   className="break-all text-xl font-bold text-landing-pink hover:underline"
                 >
                   {s.contactEmail}
+                </a>
+              </ContactCard>
+            )}
+            {wa && (
+              <ContactCard label="whatsapp">
+                {/* Сразу открывает чат с автором — в приложении на телефоне или WhatsApp Web */}
+                <a
+                  href={wa}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-4 rounded-2xl transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/40"
+                >
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_10px_25px_-10px_rgba(37,211,102,0.9)]">
+                    <WhatsAppIcon className="h-7 w-7" />
+                  </span>
+                  <span>
+                    <span className="block text-lg font-extrabold text-landing-plum">Написать в WhatsApp</span>
+                    <span className="block text-sm font-semibold text-landing-plum/70">{whatsappLabel(s.contactWhatsapp)}</span>
+                  </span>
                 </a>
               </ContactCard>
             )}

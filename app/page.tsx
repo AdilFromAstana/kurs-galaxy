@@ -9,7 +9,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  MessageCircle,
   X,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -18,6 +17,7 @@ import type { BlockId, LandingContentData, ResultCard, Step, WorkPhoto } from "@
 import { COURSE_TABS, hasSection, useLandingContent, type CourseTab } from "@/hooks/useLandingContent";
 import { PREVIEW_DRAFT_COURSE_ID, isPreviewFrame, usePreviewDraft } from "@/lib/preview";
 import Header from "@/components/layout/Header";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 import LandingFooter from "@/components/landing/LandingFooter";
 import { focusRing, formatPrice, manrope, pinkButtonCls, plural } from "@/components/landing/shared";
 
@@ -571,7 +571,7 @@ function permanentCta(whatsapp: string): Cta {
 function CtaLink({ cta, className, short = false }: { cta: Cta; className: string; short?: boolean }) {
   const inner = (
     <>
-      {cta.whatsapp && <MessageCircle className="h-5 w-5" aria-hidden />}
+      {cta.whatsapp && <WhatsAppIcon className="h-5 w-5 text-[#25D366]" />}
       {short ? cta.short : cta.label}
       {!cta.whatsapp && <ArrowRight className="h-4 w-4" aria-hidden />}
     </>
