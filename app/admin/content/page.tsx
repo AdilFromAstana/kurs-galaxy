@@ -303,6 +303,19 @@ export default function LandingContentPage() {
       {tab === 'layout' && (
         <>
           <Card
+            title="Ссылки на курсы — для Instagram и рассылок"
+            hint="Каждая открывает сайт сразу на своём курсе. Вставьте их в профиль Instagram: Редактировать профиль → Ссылки."
+          >
+            <CourseLinks
+              items={[
+                { path: '/links', name: 'Одна ссылка для профиля: обе кнопки на курсы' },
+                { path: '/brow', name: content.texts.tabBrow },
+                { path: '/permanent', name: content.texts.tabPermanent },
+                { path: '/', name: 'Главная (обо мне и оба курса)' },
+              ]}
+            />
+          </Card>
+          <Card
             title="Какая вкладка открывается первой"
             hint="Посетитель сразу видит эту вкладку. Переключатель на сайте остаётся: «Бровист с 0» слева, «Натуральный перманент» справа."
           >
@@ -1409,6 +1422,15 @@ const TEXT_GROUPS: { title: string; hint?: string; fields: [TextKey, string, boo
     ],
   },
   {
+    title: 'Страница ссылок (/links)',
+    hint: 'Одна ссылка для профиля Instagram: ваше фото, имя и кнопки на курсы. Названия кнопок — это названия вкладок выше.',
+    fields: [
+      ['linksBrowNote', 'Подпись под кнопкой бровиста', true],
+      ['linksPermanentNote', 'Подпись под кнопкой перманента', true],
+      ['linksWhatsapp', 'Кнопка WhatsApp'],
+    ],
+  },
+  {
     title: 'Готовый текст сообщения в WhatsApp',
     hint: 'Человек нажимает кнопку — WhatsApp открывается с этим текстом, остаётся нажать «Отправить».',
     fields: [
@@ -1435,6 +1457,44 @@ function blockEmptyHint(c: LandingContentData, tab: CourseTabId, id: BlockState[
     case 'price':
       return null;
   }
+}
+
+/** Готовые ссылки с кнопкой «Скопировать». */
+function CourseLinks({ items }: { items: { path: string; name: string }[] }) {
+  const [origin, setOrigin] = useState('');
+  useEffect(() => setOrigin(window.location.origin), []);
+  const copy = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success('Ссылка скопирована');
+    } catch {
+      toast.error('Не получилось скопировать — выделите ссылку вручную');
+    }
+  };
+  return (
+    <ul className="space-y-2">
+      {items.map(({ path, name }) => {
+        const url = origin + path;
+        return (
+          <li key={path} className="flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 p-3">
+            <div className="min-w-0 flex-1 basis-[60%]">
+              <p className="font-semibold text-gray-900">{name}</p>
+              <a href={path} target="_blank" rel="noopener noreferrer" className="break-all text-sm text-primary-700 underline">
+                {url}
+              </a>
+            </div>
+            <button
+              type="button"
+              onClick={() => copy(url)}
+              className="min-h-[40px] rounded-lg bg-primary-50 px-4 text-sm font-semibold text-primary-700 hover:bg-primary-100"
+            >
+              Скопировать
+            </button>
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 /** Порядок и видимость блоков вкладки. */
