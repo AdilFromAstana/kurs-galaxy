@@ -27,6 +27,7 @@ import toast from 'react-hot-toast';
 import { DevicePreviewModal, PreviewButton } from '@/components/admin/DevicePreviewModal';
 import { CROP, useImageCropper, type CropOptions } from '@/components/admin/ImageCropper';
 import { invalidateLandingContent } from '@/hooks/useLandingContent';
+import { compressImage } from '@/lib/compressImage';
 import type {
   AuthorFact,
   FaqItem,
@@ -63,7 +64,8 @@ export default function LandingContentPage() {
   const [content, setContent] = useState<LandingContentData | null>(null);
   // Версия, которую редактируем: сервер не даст сохранить поверх более новой
   const [version, setVersion] = useState<string | null>(null);
-  const [conflict, setConflict] = useState(false);
+  // Контент в том виде, как его загрузили: по нему видно, какие поля правили здесь
+  const baseRef = useRef<LandingContentData | null>(null);
   const [tab, setTab] = useState<TabId>('author');
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -77,6 +79,7 @@ export default function LandingContentPage() {
         const data = await res.json();
         setContent(data.content);
         setVersion(data.version);
+        baseRef.current = data.content;
       }
       else setError('Не удалось загрузить контент');
     })();
@@ -95,25 +98,49 @@ export default function LandingContentPage() {
     setDirty(true);
   };
 
+  const put = (body: LandingContentData, v: string | null) =>
+    fetch('/api/admin/site-content', {
+      method: 'PUT',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: body, version: v }),
+    });
+
   const save = async () => {
     if (!content) return;
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch('/api/admin/site-content', {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, version }),
-      });
+      let res = await put(content, version);
+      let merged = false;
+      // Пока редактировали, главную изменили в другом месте (другая вкладка, телефон,
+      // правка разработчика). Не теряем ни то, ни другое: берём свежую версию
+      // и накладываем поверх только те разделы, которые меняли здесь.
+      if (res.status === 409) {
+        const fresh = await fetch('/api/admin/site-content', { credentials: 'include' });
+        if (!fresh.ok) throw new Error('Не удалось сохранить — обновите страницу');
+        const server = (await fresh.json()) as { content: LandingContentData; version: string };
+        const base = baseRef.current;
+        const next = { ...server.content } as Record<string, unknown>;
+        for (const key of Object.keys(content) as (keyof LandingContentData)[]) {
+          const mine = JSON.stringify(content[key]);
+          if (!base || mine !== JSON.stringify(base[key])) next[key] = content[key];
+        }
+        res = await put(next as unknown as LandingContentData, server.version);
+        merged = true;
+      }
       const data = await res.json().catch(() => ({}));
-      if (res.status === 409) setConflict(true);
       if (!res.ok) throw new Error(data.message || 'Не удалось сохранить');
       setContent(data.content);
       setVersion(data.version);
+      baseRef.current = data.content;
       setDirty(false);
       invalidateLandingContent();
-      toast.success('Сохранено — изменения уже на сайте');
+      toast.success(
+        merged
+          ? 'Сохранено. Изменения из другой вкладки тоже сохранены'
+          : 'Сохранено — изменения уже на сайте',
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Не удалось сохранить');
     } finally {
@@ -183,18 +210,7 @@ export default function LandingContentPage() {
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-red-700">
-            <p>{error}</p>
-            {conflict && (
-              <button
-                type="button"
-                onClick={() => window.location.reload()}
-                className="mt-2 font-semibold underline"
-              >
-                Обновить страницу
-              </button>
-            )}
-          </div>
+          <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 
@@ -252,12 +268,20 @@ export default function LandingContentPage() {
       {tab === 'brow' && (
         <>
           <Card
-            title="Бровист с 0 — мои работы"
-            hint="Вкладка «Бровист с 0» на главной: ваши работы по бровям. Можно выбрать сразу несколько фото."
+            title="Бровист с 0 — МОИ работы"
+            hint="Ваши собственные работы по бровям — на сайте блок «Мои работы». Работы выпускниц — в карточке ниже."
           >
             <GalleryEditor
               items={content.browAuthorWorks}
               onChange={(browAuthorWorks) => patch({ browAuthorWorks })}
+              moveTo={{
+                label: 'Работы учениц',
+                onMove: (w) =>
+                  patch({
+                    browAuthorWorks: content.browAuthorWorks.filter((x) => x.src !== w.src),
+                    browWorks: [...content.browWorks, w],
+                  }),
+              }}
               crop={{
                 title: 'Моя работа — брови',
                 aspects: [CROP.square, CROP.portrait, CROP.landscape, CROP.original],
@@ -266,12 +290,20 @@ export default function LandingContentPage() {
             />
           </Card>
           <Card
-            title="Бровист с 0 — работы учениц"
-            hint="Фото «до/после» учениц курса по бровям, карусель под вашими работами."
+            title="Бровист с 0 — работы УЧЕНИЦ"
+            hint="Работы выпускниц курса по бровям — на сайте карусель «Работы учениц» под вашими работами."
           >
             <GalleryEditor
               items={content.browWorks}
               onChange={(browWorks) => patch({ browWorks })}
+              moveTo={{
+                label: 'Мои работы',
+                onMove: (w) =>
+                  patch({
+                    browWorks: content.browWorks.filter((x) => x.src !== w.src),
+                    browAuthorWorks: [...content.browAuthorWorks, w],
+                  }),
+              }}
               crop={{
                 title: 'Работа ученицы — брови',
                 aspects: [CROP.landscape, CROP.square, CROP.original],
@@ -329,12 +361,20 @@ export default function LandingContentPage() {
             />
           </Card>
           <Card
-            title="Натуральный перманент — мои работы"
-            hint="Вкладка «Натуральный перманент» на главной: ваше портфолио. Можно выбрать сразу несколько фото."
+            title="Натуральный перманент — МОИ работы"
+            hint="Ваши собственные работы по перманенту — на сайте блок «Мои работы». Работы выпускниц — в карточке ниже."
           >
             <GalleryEditor
               items={content.authorWorks}
               onChange={(authorWorks) => patch({ authorWorks })}
+              moveTo={{
+                label: 'Работы учениц',
+                onMove: (w) =>
+                  patch({
+                    authorWorks: content.authorWorks.filter((x) => x.src !== w.src),
+                    works: [...content.works, w],
+                  }),
+              }}
               crop={{
                 title: 'Моя работа — перманент',
                 aspects: [CROP.square, CROP.portrait, CROP.landscape, CROP.original],
@@ -343,12 +383,20 @@ export default function LandingContentPage() {
             />
           </Card>
           <Card
-            title="Натуральный перманент — работы учениц"
-            hint="Фото «до/после» учениц курса по перманенту. Карточки с описанием — во вкладке «Результаты»."
+            title="Натуральный перманент — работы УЧЕНИЦ"
+            hint="Работы выпускниц курса по перманенту — на сайте карусель «Работы учениц». Карточки с описанием — во вкладке «Результаты»."
           >
             <GalleryEditor
               items={content.works}
               onChange={(works) => patch({ works })}
+              moveTo={{
+                label: 'Мои работы',
+                onMove: (w) =>
+                  patch({
+                    works: content.works.filter((x) => x.src !== w.src),
+                    authorWorks: [...content.authorWorks, w],
+                  }),
+              }}
               crop={{
                 title: 'Работа ученицы — перманент',
                 aspects: [CROP.landscape, CROP.square, CROP.original],
@@ -548,7 +596,8 @@ export default function LandingContentPage() {
 
 async function uploadImage(file: File): Promise<string> {
   const fd = new FormData();
-  fd.append('file', file);
+  // Фото с телефона по 3–4 МБ: ужимаем до 2000px — сайт и предпросмотр не тормозят
+  fd.append('file', await compressImage(file));
   const res = await fetch('/api/admin/site-content/upload', {
     method: 'POST',
     credentials: 'include',
@@ -564,12 +613,16 @@ function GalleryEditor({
   items,
   onChange,
   crop,
+  moveTo,
 }: {
   items: WorkPhoto[];
   onChange: (items: WorkPhoto[]) => void;
   crop: CropOptions;
+  /** Соседняя галерея того же курса («Мои работы» ↔ «Работы учениц») — перенос одним нажатием */
+  moveTo?: { label: string; onMove: (item: WorkPhoto) => void };
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [busyIdx, setBusyIdx] = useState<number | null>(null);
   const { cropImage, cropper } = useImageCropper();
@@ -664,6 +717,26 @@ function GalleryEditor({
         className="hidden"
         onChange={(e) => addFiles(Array.from(e.target.files ?? []))}
       />
+      <button
+        type="button"
+        onClick={() => setLibraryOpen(true)}
+        disabled={!!progress}
+        className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+      >
+        <Images className="w-4 h-4" />
+        Выбрать из уже загруженных
+      </button>
+      {libraryOpen && (
+        <PhotoLibrary
+          exclude={items.map((w) => w.src)}
+          onClose={() => setLibraryOpen(false)}
+          onPick={(srcs) => {
+            onChange([...itemsRef.current, ...srcs.map((src) => ({ src, alt: '' }))]);
+            setLibraryOpen(false);
+            toast.success(`Добавлено фото: ${srcs.length}. Не забудьте сохранить`);
+          }}
+        />
+      )}
 
       {items.length === 0 ? (
         <p className="mt-4 text-center text-sm text-gray-500">Пока нет фото — этот блок на сайте не показывается</p>
@@ -715,6 +788,15 @@ function GalleryEditor({
                     <Trash2 className="w-4 h-4" />
                   </IconBtn>
                 </div>
+                {moveTo && (
+                  <button
+                    type="button"
+                    onClick={() => moveTo.onMove(w)}
+                    className="w-full rounded-lg bg-gray-50 px-2 py-1.5 text-xs font-semibold text-gray-700 hover:bg-primary-50 hover:text-primary-700"
+                  >
+                    Перенести в «{moveTo.label}»
+                  </button>
+                )}
               </div>
             </li>
           ))}
@@ -929,6 +1011,113 @@ function ListEditor<T>({
         <Plus className="w-4 h-4" />
         {addLabel}
       </button>
+    </div>
+  );
+}
+
+type LibraryPhoto = { src: string; uploadedAt: string; used: boolean };
+
+/**
+ * Все загруженные для главной фото. Сверху — те, что нигде не стоят
+ * (загрузили, но не сохранили или убрали из галереи), их можно вернуть без повторной загрузки.
+ */
+function PhotoLibrary({
+  exclude,
+  onPick,
+  onClose,
+}: {
+  exclude: string[];
+  onPick: (srcs: string[]) => void;
+  onClose: () => void;
+}) {
+  const [photos, setPhotos] = useState<LibraryPhoto[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [onlyFree, setOnlyFree] = useState(true);
+  const [picked, setPicked] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch('/api/admin/site-content/library', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
+      .then((d) => setPhotos(d.photos))
+      .catch(() => setFailed(true));
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const list = (photos ?? []).filter((p) => !exclude.includes(p.src) && (!onlyFree || !p.used));
+  const toggle = (src: string) =>
+    setPicked((cur) => (cur.includes(src) ? cur.filter((x) => x !== src) : [...cur, src]));
+  const day = (iso: string) =>
+    new Date(iso).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center sm:p-6" role="dialog" aria-modal="true" aria-label="Загруженные фото" onClick={onClose}>
+      <div className="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-t-2xl bg-white sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-4 border-b border-gray-100 p-5">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Уже загруженные фото</h2>
+            <p className="mt-1 text-sm text-gray-500">Отметьте нужные — они добавятся в эту галерею в порядке выбора.</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-lg px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">
+            Закрыть
+          </button>
+        </div>
+        <label className="flex items-center gap-2 px-5 pt-4 text-sm text-gray-700">
+          <input type="checkbox" checked={onlyFree} onChange={(e) => setOnlyFree(e.target.checked)} className="h-4 w-4" />
+          Только те, что сейчас нигде не стоят на сайте
+        </label>
+        <div className="flex-1 overflow-y-auto p-5">
+          {failed ? (
+            <p className="text-sm text-red-600">Не удалось загрузить список фото</p>
+          ) : !photos ? (
+            <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-primary-600" /></div>
+          ) : list.length === 0 ? (
+            <p className="py-10 text-center text-sm text-gray-500">
+              {onlyFree ? 'Свободных фото нет — все загруженные уже стоят на сайте.' : 'Фото пока нет.'}
+            </p>
+          ) : (
+            <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
+              {list.map((p) => {
+                const n = picked.indexOf(p.src);
+                return (
+                  <li key={p.src}>
+                    <button
+                      type="button"
+                      onClick={() => toggle(p.src)}
+                      aria-pressed={n >= 0}
+                      className={`relative block aspect-square w-full overflow-hidden rounded-xl bg-gray-100 ring-offset-2 ${n >= 0 ? 'ring-4 ring-primary-500' : 'hover:opacity-90'}`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.src} alt="" loading="lazy" className="h-full w-full object-cover" />
+                      {n >= 0 && (
+                        <span className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary-600 text-sm font-bold text-white">
+                          {n + 1}
+                        </span>
+                      )}
+                      {p.used && (
+                        <span className="absolute left-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white">на сайте</span>
+                      )}
+                    </button>
+                    <p className="mt-1 text-center text-[11px] text-gray-500">{day(p.uploadedAt)}</p>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+        <div className="flex items-center justify-between gap-3 border-t border-gray-100 p-4">
+          <span className="text-sm text-gray-600">Выбрано: {picked.length}</span>
+          <button
+            type="button"
+            onClick={() => onPick(picked)}
+            disabled={picked.length === 0}
+            className="rounded-lg bg-primary-600 px-5 py-3 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50"
+          >
+            Добавить в галерею
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
