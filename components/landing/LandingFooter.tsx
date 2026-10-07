@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { CheckCircle2, Instagram, Loader2, Send } from 'lucide-react';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { instagramHref, telegramHref, whatsappHref, whatsappLabel } from '@/lib/contactLinks';
-import { hasSection, sectionFromHref, useLandingContent } from '@/hooks/useLandingContent';
+import { hasSection, navLabel, sectionFromHref, useLandingContent } from '@/hooks/useLandingContent';
 
 interface PublicSiteSettings {
   contactPhone: string | null;
@@ -210,17 +210,17 @@ export default function LandingFooter() {
   }, []);
 
   // В настройках может стоять номер, @ник или ссылка — собираем рабочие адреса
-  const wa = whatsappHref(s.contactWhatsapp);
+  const landing = useLandingContent();
+  const wa = whatsappHref(s.contactWhatsapp, landing?.texts.siteGreeting);
   const socials = [
     telegramHref(s.contactTelegram) && { href: telegramHref(s.contactTelegram)!, label: 'Telegram', icon: Send },
     instagramHref(s.contactInstagram) && { href: instagramHref(s.contactInstagram)!, label: 'Instagram', icon: Instagram },
   ].filter(Boolean) as { href: string; label: string; icon: typeof Send }[];
 
-  const landing = useLandingContent();
   const menu = MENU.filter((m) => {
     const section = sectionFromHref(m.href);
     return !section || hasSection(landing, section);
-  });
+  }).map((m) => ({ ...m, label: navLabel(landing, m.href, m.label) }));
 
   const hasContacts = s.contactPhone || s.contactEmail || wa || socials.length > 0;
   const year = new Date().getFullYear();

@@ -19,7 +19,7 @@ import {
   Camera,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { hasSection, sectionFromHref, useLandingContent } from "@/hooks/useLandingContent";
+import { hasSection, navLabel, sectionFromHref, useLandingContent } from "@/hooks/useLandingContent";
 import { useEffect } from "react";
 
 interface SideDrawerProps {
@@ -71,7 +71,7 @@ export default function SideDrawer({ isOpen, onClose }: SideDrawerProps) {
     // Пустые разделы главной (не заполнены в админке) в меню не показываем
     const section = sectionFromHref(item.href);
     return !section || hasSection(landing, section);
-  });
+  }).map((item) => ({ ...item, name: navLabel(landing, item.href, item.name) }));
 
   const navigation = isAuthenticated ? authenticatedNav : publicNav;
 

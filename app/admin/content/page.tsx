@@ -11,6 +11,7 @@ import {
   Check,
   Crop,
   ExternalLink,
+  Type,
   Eye,
   EyeOff,
   HelpCircle,
@@ -32,6 +33,8 @@ import { invalidateLandingContent } from '@/hooks/useLandingContent';
 import { compressImage } from '@/lib/compressImage';
 import {
   BLOCK_NAMES,
+  DEFAULT_TEXTS,
+  type TextKey,
   type AuthorFact,
   type BlockState,
   type CourseTabId,
@@ -49,6 +52,7 @@ import type {
 const TABS = [
   { id: 'author', name: 'Об авторе', icon: User },
   { id: 'layout', name: 'Порядок блоков', icon: LayoutTemplate },
+  { id: 'texts', name: 'Тексты и кнопки', icon: Type },
   { id: 'brow', name: 'Бровист с 0', icon: Images },
   { id: 'permanent', name: 'Натуральный перманент', icon: Camera },
   { id: 'results', name: 'Результаты', icon: Sparkles },
@@ -61,6 +65,7 @@ type TabId = (typeof TABS)[number]['id'];
 const TAB_ANCHOR: Record<TabId, string> = {
   author: 'author',
   layout: 'courses',
+  texts: 'courses',
   brow: 'brow',
   permanent: 'permanent',
   results: 'permanent',
@@ -82,6 +87,13 @@ export default function LandingContentPage() {
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [courses, setCourses] = useState<{ id: string; title: string; published: boolean }[]>([]);
+  useEffect(() => {
+    fetch('/api/admin/courses', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : { courses: [] }))
+      .then((d) => setCourses(d.courses ?? []))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -198,6 +210,18 @@ export default function LandingContentPage() {
         </div>
       </div>
 
+      <details className="rounded-2xl border border-gray-200 bg-white p-4 text-sm text-gray-700 [&_a]:font-semibold [&_a]:text-primary-700 [&_a]:underline">
+        <summary className="cursor-pointer font-semibold text-gray-900">Где что меняется на сайте</summary>
+        <ul className="mt-3 space-y-1.5">
+          <li><b>Здесь, «Контент сайта»</b> — фото и текст о себе, фото работ, карточки, план обучения, цена перманента, заголовки и кнопки, порядок и видимость блоков, отзывы, вопросы.</li>
+          <li><a href="/admin/courses">Курсы</a> — названия курсов и разделов, уроки, видео и фото уроков, обложка, тарифы и цены бровиста, «бесплатный курс», публикация.</li>
+          <li><a href="/admin/site">Сайт</a> — телефон, WhatsApp, Telegram, Instagram внизу сайта, реквизиты, тексты оферты, политики и возврата.</li>
+          <li><a href="/admin/certificate">Сертификат</a> — как выглядит сертификат ученицы.</li>
+          <li><a href="/admin/leads">Заявки</a> — кто оставил телефон в форме внизу сайта.</li>
+          <li>Перед сохранением нажмите <b>«Предпросмотр»</b> — увидите, как будет на телефоне и компьютере. Посетители видят изменения только после <b>«Сохранить»</b>.</li>
+        </ul>
+      </details>
+
       <div className="flex gap-1 border-b border-gray-200 overflow-x-auto" role="tablist">
         {TABS.map((t) => (
           <button
@@ -298,16 +322,34 @@ export default function LandingContentPage() {
                     className="h-4 w-4"
                   />
                   <span className="font-semibold text-gray-900">
-                    {id === 'brow' ? 'Бровист с 0' : 'Натуральный перманент'}
+                    {id === 'brow' ? content.texts.tabBrow : content.texts.tabPermanent}
                   </span>
                 </label>
               ))}
             </div>
           </Card>
+          <Card
+            title={`Курс во вкладке «${content.texts.tabBrow}»`}
+            hint="Его разделы показываются в «Что входит в обучение», цена — из его тарифов, кнопка «Купить» ведёт на него."
+          >
+            <select
+              className={inputCls}
+              value={content.layout.browCourseId}
+              onChange={(e) => patch({ layout: { ...content.layout, browCourseId: e.target.value } })}
+            >
+              <option value="">Автоматически — курс со словом «бров» в названии</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                  {c.published ? '' : ' (не опубликован)'}
+                </option>
+              ))}
+            </select>
+          </Card>
           {(['brow', 'permanent'] as CourseTabId[]).map((tabId) => (
             <Card
               key={tabId}
-              title={`Блоки вкладки «${tabId === 'brow' ? 'Бровист с 0' : 'Натуральный перманент'}»`}
+              title={`Блоки вкладки «${tabId === 'brow' ? content.texts.tabBrow : content.texts.tabPermanent}»`}
               hint="Стрелками меняйте порядок, переключателем — показывать блок или нет. Скрытый блок не удаляется: его содержимое сохранится, можно вернуть в любой момент."
             >
               <BlocksEditor
@@ -333,6 +375,36 @@ export default function LandingContentPage() {
               />
             </div>
           </Card>
+        </>
+      )}
+
+      {tab === 'texts' && (
+        <>
+          <p className="rounded-xl bg-primary-50 p-4 text-sm text-primary-800">
+            Пустое поле — на сайте останется текст по умолчанию (он виден серым внутри поля).
+            Заголовки — в две строки: первая тёмная, вторая розовая.
+          </p>
+          {TEXT_GROUPS.map((g) => (
+            <Card key={g.title} title={g.title} hint={g.hint}>
+              <div className="grid gap-4 md:grid-cols-2">
+                {g.fields.map(([key, label, wide]) => {
+                  const value = content.texts[key] === DEFAULT_TEXTS[key] ? '' : content.texts[key];
+                  const set = (v: string) => patch({ texts: { ...content.texts, [key]: v || DEFAULT_TEXTS[key] } });
+                  return (
+                    <div key={key} className={wide ? 'md:col-span-2' : ''}>
+                      <Field label={label}>
+                        {wide ? (
+                          <textarea className={inputCls} rows={2} value={value} placeholder={DEFAULT_TEXTS[key]} maxLength={600} onChange={(e) => set(e.target.value)} />
+                        ) : (
+                          <input className={inputCls} value={value} placeholder={DEFAULT_TEXTS[key]} maxLength={120} onChange={(e) => set(e.target.value)} />
+                        )}
+                      </Field>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          ))}
         </>
       )}
 
@@ -533,7 +605,7 @@ export default function LandingContentPage() {
           </Card>
           <Card
             title="Цена обучения и запись"
-            hint="Под ценой — кнопка «Написать в WhatsApp». Без номера кнопка не показывается."
+            hint="Номер для кнопки под ценой. Без номера вместо неё будет «Оставить заявку». Номер WhatsApp внизу сайта (в контактах) меняется в разделе «Сайт»."
           >
             <div className="space-y-4">
               <Field label="Цена обучения">
@@ -1248,6 +1320,57 @@ function PhotoLibrary({
     </div>
   );
 }
+
+/** Поля вкладки «Тексты и кнопки»: [ключ, подпись, широкое поле]. */
+const TEXT_GROUPS: { title: string; hint?: string; fields: [TextKey, string, boolean?][] }[] = [
+  {
+    title: 'Названия вкладок курсов',
+    hint: 'Так вкладки называются на главной и в меню сайта.',
+    fields: [
+      ['tabBrow', 'Левая вкладка'],
+      ['tabPermanent', 'Правая вкладка'],
+      ['chooseCourse', 'Подпись над вкладками'],
+    ],
+  },
+  {
+    title: 'Заголовки блоков',
+    fields: [
+      ['myWorksTop', '«Мои работы» — тёмная строка'],
+      ['myWorksAccent', '«Мои работы» — розовая строка'],
+      ['studentWorksTop', '«Работы учениц» — тёмная строка'],
+      ['studentWorksAccent', '«Работы учениц» — розовая строка'],
+      ['modulesTop', '«Что входит в обучение» — тёмная строка'],
+      ['modulesAccent', '«Что входит в обучение» — розовая строка'],
+      ['factsTop', '«Почему натуральный перманент» — тёмная строка'],
+      ['factsAccent', '«Почему натуральный перманент» — розовая строка'],
+      ['stepsTop', '«Как проходит обучение» — тёмная строка'],
+      ['stepsAccent', '«Как проходит обучение» — розовая строка'],
+      ['reviewsTop', '«Отзывы» — тёмная строка'],
+      ['reviewsAccent', '«Отзывы» — розовая строка'],
+      ['faqTop', '«Вопрос / ответ» — тёмная строка'],
+      ['faqAccent', '«Вопрос / ответ» — розовая строка'],
+      ['faqLead', 'Подпись под «Вопрос / ответ»', true],
+    ],
+  },
+  {
+    title: 'Цена и кнопки',
+    fields: [
+      ['browBuy', 'Кнопка покупки во вкладке бровиста'],
+      ['browPriceNote', 'Пояснение под ценой бровиста', true],
+      ['permanentPriceLabel', 'Надпись над ценой перманента'],
+      ['permanentNoPrice', 'Если цена перманента не указана'],
+      ['permanentButton', 'Кнопка WhatsApp во вкладке перманента'],
+    ],
+  },
+  {
+    title: 'Готовый текст сообщения в WhatsApp',
+    hint: 'Человек нажимает кнопку — WhatsApp открывается с этим текстом, остаётся нажать «Отправить».',
+    fields: [
+      ['permanentGreeting', 'С кнопки во вкладке перманента', true],
+      ['siteGreeting', 'С кнопки WhatsApp внизу сайта', true],
+    ],
+  },
+];
 
 /** Подсказка, почему блок может быть не виден на сайте, даже если он включён. */
 function blockEmptyHint(c: LandingContentData, tab: CourseTabId, id: BlockState['id']): string | null {
