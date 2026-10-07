@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/db';
 
 // Контент главной страницы, который автор курсов редактирует сам
@@ -10,6 +11,78 @@ export type WorkPhoto = { src: string; alt: string };
 export type ResultCard = { photo: string; tag: string; before: string[]; after: string[] };
 export type Review = { text: string; name: string };
 export type FaqItem = { q: string; a: string };
+export type Step = { days: string; format: string; title: string; points: string[] };
+
+// ─── Порядок и видимость блоков на вкладках курсов ──────────────────────────
+export type BlockId = 'facts' | 'steps' | 'myWorks' | 'studentWorks' | 'modules' | 'price';
+export type BlockState = { id: BlockId; hidden: boolean };
+export type CourseTabId = 'brow' | 'permanent';
+export interface LandingLayout {
+  brow: BlockState[];
+  permanent: BlockState[];
+  firstTab: CourseTabId;
+  hideReviews: boolean;
+  hideFaq: boolean;
+}
+
+/** Какие блоки бывают на вкладке — в порядке «по умолчанию» (как на схеме автора). */
+export const TAB_BLOCKS: Record<CourseTabId, BlockId[]> = {
+  brow: ['myWorks', 'studentWorks', 'modules', 'price'],
+  permanent: ['facts', 'steps', 'myWorks', 'studentWorks', 'price'],
+};
+
+export const BLOCK_NAMES: Record<BlockId, string> = {
+  facts: 'Почему этот курс (карточки)',
+  steps: 'Как проходит обучение',
+  myWorks: 'Мои работы',
+  studentWorks: 'Работы учениц',
+  modules: 'Что входит в обучение (разделы курса)',
+  price: 'Цена и кнопка записи / покупки',
+};
+
+export const DEFAULT_LAYOUT: LandingLayout = {
+  brow: TAB_BLOCKS.brow.map((id) => ({ id, hidden: false })),
+  permanent: TAB_BLOCKS.permanent.map((id) => ({ id, hidden: false })),
+  firstTab: 'brow',
+  hideReviews: false,
+  hideFaq: false,
+};
+
+export const DEFAULT_STEPS_LEAD = '10 дней: неделя онлайн-подготовки и 3 дня практики на моделях';
+export const DEFAULT_STEPS: Step[] = [
+  {
+    days: '1–7 день',
+    format: 'онлайн',
+    title: 'Онлайн-подготовка',
+    points: [
+      'Уроки на сайте: мои показы на моделях и вся теория по перманенту',
+      'Материалы остаются с вами и после обучения',
+      'Домашнее задание',
+    ],
+  },
+  {
+    days: '8 день',
+    format: 'очно',
+    title: 'Знакомство и постановка руки',
+    points: [
+      'Разбираем пройденный материал',
+      'Ставим руку и тренируем штрихи на латексе',
+      'Строим эскиз на манекене',
+    ],
+  },
+  {
+    days: '9 день',
+    format: 'очно',
+    title: 'Мой показ на модели',
+    points: ['Показываю работу на модели — брови или губы на выбор', 'Вы работаете с моделью на зоне бровей'],
+  },
+  {
+    days: '10 день',
+    format: 'очно',
+    title: 'Практика и сертификат',
+    points: ['Две модели: зона бровей и зона губ', 'Вручение сертификата'],
+  },
+];
 
 export interface LandingContentData {
   authorName: string;
@@ -29,6 +102,10 @@ export interface LandingContentData {
   permanentPrice: string;
   permanentNote: string;
   whatsapp: string;
+  // План «Как проходит обучение» (вкладка перманента) и подзаголовок над ним
+  steps: Step[];
+  stepsLead: string;
+  layout: LandingLayout;
 }
 
 // Начальное наполнение при первом открытии: реальные фото работ и базовый FAQ.
@@ -60,6 +137,9 @@ const DEFAULTS: LandingContentData = {
   permanentPrice: '',
   permanentNote: '',
   whatsapp: '',
+  steps: DEFAULT_STEPS,
+  stepsLead: DEFAULT_STEPS_LEAD,
+  layout: DEFAULT_LAYOUT,
   faq: [
     {
       q: 'Подойдёт ли мне курс, если я обучаюсь с 0?',
@@ -157,17 +237,67 @@ export function sanitizeLandingContent(input: unknown): LandingContentData {
     permanentNote: str(b.permanentNote, LIMITS.text),
     // Только цифры номера — из них собираем ссылку wa.me
     whatsapp: str(b.whatsapp, 30).replace(/\D/g, ''),
+    // null в БД — ещё ни разу не сохраняли: показываем план по умолчанию.
+    // Пустой массив — автор сам убрал все шаги.
+    steps:
+      b.steps == null
+        ? DEFAULT_STEPS
+        : arr(b.steps)
+            .map(obj)
+            .map((x) => ({
+              days: str(x.days, 40),
+              format: str(x.format, 40),
+              title: str(x.title, LIMITS.short),
+              points: lines(x.points),
+            }))
+            .filter((x) => x.title || x.points.length),
+    stepsLead: b.stepsLead == null ? DEFAULT_STEPS_LEAD : str(b.stepsLead, LIMITS.text),
+    layout: sanitizeLayout(b.layout),
+  };
+}
+
+/** Каждый блок вкладки ровно один раз; неизвестные выкидываем, новые (после обновления сайта) — в конец. */
+function blocks(v: unknown, allowed: BlockId[]): BlockState[] {
+  const seen = new Set<BlockId>();
+  const out: BlockState[] = [];
+  for (const x of arr(v).map(obj)) {
+    const id = x.id as BlockId;
+    if (!allowed.includes(id) || seen.has(id)) continue;
+    seen.add(id);
+    out.push({ id, hidden: x.hidden === true });
+  }
+  for (const id of allowed) if (!seen.has(id)) out.push({ id, hidden: false });
+  return out;
+}
+
+function sanitizeLayout(v: unknown): LandingLayout {
+  const l = obj(v);
+  return {
+    brow: blocks(l.brow, TAB_BLOCKS.brow),
+    permanent: blocks(l.permanent, TAB_BLOCKS.permanent),
+    firstTab: l.firstTab === 'permanent' ? 'permanent' : 'brow',
+    hideReviews: l.hideReviews === true,
+    hideFaq: l.hideFaq === true,
   };
 }
 
 // ─── Чтение / запись ────────────────────────────────────────────────────────
+
+/** Для Prisma вложенные объекты — просто JSON; форму уже проверил санитайзер. */
+function toDb(data: LandingContentData) {
+  return {
+    ...data,
+    steps: data.steps as unknown as Prisma.InputJsonArray,
+    layout: data.layout as unknown as Prisma.InputJsonObject,
+  };
+}
 
 async function loadRow() {
   const row = await prisma.landingContent.findUnique({ where: { id: SINGLETON_ID } });
   if (row) return row;
   return prisma.landingContent.upsert({
     where: { id: SINGLETON_ID },
-    create: { id: SINGLETON_ID, ...DEFAULTS },
+    create: { id: SINGLETON_ID, ...toDb(DEFAULTS) },
     update: {},
   });
 }
@@ -200,7 +330,7 @@ export async function saveLandingContent(
   if (!base || Number.isNaN(base.getTime())) return 'conflict';
   const { count } = await prisma.landingContent.updateMany({
     where: { id: SINGLETON_ID, updatedAt: base },
-    data,
+    data: toDb(data),
   });
   return count === 1 ? 'ok' : 'conflict';
 }

@@ -11,6 +11,8 @@ import {
   Check,
   Crop,
   ExternalLink,
+  Eye,
+  EyeOff,
   HelpCircle,
   ImagePlus,
   Images,
@@ -28,8 +30,15 @@ import { DevicePreviewModal, PreviewButton } from '@/components/admin/DevicePrev
 import { CROP, useImageCropper, type CropOptions } from '@/components/admin/ImageCropper';
 import { invalidateLandingContent } from '@/hooks/useLandingContent';
 import { compressImage } from '@/lib/compressImage';
+import {
+  BLOCK_NAMES,
+  type AuthorFact,
+  type BlockState,
+  type CourseTabId,
+  type LandingLayout,
+  type Step,
+} from '@/lib/landingContent';
 import type {
-  AuthorFact,
   FaqItem,
   LandingContentData,
   ResultCard,
@@ -39,6 +48,7 @@ import type {
 
 const TABS = [
   { id: 'author', name: 'Об авторе', icon: User },
+  { id: 'layout', name: 'Порядок блоков', icon: LayoutTemplate },
   { id: 'brow', name: 'Бровист с 0', icon: Images },
   { id: 'permanent', name: 'Натуральный перманент', icon: Camera },
   { id: 'results', name: 'Результаты', icon: Sparkles },
@@ -50,6 +60,7 @@ type TabId = (typeof TABS)[number]['id'];
 // Какой раздел главной показывать в предпросмотре для каждой вкладки
 const TAB_ANCHOR: Record<TabId, string> = {
   author: 'author',
+  layout: 'courses',
   brow: 'brow',
   permanent: 'permanent',
   results: 'permanent',
@@ -265,6 +276,66 @@ export default function LandingContentPage() {
         </Card>
       )}
 
+      {tab === 'layout' && (
+        <>
+          <Card
+            title="Какая вкладка открывается первой"
+            hint="Посетитель сразу видит эту вкладку. Переключатель на сайте остаётся: «Бровист с 0» слева, «Натуральный перманент» справа."
+          >
+            <div className="grid gap-2 sm:grid-cols-2">
+              {(['brow', 'permanent'] as CourseTabId[]).map((id) => (
+                <label
+                  key={id}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border p-4 ${
+                    content.layout.firstTab === id ? 'border-primary-500 bg-primary-50' : 'border-gray-200'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="firstTab"
+                    checked={content.layout.firstTab === id}
+                    onChange={() => patch({ layout: { ...content.layout, firstTab: id } })}
+                    className="h-4 w-4"
+                  />
+                  <span className="font-semibold text-gray-900">
+                    {id === 'brow' ? 'Бровист с 0' : 'Натуральный перманент'}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </Card>
+          {(['brow', 'permanent'] as CourseTabId[]).map((tabId) => (
+            <Card
+              key={tabId}
+              title={`Блоки вкладки «${tabId === 'brow' ? 'Бровист с 0' : 'Натуральный перманент'}»`}
+              hint="Стрелками меняйте порядок, переключателем — показывать блок или нет. Скрытый блок не удаляется: его содержимое сохранится, можно вернуть в любой момент."
+            >
+              <BlocksEditor
+                items={content.layout[tabId]}
+                emptyHint={(id) => blockEmptyHint(content, tabId, id)}
+                onChange={(items) => patch({ layout: { ...content.layout, [tabId]: items } as LandingLayout })}
+              />
+            </Card>
+          ))}
+          <Card title="Общие блоки под вкладками" hint="Показываются под любой вкладкой.">
+            <div className="space-y-2">
+              <Toggle
+                label="Отзывы учениц"
+                note={content.reviews.length ? `${content.reviews.length} шт.` : 'пока нет — блок и так не виден'}
+                on={!content.layout.hideReviews}
+                onChange={(on) => patch({ layout: { ...content.layout, hideReviews: !on } })}
+              />
+              <Toggle
+                label="Вопросы и ответы"
+                note={content.faq.length ? `${content.faq.length} шт.` : 'пока нет — блок и так не виден'}
+                on={!content.layout.hideFaq}
+                onChange={(on) => patch({ layout: { ...content.layout, hideFaq: !on } })}
+              />
+            </div>
+          </Card>
+        </>
+      )}
+
       {tab === 'brow' && (
         <>
           <Card
@@ -359,6 +430,62 @@ export default function LandingContentPage() {
                 </div>
               )}
             />
+          </Card>
+          <Card
+            title="Натуральный перманент — как проходит обучение"
+            hint="План по дням. Каждый пункт — с новой строки. Порядок шагов — стрелками справа."
+          >
+            <Field label="Подзаголовок над планом">
+              <input
+                className={inputCls}
+                value={content.stepsLead}
+                onChange={(e) => patch({ stepsLead: e.target.value })}
+                placeholder="10 дней: неделя онлайн-подготовки и 3 дня практики на моделях"
+                maxLength={600}
+              />
+            </Field>
+            <div className="mt-4">
+              <ListEditor<Step>
+                items={content.steps}
+                onChange={(steps) => patch({ steps })}
+                empty={{ days: '', format: 'очно', title: '', points: [] }}
+                addLabel="Добавить шаг"
+                render={(st, set) => (
+                  <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
+                      <input
+                        className={inputCls}
+                        value={st.days}
+                        onChange={(e) => set({ ...st, days: e.target.value })}
+                        placeholder="Когда: 8 день"
+                        maxLength={40}
+                      />
+                      <select
+                        className={inputCls}
+                        value={st.format}
+                        onChange={(e) => set({ ...st, format: e.target.value })}
+                        aria-label="Формат"
+                      >
+                        <option value="онлайн">онлайн</option>
+                        <option value="очно">очно</option>
+                      </select>
+                    </div>
+                    <input
+                      className={`${inputCls} font-semibold`}
+                      value={st.title}
+                      onChange={(e) => set({ ...st, title: e.target.value })}
+                      placeholder="Название шага: Постановка руки"
+                      maxLength={120}
+                    />
+                    <LinesInput
+                      value={st.points}
+                      onChange={(points) => set({ ...st, points })}
+                      placeholder={'Разбираем пройденный материал\nСтавим руку на латексе'}
+                    />
+                  </div>
+                )}
+              />
+            </div>
           </Card>
           <Card
             title="Натуральный перманент — МОИ работы"
@@ -1119,6 +1246,99 @@ function PhotoLibrary({
         </div>
       </div>
     </div>
+  );
+}
+
+/** Подсказка, почему блок может быть не виден на сайте, даже если он включён. */
+function blockEmptyHint(c: LandingContentData, tab: CourseTabId, id: BlockState['id']): string | null {
+  const brow = tab === 'brow';
+  switch (id) {
+    case 'facts':
+      return c.authorFacts.length ? null : 'нет карточек — добавьте во вкладке «Натуральный перманент»';
+    case 'steps':
+      return c.steps.length ? null : 'нет шагов — добавьте во вкладке «Натуральный перманент»';
+    case 'myWorks':
+      return (brow ? c.browAuthorWorks : c.authorWorks).length ? null : 'нет фото — загрузите в «МОИ работы»';
+    case 'studentWorks':
+      return (brow ? c.browWorks : c.works).length || (!brow && c.results.length) ? null : 'нет фото — загрузите в «работы УЧЕНИЦ»';
+    case 'modules':
+      return null;
+    case 'price':
+      return null;
+  }
+}
+
+/** Порядок и видимость блоков вкладки. */
+function BlocksEditor({
+  items,
+  onChange,
+  emptyHint,
+}: {
+  items: BlockState[];
+  onChange: (items: BlockState[]) => void;
+  emptyHint: (id: BlockState['id']) => string | null;
+}) {
+  const move = (i: number, d: -1 | 1) => {
+    const j = i + d;
+    if (j < 0 || j >= items.length) return;
+    const next = [...items];
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  };
+  return (
+    <ol className="space-y-2">
+      {items.map((b, i) => {
+        const hint = emptyHint(b.id);
+        return (
+          <li
+            key={b.id}
+            className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border p-3 sm:flex-nowrap ${b.hidden ? 'border-dashed border-gray-300 bg-gray-50' : 'border-gray-200 bg-white'}`}
+          >
+            <span className="w-6 shrink-0 text-center text-sm font-bold text-gray-400">{i + 1}</span>
+            {/* На телефоне кнопки уходят под название, чтобы оно не сжималось в столбик */}
+            <div className="min-w-0 flex-1 basis-[calc(100%-3rem)] sm:basis-auto">
+              <p className={`font-semibold ${b.hidden ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{BLOCK_NAMES[b.id]}</p>
+              {b.hidden ? (
+                <p className="text-xs text-gray-500">скрыт на сайте</p>
+              ) : (
+                hint && <p className="text-xs text-amber-700">на сайте не виден: {hint}</p>
+              )}
+            </div>
+            <div className="ml-9 flex shrink-0 items-center gap-1 sm:ml-0">
+              <IconBtn label="Выше" onClick={() => move(i, -1)} disabled={i === 0}>
+                <ArrowUp className="w-4 h-4" />
+              </IconBtn>
+              <IconBtn label="Ниже" onClick={() => move(i, 1)} disabled={i === items.length - 1}>
+                <ArrowDown className="w-4 h-4" />
+              </IconBtn>
+              <button
+                type="button"
+                onClick={() => onChange(items.map((x, k) => (k === i ? { ...x, hidden: !x.hidden } : x)))}
+                aria-pressed={!b.hidden}
+                className={`ml-1 inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-3 text-sm font-semibold ${
+                  b.hidden ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' : 'bg-primary-50 text-primary-700 hover:bg-primary-100'
+                }`}
+              >
+                {b.hidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {b.hidden ? 'Скрыт' : 'Виден'}
+              </button>
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function Toggle({ label, note, on, onChange }: { label: string; note?: string; on: boolean; onChange: (on: boolean) => void }) {
+  return (
+    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-gray-200 p-4">
+      <span>
+        <span className="block font-semibold text-gray-900">{label}</span>
+        {note && <span className="text-xs text-gray-500">{note}</span>}
+      </span>
+      <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} className="h-5 w-5 accent-primary-600" />
+    </label>
   );
 }
 

@@ -181,6 +181,8 @@ test.describe('Часть IV: Кросс-роль и безопасность', 
   });
 
   test('4.11 Rate-limit логина: 11-я попытка → 429', async () => {
+    // Лимит включён только при NODE_ENV=production (lib/rateLimit.ts) — на dev-сервере тест бессмыслен
+    test.skip(!process.env.E2E_RATE_LIMIT, 'нужен production-сервер: запустите с E2E_RATE_LIMIT=1');
     const ctx = await newGuestContext();
     const email = `rl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}@test.local`;
     // 10 неудачных попыток подряд — все 401
@@ -200,6 +202,8 @@ test.describe('Часть IV: Кросс-роль и безопасность', 
   });
 
   test('4.12 Rate-limit reset: 4-й запрос → 429', async () => {
+    // Лимит включён только при NODE_ENV=production (lib/rateLimit.ts) — на dev-сервере тест бессмыслен
+    test.skip(!process.env.E2E_RATE_LIMIT, 'нужен production-сервер: запустите с E2E_RATE_LIMIT=1');
     const ctx = await newGuestContext();
     const email = `rl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}@test.local`;
     for (let i = 0; i < 3; i++) {
