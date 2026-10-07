@@ -178,14 +178,14 @@ export default function SiteSettingsPage() {
             onChange={(v) => update({ contactEmail: v })}
           />
           <Input
-            label="WhatsApp (ссылка wa.me)"
+            label="WhatsApp — номер или ссылка wa.me"
             icon={<MessageCircle className="w-4 h-4" />}
-            placeholder="https://wa.me/77771234567"
+            placeholder="+7 708 855 64 04"
             value={settings.contactWhatsapp ?? ''}
             onChange={(v) => update({ contactWhatsapp: v })}
           />
           <Input
-            label="Telegram (ссылка t.me)"
+            label="Telegram — @ник или ссылка t.me"
             icon={<Send className="w-4 h-4" />}
             placeholder="https://t.me/kursgalaxy"
             value={settings.contactTelegram ?? ''}
@@ -193,7 +193,7 @@ export default function SiteSettingsPage() {
           />
           <div className="md:col-span-2">
             <Input
-              label="Instagram (ссылка)"
+              label="Instagram — @ник или ссылка"
               icon={<Instagram className="w-4 h-4" />}
               placeholder="https://instagram.com/kursgalaxy"
               value={settings.contactInstagram ?? ''}

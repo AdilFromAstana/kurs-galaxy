@@ -2,13 +2,14 @@ import Link from 'next/link';
 import {
   Phone,
   Mail,
-  MessageCircle,
   Send,
   Instagram,
   Building,
   ArrowLeft,
 } from 'lucide-react';
 import { loadOrCreateSiteSettings } from '@/lib/siteSettings';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
+import { instagramHref, telegramHref, whatsappHref, whatsappLabel } from '@/lib/contactLinks';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,24 +35,24 @@ export default async function ContactsPage() {
       icon: Mail,
       color: 'text-purple-600 bg-purple-50',
     },
-    s.contactWhatsapp && {
+    whatsappHref(s.contactWhatsapp) && {
       label: 'WhatsApp',
-      value: s.contactWhatsapp.replace(/^https?:\/\//, ''),
-      href: s.contactWhatsapp,
-      icon: MessageCircle,
+      value: whatsappLabel(s.contactWhatsapp),
+      href: whatsappHref(s.contactWhatsapp)!,
+      icon: WhatsAppIcon,
       color: 'text-green-600 bg-green-50',
     },
-    s.contactTelegram && {
+    telegramHref(s.contactTelegram) && {
       label: 'Telegram',
-      value: s.contactTelegram.replace(/^https?:\/\//, ''),
-      href: s.contactTelegram,
+      value: s.contactTelegram!.replace(/^https?:\/\//, ''),
+      href: telegramHref(s.contactTelegram)!,
       icon: Send,
       color: 'text-sky-600 bg-sky-50',
     },
-    s.contactInstagram && {
+    instagramHref(s.contactInstagram) && {
       label: 'Instagram',
-      value: s.contactInstagram.replace(/^https?:\/\//, ''),
-      href: s.contactInstagram,
+      value: s.contactInstagram!.replace(/^https?:\/\//, ''),
+      href: instagramHref(s.contactInstagram)!,
       icon: Instagram,
       color: 'text-pink-600 bg-pink-50',
     },
@@ -59,7 +60,7 @@ export default async function ContactsPage() {
     label: string;
     value: string;
     href: string;
-    icon: typeof Phone;
+    icon: React.ComponentType<{ className?: string }>;
     color: string;
   }>;
 
