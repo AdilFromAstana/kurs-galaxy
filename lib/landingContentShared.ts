@@ -104,12 +104,17 @@ export const DEFAULT_TEXTS = {
   courseNoPriceButton: 'Узнать стоимость',
   courseProgramTop: 'Программа',
   courseProgramAccent: 'курса',
+  // Страница ссылок /links — одна ссылка для профиля Instagram, внутри кнопки на курсы
+  linksBrowNote: 'Онлайн-курс · доступ к урокам сразу после оплаты',
+  linksPermanentNote: 'Онлайн-подготовка и практика на моделях',
+  linksWhatsapp: 'Написать мне в WhatsApp',
 };
 
 /** Длинные тексты (описания, подписи) — до 600 символов, остальное — до 120. */
 const LONG_TEXTS: TextKey[] = [
   'faqLead', 'browPriceNote', 'permanentGreeting', 'siteGreeting', 'seoDescription',
   'footerFormLead', 'footerSuccessText', 'catalogLead', 'courseNoPriceText',
+  'linksBrowNote', 'linksPermanentNote',
 ];
 export type LandingTexts = typeof DEFAULT_TEXTS;
 export type TextKey = keyof LandingTexts;

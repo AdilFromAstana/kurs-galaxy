@@ -10,13 +10,33 @@ const inter = Inter({ subsets: ["latin", "cyrillic"] });
 // Страницы пересобираются раз в 5 минут, так что правка доходит до них без деплоя.
 export const revalidate = 300;
 
+// Адрес сайта — чтобы картинка превью ссылки была полным URL (Instagram, WhatsApp, Telegram)
+function siteUrl(): URL | undefined {
+  try {
+    return process.env.NEXT_PUBLIC_APP_URL ? new URL(process.env.NEXT_PUBLIC_APP_URL) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function generateMetadata(): Promise<Metadata> {
-  const fallback = { title: DEFAULT_TEXTS.seoTitle, description: DEFAULT_TEXTS.seoDescription };
+  const base = { metadataBase: siteUrl() };
+  const fallback = { ...base, title: DEFAULT_TEXTS.seoTitle, description: DEFAULT_TEXTS.seoDescription };
   // Сборка идёт без БД (прод собирается локально) — не пытаемся к ней ходить
   if (!process.env.DATABASE_URL) return fallback;
   try {
-    const { texts } = await loadLandingContent();
-    return { title: texts.seoTitle, description: texts.seoDescription };
+    const { texts, authorPhoto } = await loadLandingContent();
+    return {
+      ...base,
+      title: texts.seoTitle,
+      description: texts.seoDescription,
+      openGraph: {
+        title: texts.seoTitle,
+        description: texts.seoDescription,
+        images: authorPhoto ? [authorPhoto] : undefined,
+        type: 'website',
+      },
+    };
   } catch {
     return fallback;
   }
