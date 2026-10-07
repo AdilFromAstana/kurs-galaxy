@@ -19,7 +19,7 @@ import { COURSE_TABS, hasSection, useLandingContent, type CourseTab } from "@/ho
 import { PREVIEW_DRAFT_COURSE_ID, isPreviewFrame, usePreviewDraft } from "@/lib/preview";
 import Header from "@/components/layout/Header";
 import LandingFooter from "@/components/landing/LandingFooter";
-import { focusRing, formatPrice, manrope, plural } from "@/components/landing/shared";
+import { focusRing, formatPrice, manrope, pinkButtonCls, plural } from "@/components/landing/shared";
 
 function lessonCount(course: CourseDTO) {
   return course.modules.reduce((sum, m) => sum + m.lessons.length, 0);
@@ -167,25 +167,39 @@ function SectionTitle({
   );
 }
 
-/** Галерея «Мои работы»: сетка + просмотр на весь экран (стрелки, свайп, Esc). */
-function AuthorGallery({ photos }: { photos: WorkPhoto[] }) {
-  const [open, setOpen] = useState<number | null>(null);
-  const [showAll, setShowAll] = useState(false);
+/** Подпись для незрячих и поисковиков, если автор не подписал фото в админке. */
+function photoAlt(p: WorkPhoto, i: number, who: string) {
+  return p.alt || `${who}: до и после, фото ${i + 1}`;
+}
+
+/** Просмотр фото на весь экран: стрелки, свайп, Esc, счётчик. Общий для всех галерей. */
+function Lightbox({
+  photos,
+  index,
+  who,
+  onIndex,
+  onClose,
+}: {
+  photos: WorkPhoto[];
+  index: number | null;
+  who: string;
+  onIndex: (i: number) => void;
+  onClose: () => void;
+}) {
   const touchX = useRef<number | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const LIMIT = 8;
-  const visible = showAll ? photos : photos.slice(0, LIMIT);
-
-  const go = (d: number) =>
-    setOpen((i) => (i === null ? i : (i + d + photos.length) % photos.length));
+  const open = index !== null;
+  const go = (d: number) => index !== null && onIndex((index + d + photos.length) % photos.length);
 
   useEffect(() => {
-    if (open === null) return;
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(null);
+      if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight") go(1);
       if (e.key === "ArrowLeft") go(-1);
     };
+    // Возвращаем фокус туда, откуда открыли — клавиатурой не теряем место на странице
+    const opener = document.activeElement as HTMLElement | null;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
@@ -193,11 +207,77 @@ function AuthorGallery({ photos }: { photos: WorkPhoto[] }) {
     return () => {
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", onKey);
+      opener?.focus();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open === null]);
+  }, [open, index]);
 
-  const current = open === null ? null : photos[open];
+  if (index === null) return null;
+  const current = photos[index];
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-landing-plum/95 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Просмотр фото"
+      onClick={onClose}
+      onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
+      onTouchEnd={(e) => {
+        if (touchX.current === null) return;
+        const dx = e.changedTouches[0].clientX - touchX.current;
+        if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+        touchX.current = null;
+      }}
+    >
+      <figure className="max-h-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
+        <img
+          src={current.src}
+          alt={photoAlt(current, index, who)}
+          className="max-h-[80vh] w-auto rounded-2xl object-contain"
+        />
+        <figcaption className="mt-3 text-center text-sm text-white/85">
+          {current.alt && <span className="font-semibold text-white">{current.alt} · </span>}
+          {index + 1} из {photos.length}
+        </figcaption>
+      </figure>
+      <button
+        ref={closeRef}
+        type="button"
+        onClick={onClose}
+        aria-label="Закрыть"
+        className="absolute right-4 top-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/60"
+      >
+        <X className="h-6 w-6" />
+      </button>
+      {photos.length > 1 &&
+        ([-1, 1] as const).map((d) => (
+          <button
+            key={d}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              go(d);
+            }}
+            aria-label={d < 0 ? "Предыдущее фото" : "Следующее фото"}
+            className={`absolute top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/60 sm:flex ${
+              d < 0 ? "left-4" : "right-4"
+            }`}
+          >
+            {d < 0 ? <ChevronLeft className="h-6 w-6" /> : <ChevronRight className="h-6 w-6" />}
+          </button>
+        ))}
+    </div>
+  );
+}
+
+/** Галерея «Мои работы»: сетка, первое фото крупно, по нажатию — на весь экран. */
+function AuthorGallery({ photos }: { photos: WorkPhoto[] }) {
+  const [open, setOpen] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
+  const LIMIT = 8;
+  const visible = showAll ? photos : photos.slice(0, LIMIT);
+  const who = "Работа мастера";
 
   return (
     <>
@@ -208,12 +288,13 @@ function AuthorGallery({ photos }: { photos: WorkPhoto[] }) {
               type="button"
               onClick={() => setOpen(i)}
               className={`group relative block aspect-square w-full overflow-hidden rounded-2xl bg-landing-blush md:rounded-3xl ${focusRing}`}
-              aria-label={`Открыть фото ${i + 1}${p.alt ? `: ${p.alt}` : ""}`}
+              aria-label={`Открыть фото ${i + 1} из ${photos.length}${p.alt ? `: ${p.alt}` : ""}`}
             >
               <img
                 src={p.src}
-                alt={p.alt}
+                alt={photoAlt(p, i, who)}
                 loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none"
               />
               {p.alt && (
@@ -236,70 +317,18 @@ function AuthorGallery({ photos }: { photos: WorkPhoto[] }) {
           </button>
         </div>
       )}
-
-      {current && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-landing-plum/95 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Просмотр фото"
-          onClick={() => setOpen(null)}
-          onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
-          onTouchEnd={(e) => {
-            if (touchX.current === null) return;
-            const dx = e.changedTouches[0].clientX - touchX.current;
-            if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
-            touchX.current = null;
-          }}
-        >
-          <figure className="max-h-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={current.src}
-              alt={current.alt}
-              className="max-h-[80vh] w-auto rounded-2xl object-contain"
-            />
-            <figcaption className="mt-3 text-center text-sm text-white/85">
-              {current.alt && <span className="font-semibold text-white">{current.alt} · </span>}
-              {open! + 1} из {photos.length}
-            </figcaption>
-          </figure>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={() => setOpen(null)}
-            aria-label="Закрыть"
-            className="absolute right-4 top-4 flex h-12 w-12 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/60"
-          >
-            <X className="h-6 w-6" />
-          </button>
-          {photos.length > 1 &&
-            ([-1, 1] as const).map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  go(d);
-                }}
-                aria-label={d < 0 ? "Предыдущее фото" : "Следующее фото"}
-                className={`absolute top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/60 sm:flex ${
-                  d < 0 ? "left-4" : "right-4"
-                }`}
-              >
-                {d < 0 ? <ChevronLeft className="h-6 w-6" /> : <ChevronRight className="h-6 w-6" />}
-              </button>
-            ))}
-        </div>
-      )}
+      <Lightbox photos={photos} index={open} who={who} onIndex={setOpen} onClose={() => setOpen(null)} />
     </>
   );
 }
 
-/** Горизонтальная карусель работ: свайп на мобильных, стрелки на десктопе. */
+/** Карусель «Работы учениц»: свайп на телефоне, стрелки на десктопе, по нажатию — на весь экран. */
 function WorksCarousel({ works }: { works: WorkPhoto[] }) {
-  const trackRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLUListElement>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(true);
+  const [open, setOpen] = useState<number | null>(null);
+  const who = "Работа ученицы";
 
   const updateArrows = () => {
     const el = trackRef.current;
@@ -339,32 +368,40 @@ function WorksCarousel({ works }: { works: WorkPhoto[] }) {
   return (
     <div className="rounded-[28px] bg-white p-4 ring-1 ring-landing-plum/10 md:p-6">
       <div className="mb-4 flex items-center justify-between gap-4">
-        <p className="text-sm md:text-base font-extrabold uppercase tracking-widest">
-          Галерея работ
+        <p className="text-sm text-landing-plum/70">
+          {works.length} {plural(works.length, "работа", "работы", "работ")} · нажмите, чтобы увеличить
         </p>
         <div className="flex gap-2">
           {arrow(-1, canPrev)}
           {arrow(1, canNext)}
         </div>
       </div>
-      <div
+      <ul
         ref={trackRef}
         onScroll={updateArrows}
         className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 pb-2 [scrollbar-width:none] md:-mx-6 md:scroll-px-6 md:px-6 [&::-webkit-scrollbar]:hidden"
-        role="region"
         aria-label="Галерея работ учениц"
-        tabIndex={0}
       >
-        {works.map((w) => (
-          <img
-            key={w.src}
-            src={w.src}
-            alt={w.alt}
-            loading="lazy"
-            className="aspect-[4/3] w-[80%] shrink-0 snap-start rounded-2xl object-cover sm:w-[45%] lg:w-[calc((100%-2rem)/3)]"
-          />
+        {works.map((w, i) => (
+          <li key={w.src} className="w-[80%] shrink-0 snap-start sm:w-[45%] lg:w-[calc((100%-2rem)/3)]">
+            <button
+              type="button"
+              onClick={() => setOpen(i)}
+              className={`group block w-full overflow-hidden rounded-2xl ${focusRing}`}
+              aria-label={`Открыть работу ${i + 1} из ${works.length}${w.alt ? `: ${w.alt}` : ""}`}
+            >
+              <img
+                src={w.src}
+                alt={photoAlt(w, i, who)}
+                loading="lazy"
+                decoding="async"
+                className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transform-none"
+              />
+            </button>
+          </li>
         ))}
-      </div>
+      </ul>
+      <Lightbox photos={works} index={open} who={who} onIndex={setOpen} onClose={() => setOpen(null)} />
     </div>
   );
 }
@@ -425,6 +462,15 @@ function Steps() {
 }
 
 /** Разделы курса — «что входит в обучение» перед ценой. */
+/**
+ * Название раздела для списка: номер уже в кружке, поэтому «Урок 3. РАЗМЕТКА» → «РАЗМЕТКА»;
+ * «ДО|ПОСЛЕ» → «ДО / ПОСЛЕ» (вертикальная черта в этом шрифте похожа на «І»).
+ */
+function moduleTitle(title: string) {
+  const t = title.replace(/^\s*(урок|раздел|модуль)\s*\d+\s*[.:)—-]?\s*/i, "").replace(/\s*\|\s*/g, " / ").trim();
+  return t || title;
+}
+
 function ModulesList({ course }: { course: CourseDTO }) {
   return (
     <ol className="grid gap-3 sm:grid-cols-2">
@@ -439,7 +485,7 @@ function ModulesList({ course }: { course: CourseDTO }) {
           >
             {i + 1}
           </span>
-          <span className="text-sm md:text-base font-bold leading-snug">{m.title}</span>
+          <span className="text-sm md:text-base font-bold leading-snug">{moduleTitle(m.title)}</span>
         </li>
       ))}
     </ol>
@@ -538,16 +584,61 @@ function PriceCard({
 
 const whiteButtonCls = `inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-white px-8 py-4 text-sm md:text-base font-bold uppercase tracking-wide text-landing-pink transition-transform hover:-translate-y-0.5 active:scale-95 motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/60 md:w-auto`;
 
+/** Главное действие вкладки — одно и то же в карточке цены и в плавающей кнопке на телефоне. */
+type Cta = { href: string; label: string; short: string; external?: boolean; whatsapp?: boolean };
+
+function browCta(course: CourseDTO | undefined, fallbackPrice: string): Cta {
+  const href = course ? `/course/${course.id}` : "/courses";
+  if (course?.isFree) return { href, label: "Начать бесплатно", short: "Начать бесплатно" };
+  const plans = course ? activePlans(course) : [];
+  const min = plans.reduce<(typeof plans)[number] | null>((m, p) => (!m || p.price < m.price ? p : m), null);
+  const price = min ? `${plans.length > 1 ? "от " : ""}${formatPrice(min.price, min.currency)}` : fallbackPrice;
+  return { href, label: "Купить и начать обучение", short: price ? `Купить · ${price}` : "Купить курс" };
+}
+
+function permanentCta(whatsapp: string): Cta {
+  if (!whatsapp) return { href: "#contacts", label: "Оставить заявку", short: "Записаться на обучение" };
+  const text = encodeURIComponent("Здравствуйте! Хочу записаться на обучение «Натуральный перманент»");
+  return {
+    href: `https://wa.me/${whatsapp}?text=${text}`,
+    label: "Написать в WhatsApp",
+    short: "Записаться в WhatsApp",
+    external: true,
+    whatsapp: true,
+  };
+}
+
+function CtaLink({ cta, className, short = false }: { cta: Cta; className: string; short?: boolean }) {
+  const inner = (
+    <>
+      {cta.whatsapp && <MessageCircle className="h-5 w-5" aria-hidden />}
+      {short ? cta.short : cta.label}
+      {!cta.whatsapp && <ArrowRight className="h-4 w-4" aria-hidden />}
+    </>
+  );
+  if (cta.external)
+    return (
+      <a href={cta.href} target="_blank" rel="noopener noreferrer" className={className}>
+        {inner}
+      </a>
+    );
+  if (cta.href.startsWith("#"))
+    return (
+      <a href={cta.href} className={className}>
+        {inner}
+      </a>
+    );
+  return (
+    <Link href={cta.href} className={className}>
+      {inner}
+    </Link>
+  );
+}
+
 /** Цена курса «Бровист с 0»: тарифы курса, а если их нет — цена из админки. */
 function BrowPrice({ course, fallback }: { course: CourseDTO | undefined; fallback: string }) {
   const plans = course ? activePlans(course) : [];
-  const href = course ? `/course/${course.id}` : "/courses";
-  const action = (
-    <Link href={href} className={whiteButtonCls}>
-      {course?.isFree ? "Начать бесплатно" : "Купить и начать обучение"}
-      <ArrowRight className="h-4 w-4" aria-hidden />
-    </Link>
-  );
+  const action = <CtaLink cta={browCta(course, fallback)} className={whiteButtonCls} />;
 
   if (course?.isFree) {
     return (
@@ -587,22 +678,7 @@ function BrowPrice({ course, fallback }: { course: CourseDTO | undefined; fallba
 
 /** Цена обучения перманенту и кнопка записи в WhatsApp. */
 function PermanentPrice({ price, note, whatsapp }: { price: string; note: string; whatsapp: string }) {
-  const text = encodeURIComponent("Здравствуйте! Хочу записаться на обучение «Натуральный перманент»");
-  const action = whatsapp ? (
-    <a
-      href={`https://wa.me/${whatsapp}?text=${text}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={whiteButtonCls}
-    >
-      <MessageCircle className="h-5 w-5" aria-hidden />
-      Написать в WhatsApp
-    </a>
-  ) : (
-    <a href="#contacts" className={whiteButtonCls}>
-      Оставить заявку <ArrowRight className="h-4 w-4" aria-hidden />
-    </a>
-  );
+  const action = <CtaLink cta={permanentCta(whatsapp)} className={whiteButtonCls} />;
   return (
     <PriceCard action={action} note={note || undefined}>
       <p className="text-sm font-extrabold uppercase tracking-widest text-white/80">Цена обучения</p>
@@ -711,12 +787,54 @@ export default function WelcomePage() {
     return () => window.removeEventListener("hashchange", fromHash);
   }, [loaded]);
 
-  const pickTab = (id: CourseTab) => {
+  const pickTab = (id: CourseTab, focus = false) => {
     setTab(id);
+    // Вкладка в адресе — ссылкой можно поделиться, «назад» не засоряем
+    window.history.replaceState(null, "", `#${id}`);
+    if (focus) document.getElementById(`tab-${id}`)?.focus();
     // Новая вкладка начинается с начала, а не с середины чужого контента
     const top = tabsRef.current?.getBoundingClientRect().top ?? 0;
     if (top < 0) tabsRef.current?.scrollIntoView({ block: "start" });
   };
+
+  // Стрелки ←/→, Home/End переключают вкладки (WAI-ARIA Tabs)
+  const onTabsKey = (e: React.KeyboardEvent) => {
+    const ids = COURSE_TABS.map((t) => t.id);
+    const i = ids.indexOf(tab);
+    const next =
+      e.key === "ArrowRight" ? ids[(i + 1) % ids.length]
+      : e.key === "ArrowLeft" ? ids[(i - 1 + ids.length) % ids.length]
+      : e.key === "Home" ? ids[0]
+      : e.key === "End" ? ids[ids.length - 1]
+      : null;
+    if (!next) return;
+    e.preventDefault();
+    pickTab(next, true);
+  };
+
+  // Плавающая кнопка на телефоне: появляется, когда долистали до курсов,
+  // и прячется, пока на экране сама карточка цены — чтобы не дублировать.
+  const authorRef = useRef<HTMLElement>(null);
+  const priceRef = useRef<HTMLDivElement>(null);
+  const [showStickyCta, setShowStickyCta] = useState(false);
+  useEffect(() => {
+    const top = authorRef.current;
+    const price = priceRef.current;
+    if (!top || typeof IntersectionObserver === "undefined") return;
+    const state = { top: true, price: false };
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.target === top) state.top = e.isIntersecting;
+        if (e.target === price) state.price = e.isIntersecting;
+      }
+      setShowStickyCta(!state.top && !state.price);
+    });
+    io.observe(top);
+    if (price) io.observe(price);
+    return () => io.disconnect();
+  }, [tab, loaded, isLoading]);
+  const stickyCta =
+    tab === "brow" ? browCta(browCourse, content?.browPrice ?? "") : permanentCta(content?.whatsapp ?? "");
 
   useEffect(() => {
     // Внутри предпросмотра админки показываем главную как гостю
@@ -735,6 +853,7 @@ export default function WelcomePage() {
       <main className={`${manrope.className} w-full bg-white text-landing-plum`}>
         {/* ── Автор: фото и информация ──────────────────────────── */}
         <section
+          ref={authorRef}
           id="author"
           className="relative scroll-mt-20 overflow-hidden bg-gradient-to-b from-landing-blush to-white px-4 pb-12 pt-10 md:px-6 md:pb-20 md:pt-16 lg:px-8"
         >
@@ -785,11 +904,15 @@ export default function WelcomePage() {
           className="scroll-mt-16 px-4 pb-12 md:px-6 md:pb-20 lg:px-8"
         >
           <div className="mx-auto max-w-7xl">
+            <p id="courses-label" className="mb-1 text-center text-xs md:text-sm font-extrabold uppercase tracking-widest text-landing-plum/60">
+              Выберите курс
+            </p>
             {/* Переключатель: две половины, как на схеме. Липнет под шапкой */}
             <div className="sticky top-16 z-20 -mx-4 bg-white/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
               <div
                 role="tablist"
-                aria-label="Курсы"
+                aria-labelledby="courses-label"
+                onKeyDown={onTabsKey}
                 className="grid grid-cols-2 gap-1 rounded-full bg-landing-blush p-1"
               >
                 {COURSE_TABS.map((t) => (
@@ -800,6 +923,7 @@ export default function WelcomePage() {
                     id={`tab-${t.id}`}
                     aria-selected={tab === t.id}
                     aria-controls={`panel-${t.id}`}
+                    tabIndex={tab === t.id ? 0 : -1}
                     onClick={() => pickTab(t.id)}
                     className={`min-h-[52px] rounded-full px-3 text-sm md:text-lg font-extrabold uppercase leading-tight tracking-tight transition-colors ${focusRing} ${
                       tab === t.id
@@ -841,7 +965,9 @@ export default function WelcomePage() {
                 )}
                 {!isLoading && (
                   <Reveal className="pt-4">
+                    <div ref={priceRef}>
                     <BrowPrice course={browCourse} fallback={content.browPrice} />
+                    </div>
                   </Reveal>
                 )}
               </div>
@@ -891,11 +1017,13 @@ export default function WelcomePage() {
                   </TabBlock>
                 )}
                 <Reveal className="pt-4">
+                  <div ref={priceRef}>
                   <PermanentPrice
                     price={content.permanentPrice}
                     note={content.permanentNote}
                     whatsapp={content.whatsapp}
                   />
+                  </div>
                 </Reveal>
               </div>
             )}
@@ -955,6 +1083,20 @@ export default function WelcomePage() {
       <div className={manrope.className}>
         <LandingFooter />
       </div>
+      {/* Отступ, чтобы плавающая кнопка не закрывала низ футера на телефоне */}
+      <div className="h-24 bg-landing-pink-dark md:hidden" aria-hidden />
+
+      {/* ── Плавающая кнопка действия текущей вкладки (только телефон) ── */}
+      {content && (
+        <div
+          className={`${manrope.className} fixed inset-x-0 bottom-0 z-30 border-t border-landing-plum/10 bg-white/95 p-3 backdrop-blur transition-all duration-300 motion-reduce:transition-none md:hidden ${
+            showStickyCta ? "visible translate-y-0" : "invisible translate-y-full"
+          }`}
+          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        >
+          <CtaLink cta={stickyCta} short className={`${pinkButtonCls} w-full`} />
+        </div>
+      )}
     </>
   );
 }
