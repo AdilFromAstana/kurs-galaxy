@@ -48,3 +48,8 @@ ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "browPrice"       TEXT;
 ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "permanentPrice"  TEXT;
 ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "permanentNote"   TEXT;
 ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "whatsapp"        TEXT;
+
+-- 2026-10: автор сама управляет главной — порядок/видимость блоков и план обучения.
+ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "steps"     JSONB;
+ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "stepsLead" TEXT;
+ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "layout"    JSONB NOT NULL DEFAULT '{}';

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCourses, type CourseDTO } from "@/components/providers/CoursesProvider";
-import type { LandingContentData, ResultCard, WorkPhoto } from "@/lib/landingContent";
+import type { BlockId, LandingContentData, ResultCard, Step, WorkPhoto } from "@/lib/landingContent";
 import { COURSE_TABS, hasSection, useLandingContent, type CourseTab } from "@/hooks/useLandingContent";
 import { PREVIEW_DRAFT_COURSE_ID, isPreviewFrame, usePreviewDraft } from "@/lib/preview";
 import Header from "@/components/layout/Header";
@@ -38,46 +38,6 @@ function activePlans(course: CourseDTO) {
 const num = (i: number) => `(${String(i + 1).padStart(2, "0")})`;
 
 // Единый видимый фокус для клавиатурной навигации
-
-// ─── Статичный контент лендинга ────────────────────────────────────────────
-// План обучения по дням (текст автора курсов)
-const STEPS = [
-  {
-    days: "1–7 день",
-    format: "онлайн",
-    title: "Онлайн-подготовка",
-    points: [
-      "Уроки на сайте: мои показы на моделях и вся теория по перманенту",
-      "Материалы остаются с вами и после обучения",
-      "Домашнее задание",
-    ],
-  },
-  {
-    days: "8 день",
-    format: "очно",
-    title: "Знакомство и постановка руки",
-    points: [
-      "Разбираем пройденный материал",
-      "Ставим руку и тренируем штрихи на латексе",
-      "Строим эскиз на манекене",
-    ],
-  },
-  {
-    days: "9 день",
-    format: "очно",
-    title: "Мой показ на модели",
-    points: [
-      "Показываю работу на модели — брови или губы на выбор",
-      "Вы работаете с моделью на зоне бровей",
-    ],
-  },
-  {
-    days: "10 день",
-    format: "очно",
-    title: "Практика и сертификат",
-    points: ["Две модели: зона бровей и зона губ", "Вручение сертификата"],
-  },
-];
 
 // ─── UI-кирпичики ───────────────────────────────────────────────────────────
 
@@ -407,11 +367,11 @@ function WorksCarousel({ works }: { works: WorkPhoto[] }) {
 }
 
 /** План обучения перманенту по дням: вертикально на телефоне, в ряд на десктопе. */
-function Steps() {
+function Steps({ steps }: { steps: Step[] }) {
   return (
     <ol className="grid gap-8 md:grid-cols-2 md:gap-x-6 md:gap-y-10 lg:grid-cols-4">
-      {STEPS.map(({ days, format, title, points }, i) => {
-        const last = i === STEPS.length - 1;
+      {steps.map(({ days, format, title, points }, i) => {
+        const last = i === steps.length - 1;
         return (
           <li key={days} className="relative flex gap-4 lg:flex-col lg:gap-5">
             {/* Линия к следующему шагу */}
@@ -775,6 +735,8 @@ export default function WelcomePage() {
       const id = window.location.hash.slice(1);
       if (id !== "brow" && id !== "permanent") {
         if (id) document.getElementById(id)?.scrollIntoView({ block: "start" });
+        // Без вкладки в адресе открываем ту, что автор выбрала первой
+        else if (content) setTab(content.layout.firstTab);
         return;
       }
       setTab(id);
@@ -833,6 +795,84 @@ export default function WelcomePage() {
     if (price) io.observe(price);
     return () => io.disconnect();
   }, [tab, loaded, isLoading]);
+  /** Один блок текущей вкладки. Пустые блоки (нет фото, нет разделов) не показываем. */
+  // Обычная функция, не компонент: компонент, объявленный внутри страницы, пересоздавался бы
+  // на каждой перерисовке (прокрутка меняет плавающую кнопку) и сбрасывал галереи.
+  const renderBlock = (id: BlockId) => {
+    if (!content) return null;
+    const brow = tab === "brow";
+    const myWorks = brow ? content.browAuthorWorks : content.authorWorks;
+    const studentWorks = brow ? content.browWorks : content.works;
+    switch (id) {
+      case "facts":
+        return content.authorFacts.length > 0 ? (
+          <TabBlock top="Почему" accent="натуральный перманент">
+            <dl className={`grid gap-3 ${content.authorFacts.length > 1 ? "sm:grid-cols-2" : ""}`}>
+              {content.authorFacts.map((f, i) => (
+                <div key={i} className="rounded-3xl bg-landing-blush p-5 md:p-6">
+                  {f.title && (
+                    <dt className="text-xs md:text-sm font-extrabold uppercase tracking-widest text-landing-pink">
+                      {f.title}
+                    </dt>
+                  )}
+                  <dd className="mt-1.5 whitespace-pre-line text-base font-semibold leading-snug">{f.text}</dd>
+                </div>
+              ))}
+            </dl>
+          </TabBlock>
+        ) : null;
+      case "steps":
+        return content.steps.length > 0 ? (
+          <TabBlock top="Как проходит" accent="обучение" lead={content.stepsLead || undefined}>
+            <Steps steps={content.steps} />
+          </TabBlock>
+        ) : null;
+      case "myWorks":
+        return myWorks.length > 0 ? (
+          <TabBlock top="Мои" accent="работы">
+            <AuthorGallery photos={myWorks} />
+          </TabBlock>
+        ) : null;
+      case "studentWorks": {
+        const results = brow ? [] : content.results;
+        return studentWorks.length > 0 || results.length > 0 ? (
+          <TabBlock top="Работы" accent="учениц">
+            {studentWorks.length > 0 && (
+              <div className={results.length ? "mb-6" : ""}>
+                <WorksCarousel works={studentWorks} />
+              </div>
+            )}
+            {results.length > 0 && <ResultCards results={results} />}
+          </TabBlock>
+        ) : null;
+      }
+      case "modules":
+        if (isLoading) return <div className="my-10 h-64 animate-pulse rounded-[28px] bg-landing-blush" aria-busy="true" />;
+        return browCourse && browCourse.modules.length > 0 ? (
+          <TabBlock
+            top="Что входит"
+            accent="в обучение"
+            lead={`${browCourse.modules.length} ${plural(browCourse.modules.length, "раздел", "раздела", "разделов")} · ${lessonCount(browCourse)} ${plural(lessonCount(browCourse), "урок", "урока", "уроков")} онлайн, в своём темпе`}
+          >
+            <ModulesList course={browCourse} />
+          </TabBlock>
+        ) : null;
+      case "price":
+        if (brow && isLoading) return null;
+        return (
+          <Reveal className="py-6 md:py-8">
+            <div ref={priceRef}>
+              {brow ? (
+                <BrowPrice course={browCourse} fallback={content.browPrice} />
+              ) : (
+                <PermanentPrice price={content.permanentPrice} note={content.permanentNote} whatsapp={content.whatsapp} />
+              )}
+            </div>
+          </Reveal>
+        );
+    }
+  };
+
   const stickyCta =
     tab === "brow" ? browCta(browCourse, content?.browPrice ?? "") : permanentCta(content?.whatsapp ?? "");
 
@@ -937,101 +977,20 @@ export default function WelcomePage() {
               </div>
             </div>
 
-            {content && tab === "brow" && (
-              <div id="panel-brow" role="tabpanel" aria-labelledby="tab-brow">
-                {content.browAuthorWorks.length > 0 && (
-                  <TabBlock top="Мои" accent="работы">
-                    <AuthorGallery photos={content.browAuthorWorks} />
-                  </TabBlock>
-                )}
-                {content.browWorks.length > 0 && (
-                  <TabBlock top="Работы" accent="учениц">
-                    <WorksCarousel works={content.browWorks} />
-                  </TabBlock>
-                )}
-                {isLoading ? (
-                  <div className="my-10 h-64 animate-pulse rounded-[28px] bg-landing-blush" aria-busy="true" />
-                ) : (
-                  browCourse &&
-                  browCourse.modules.length > 0 && (
-                    <TabBlock
-                      top="Что входит"
-                      accent="в обучение"
-                      lead={`${browCourse.modules.length} ${plural(browCourse.modules.length, "раздел", "раздела", "разделов")} · ${lessonCount(browCourse)} ${plural(lessonCount(browCourse), "урок", "урока", "уроков")} онлайн, в своём темпе`}
-                    >
-                      <ModulesList course={browCourse} />
-                    </TabBlock>
-                  )
-                )}
-                {!isLoading && (
-                  <Reveal className="pt-4">
-                    <div ref={priceRef}>
-                    <BrowPrice course={browCourse} fallback={content.browPrice} />
-                    </div>
-                  </Reveal>
-                )}
-              </div>
-            )}
-
-            {content && tab === "permanent" && (
-              <div id="panel-permanent" role="tabpanel" aria-labelledby="tab-permanent">
-                {/* Карточки о курсе (Техника, Прайс, Продвижение…) — про перманент, поэтому здесь */}
-                {content.authorFacts.length > 0 && (
-                  <TabBlock top="Почему" accent="натуральный перманент">
-                    <dl className={`grid gap-3 ${content.authorFacts.length > 1 ? "sm:grid-cols-2" : ""}`}>
-                      {content.authorFacts.map((f, i) => (
-                        <div key={i} className="rounded-3xl bg-landing-blush p-5 md:p-6">
-                          {f.title && (
-                            <dt className="text-xs md:text-sm font-extrabold uppercase tracking-widest text-landing-pink">
-                              {f.title}
-                            </dt>
-                          )}
-                          <dd className="mt-1.5 whitespace-pre-line text-base font-semibold leading-snug">
-                            {f.text}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </TabBlock>
-                )}
-                <TabBlock
-                  top="Как проходит"
-                  accent="обучение"
-                  lead="10 дней: неделя онлайн-подготовки и 3 дня практики на моделях"
-                >
-                  <Steps />
-                </TabBlock>
-                {content.authorWorks.length > 0 && (
-                  <TabBlock top="Мои" accent="работы">
-                    <AuthorGallery photos={content.authorWorks} />
-                  </TabBlock>
-                )}
-                {(content.works.length > 0 || content.results.length > 0) && (
-                  <TabBlock top="Работы" accent="учениц">
-                    {content.works.length > 0 && (
-                      <div className="mb-6">
-                        <WorksCarousel works={content.works} />
-                      </div>
-                    )}
-                    <ResultCards results={content.results} />
-                  </TabBlock>
-                )}
-                <Reveal className="pt-4">
-                  <div ref={priceRef}>
-                  <PermanentPrice
-                    price={content.permanentPrice}
-                    note={content.permanentNote}
-                    whatsapp={content.whatsapp}
-                  />
-                  </div>
-                </Reveal>
+            {content && (
+              <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`}>
+                {content.layout[tab]
+                  .filter((b) => !b.hidden)
+                  .map((b) => (
+                    <Fragment key={`${tab}-${b.id}`}>{renderBlock(b.id)}</Fragment>
+                  ))}
               </div>
             )}
           </div>
         </section>
 
         {/* ── Отзывы ───────────────────────────────────────────── */}
-        {content && content.reviews.length > 0 && (
+        {content && content.reviews.length > 0 && !content.layout.hideReviews && (
         <section
           id="reviews"
           className="scroll-mt-20 bg-landing-plum px-4 py-16 md:px-6 md:py-24 lg:px-8"
@@ -1057,7 +1016,7 @@ export default function WelcomePage() {
         )}
 
         {/* ── FAQ ──────────────────────────────────────────────── */}
-        {content && content.faq.length > 0 && (
+        {content && content.faq.length > 0 && !content.layout.hideFaq && (
         <section id="faq" className="scroll-mt-20 bg-landing-cream px-4 py-16 md:px-6 md:py-24 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[1fr_1.5fr] lg:gap-10">
             <SectionTitle

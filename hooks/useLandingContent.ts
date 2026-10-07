@@ -45,9 +45,9 @@ export function hasSection(c: LandingContentData | null, id: OptionalSection): b
     case 'author':
       return !!(c.authorName || c.authorPhoto);
     case 'reviews':
-      return c.reviews.length > 0;
+      return c.reviews.length > 0 && !c.layout.hideReviews;
     case 'faq':
-      return c.faq.length > 0;
+      return c.faq.length > 0 && !c.layout.hideFaq;
   }
 }
 
