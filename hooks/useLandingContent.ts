@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { LandingContentData } from '@/lib/landingContent';
+import { DEFAULT_TEXTS, type LandingContentData, type LandingTexts } from '@/lib/landingContentShared';
 
 // Контент главной (Админка → Контент сайта). Один запрос на загрузку страницы:
 // его используют главная, шапка, мобильное меню и футер — чтобы пункты меню
@@ -60,11 +60,19 @@ export function sectionFromHref(href: string): OptionalSection | null {
     : null;
 }
 
-/** Пункт меню «/#brow» / «/#permanent» называется так, как автор назвала вкладку в админке. */
+/** Тексты сайта из админки; пока не загрузились — тексты по умолчанию (без мигания пустотой). */
+export function useSiteTexts(): LandingTexts {
+  return useLandingContent()?.texts ?? DEFAULT_TEXTS;
+}
+
+/** Пункты меню называются так, как автор назвала их в админке («Тексты и кнопки»). */
 export function navLabel(c: LandingContentData | null, href: string, fallback: string): string {
   if (!c) return fallback;
   if (href.endsWith('#brow')) return c.texts.tabBrow;
   if (href.endsWith('#permanent')) return c.texts.tabPermanent;
+  if (href.endsWith('#author')) return c.texts.navAuthor;
+  if (href.endsWith('#reviews')) return c.texts.navReviews;
+  if (href.endsWith('#faq')) return c.texts.navFaq;
   return fallback;
 }
 

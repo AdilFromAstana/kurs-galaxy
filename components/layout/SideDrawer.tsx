@@ -105,7 +105,7 @@ export default function SideDrawer({ isOpen, onClose }: SideDrawerProps) {
                 <Award className="w-6 h-6 text-white" />
               </div>
               <span className="text-lg font-bold text-dark-900">
-                KursGalaxy.kz
+                {landing?.texts.siteName ?? "KursGalaxy.kz"}
               </span>
             </Link>
             <button

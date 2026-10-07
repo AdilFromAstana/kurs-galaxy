@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { CheckCircle2, Instagram, Loader2, Send } from 'lucide-react';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import { instagramHref, telegramHref, whatsappHref, whatsappLabel } from '@/lib/contactLinks';
-import { hasSection, navLabel, sectionFromHref, useLandingContent } from '@/hooks/useLandingContent';
+import { hasSection, navLabel, sectionFromHref, useLandingContent, useSiteTexts } from '@/hooks/useLandingContent';
 
 interface PublicSiteSettings {
   contactPhone: string | null;
@@ -79,6 +79,7 @@ function ContactCard({
 }
 
 function LeadForm() {
+  const t = useSiteTexts();
   const id = useId();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -117,8 +118,8 @@ function LeadForm() {
       >
         <CheckCircle2 className="h-10 w-10 shrink-0 text-white" aria-hidden />
         <div>
-          <p className="text-lg font-bold text-white">Заявка отправлена!</p>
-          <p className="text-sm text-white/85">Мы свяжемся с вами в ближайшее время.</p>
+          <p className="text-lg font-bold text-white">{t.footerSuccessTitle}</p>
+          <p className="text-sm text-white/85">{t.footerSuccessText}</p>
         </div>
       </div>
     );
@@ -336,9 +337,9 @@ export default function LandingFooter() {
             </nav>
 
             <div>
-              <p className="text-2xl md:text-3xl font-extrabold">Остались вопросы?</p>
+              <p className="text-2xl md:text-3xl font-extrabold">{landing?.texts.footerFormTitle ?? 'Остались вопросы?'}</p>
               <p className="mb-6 mt-2 text-white/90">
-                Оставьте заявку, и мы свяжемся с вами
+                {landing?.texts.footerFormLead ?? 'Оставьте заявку, и мы свяжемся с вами'}
               </p>
               <LeadForm />
             </div>
@@ -351,11 +352,11 @@ export default function LandingFooter() {
           style={{ fontSize: 'clamp(2.25rem, 10.5vw, 9.5rem)' }}
           aria-hidden
         >
-          kursgalaxy.kz
+          {landing?.texts.siteName ?? 'KursGalaxy.kz'}
         </p>
 
         <div className="flex flex-col gap-2 border-t border-white/25 py-6 text-xs text-white/85 md:flex-row md:items-center md:justify-between">
-          <p>© {year} KursGalaxy.kz</p>
+          <p>© {year} {landing?.texts.siteName ?? 'KursGalaxy.kz'}</p>
           {s.legalEntityName && <p>{s.legalEntityName}</p>}
           {s.legalRequisites && <p>ИИН/БИН {s.legalRequisites}</p>}
           {s.legalAddress && <p>{s.legalAddress}</p>}

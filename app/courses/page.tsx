@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, BookOpen, CheckCircle2, Gift, Layers, Play, Sparkles, TrendingUp, Video } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSiteTexts } from '@/hooks/useLandingContent';
 import { useProgress } from '@/hooks/useProgress';
 import { usePurchase } from '@/hooks/usePurchase';
 import { useCourses, type CourseDTO } from '@/components/providers/CoursesProvider';
@@ -15,6 +16,7 @@ import { PREVIEW_DRAFT_COURSE_ID } from '@/lib/preview';
 
 export default function CoursesPage() {
   const { isAuthenticated } = useAuth();
+  const t = useSiteTexts();
   const { courses, isLoading } = useCourses();
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
@@ -49,12 +51,12 @@ export default function CoursesPage() {
           <div className="relative mx-auto flex max-w-7xl flex-col gap-8 px-4 pb-10 pt-12 md:px-6 md:pb-14 md:pt-20 lg:flex-row lg:items-end lg:justify-between lg:px-8">
             <div className="animate-fade-in motion-reduce:animate-none">
               <h1 className="text-[2.6rem] leading-[0.95] md:text-7xl font-extrabold uppercase tracking-tight">
-                Каталог
+                {t.catalogTop}
                 <br />
-                <span className="text-landing-pink">курсов</span>
+                <span className="text-landing-pink">{t.catalogAccent}</span>
               </h1>
               <p className="mt-6 max-w-xl text-base md:text-xl text-landing-plum/80">
-                Выберите курс и начните учиться в своём темпе — от первых бровей до высокого чека
+                {t.catalogLead}
               </p>
             </div>
 
