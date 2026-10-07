@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useCourses, type CourseDTO } from "@/components/providers/CoursesProvider";
-import type { BlockId, LandingContentData, ResultCard, Step, WorkPhoto } from "@/lib/landingContent";
+import type { BlockId, LandingContentData, LandingTexts, ResultCard, Step, WorkPhoto } from "@/lib/landingContent";
 import { COURSE_TABS, hasSection, useLandingContent, type CourseTab } from "@/hooks/useLandingContent";
 import { PREVIEW_DRAFT_COURSE_ID, isPreviewFrame, usePreviewDraft } from "@/lib/preview";
 import Header from "@/components/layout/Header";
@@ -547,21 +547,21 @@ const whiteButtonCls = `inline-flex min-h-[52px] w-full items-center justify-cen
 /** Главное действие вкладки — одно и то же в карточке цены и в плавающей кнопке на телефоне. */
 type Cta = { href: string; label: string; short: string; external?: boolean; whatsapp?: boolean };
 
-function browCta(course: CourseDTO | undefined, fallbackPrice: string): Cta {
+function browCta(course: CourseDTO | undefined, fallbackPrice: string, t: LandingTexts): Cta {
   const href = course ? `/course/${course.id}` : "/courses";
   if (course?.isFree) return { href, label: "Начать бесплатно", short: "Начать бесплатно" };
   const plans = course ? activePlans(course) : [];
   const min = plans.reduce<(typeof plans)[number] | null>((m, p) => (!m || p.price < m.price ? p : m), null);
   const price = min ? `${plans.length > 1 ? "от " : ""}${formatPrice(min.price, min.currency)}` : fallbackPrice;
-  return { href, label: "Купить и начать обучение", short: price ? `Купить · ${price}` : "Купить курс" };
+  return { href, label: t.browBuy, short: price ? `Купить · ${price}` : "Купить курс" };
 }
 
-function permanentCta(whatsapp: string): Cta {
+function permanentCta(whatsapp: string, t: LandingTexts): Cta {
   if (!whatsapp) return { href: "#contacts", label: "Оставить заявку", short: "Записаться на обучение" };
-  const text = encodeURIComponent("Здравствуйте! Хочу записаться на обучение «Натуральный перманент»");
+  const text = encodeURIComponent(t.permanentGreeting);
   return {
     href: `https://wa.me/${whatsapp}?text=${text}`,
-    label: "Написать в WhatsApp",
+    label: t.permanentButton,
     short: "Записаться в WhatsApp",
     external: true,
     whatsapp: true,
@@ -596,9 +596,9 @@ function CtaLink({ cta, className, short = false }: { cta: Cta; className: strin
 }
 
 /** Цена курса «Бровист с 0»: тарифы курса, а если их нет — цена из админки. */
-function BrowPrice({ course, fallback }: { course: CourseDTO | undefined; fallback: string }) {
+function BrowPrice({ course, fallback, t }: { course: CourseDTO | undefined; fallback: string; t: LandingTexts }) {
   const plans = course ? activePlans(course) : [];
-  const action = <CtaLink cta={browCta(course, fallback)} className={whiteButtonCls} />;
+  const action = <CtaLink cta={browCta(course, fallback, t)} className={whiteButtonCls} />;
 
   if (course?.isFree) {
     return (
@@ -611,7 +611,7 @@ function BrowPrice({ course, fallback }: { course: CourseDTO | undefined; fallba
     return (
       <PriceCard
         action={action}
-        note="Доступ к урокам открывается сразу после оплаты"
+        note={t.browPriceNote}
       >
         <ul className="space-y-2" aria-label="Тарифы">
           {plans.map((p) => (
@@ -626,7 +626,7 @@ function BrowPrice({ course, fallback }: { course: CourseDTO | undefined; fallba
   }
   const price = plans[0] ? formatPrice(plans[0].price, plans[0].currency) : fallback;
   return (
-    <PriceCard action={action} note="Доступ к урокам открывается сразу после оплаты">
+    <PriceCard action={action} note={t.browPriceNote}>
       {price ? (
         <p className="text-4xl md:text-6xl font-extrabold">{price}</p>
       ) : (
@@ -637,12 +637,12 @@ function BrowPrice({ course, fallback }: { course: CourseDTO | undefined; fallba
 }
 
 /** Цена обучения перманенту и кнопка записи в WhatsApp. */
-function PermanentPrice({ price, note, whatsapp }: { price: string; note: string; whatsapp: string }) {
-  const action = <CtaLink cta={permanentCta(whatsapp)} className={whiteButtonCls} />;
+function PermanentPrice({ price, note, whatsapp, t }: { price: string; note: string; whatsapp: string; t: LandingTexts }) {
+  const action = <CtaLink cta={permanentCta(whatsapp, t)} className={whiteButtonCls} />;
   return (
     <PriceCard action={action} note={note || undefined}>
-      <p className="text-sm font-extrabold uppercase tracking-widest text-white/80">Цена обучения</p>
-      <p className="mt-1 text-4xl md:text-6xl font-extrabold">{price || "Уточняйте при записи"}</p>
+      <p className="text-sm font-extrabold uppercase tracking-widest text-white/80">{t.permanentPriceLabel}</p>
+      <p className="mt-1 text-4xl md:text-6xl font-extrabold">{price || t.permanentNoPrice}</p>
     </PriceCard>
   );
 }
@@ -719,12 +719,16 @@ export default function WelcomePage() {
   const content = draft ?? saved;
   const author = hasSection(content, "author") ? content : null;
 
-  // Курс по бровям — по названию; если не нашли, первый курс с программой
+  // Курс вкладки «Бровист»: выбранный в админке; иначе — по слову «бров» в названии;
+  // иначе первый курс с программой
   const saleCourses = courses.filter(
     (c) => c.modules.length > 0 || c.id === PREVIEW_DRAFT_COURSE_ID,
   );
+  const chosenId = content?.layout.browCourseId;
   const browCourse =
-    saleCourses.find((c) => /бров/i.test(c.title)) ?? saleCourses[0];
+    (chosenId ? courses.find((c) => c.id === chosenId) : undefined) ??
+    saleCourses.find((c) => /бров/i.test(c.title)) ??
+    saleCourses[0];
 
   // /#brow и /#permanent (меню, футер, предпросмотр админки) открывают вкладку
   // и прокручивают к ней. Ждём контент — иначе блоки выше ещё не отрисованы.
@@ -806,7 +810,7 @@ export default function WelcomePage() {
     switch (id) {
       case "facts":
         return content.authorFacts.length > 0 ? (
-          <TabBlock top="Почему" accent="натуральный перманент">
+          <TabBlock top={content.texts.factsTop} accent={content.texts.factsAccent}>
             <dl className={`grid gap-3 ${content.authorFacts.length > 1 ? "sm:grid-cols-2" : ""}`}>
               {content.authorFacts.map((f, i) => (
                 <div key={i} className="rounded-3xl bg-landing-blush p-5 md:p-6">
@@ -823,20 +827,20 @@ export default function WelcomePage() {
         ) : null;
       case "steps":
         return content.steps.length > 0 ? (
-          <TabBlock top="Как проходит" accent="обучение" lead={content.stepsLead || undefined}>
+          <TabBlock top={content.texts.stepsTop} accent={content.texts.stepsAccent} lead={content.stepsLead || undefined}>
             <Steps steps={content.steps} />
           </TabBlock>
         ) : null;
       case "myWorks":
         return myWorks.length > 0 ? (
-          <TabBlock top="Мои" accent="работы">
+          <TabBlock top={content.texts.myWorksTop} accent={content.texts.myWorksAccent}>
             <AuthorGallery photos={myWorks} />
           </TabBlock>
         ) : null;
       case "studentWorks": {
         const results = brow ? [] : content.results;
         return studentWorks.length > 0 || results.length > 0 ? (
-          <TabBlock top="Работы" accent="учениц">
+          <TabBlock top={content.texts.studentWorksTop} accent={content.texts.studentWorksAccent}>
             {studentWorks.length > 0 && (
               <div className={results.length ? "mb-6" : ""}>
                 <WorksCarousel works={studentWorks} />
@@ -850,8 +854,8 @@ export default function WelcomePage() {
         if (isLoading) return <div className="my-10 h-64 animate-pulse rounded-[28px] bg-landing-blush" aria-busy="true" />;
         return browCourse && browCourse.modules.length > 0 ? (
           <TabBlock
-            top="Что входит"
-            accent="в обучение"
+            top={content.texts.modulesTop}
+            accent={content.texts.modulesAccent}
             lead={`${browCourse.modules.length} ${plural(browCourse.modules.length, "раздел", "раздела", "разделов")} · ${lessonCount(browCourse)} ${plural(lessonCount(browCourse), "урок", "урока", "уроков")} онлайн, в своём темпе`}
           >
             <ModulesList course={browCourse} />
@@ -863,9 +867,9 @@ export default function WelcomePage() {
           <Reveal className="py-6 md:py-8">
             <div ref={priceRef}>
               {brow ? (
-                <BrowPrice course={browCourse} fallback={content.browPrice} />
+                <BrowPrice course={browCourse} fallback={content.browPrice} t={content.texts} />
               ) : (
-                <PermanentPrice price={content.permanentPrice} note={content.permanentNote} whatsapp={content.whatsapp} />
+                <PermanentPrice price={content.permanentPrice} note={content.permanentNote} whatsapp={content.whatsapp} t={content.texts} />
               )}
             </div>
           </Reveal>
@@ -874,7 +878,11 @@ export default function WelcomePage() {
   };
 
   const stickyCta =
-    tab === "brow" ? browCta(browCourse, content?.browPrice ?? "") : permanentCta(content?.whatsapp ?? "");
+    !content
+      ? null
+      : tab === "brow"
+        ? browCta(browCourse, content.browPrice, content.texts)
+        : permanentCta(content.whatsapp, content.texts);
 
   useEffect(() => {
     // Внутри предпросмотра админки показываем главную как гостю
@@ -945,7 +953,7 @@ export default function WelcomePage() {
         >
           <div className="mx-auto max-w-7xl">
             <p id="courses-label" className="mb-1 text-center text-xs md:text-sm font-extrabold uppercase tracking-widest text-landing-plum/60">
-              Выберите курс
+              {content?.texts.chooseCourse ?? "Выберите курс"}
             </p>
             {/* Переключатель: две половины, как на схеме. Липнет под шапкой */}
             <div className="sticky top-16 z-20 -mx-4 bg-white/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
@@ -971,7 +979,7 @@ export default function WelcomePage() {
                         : "text-landing-plum hover:text-landing-pink"
                     }`}
                   >
-                    {t.name}
+                    {content ? (t.id === "brow" ? content.texts.tabBrow : content.texts.tabPermanent) : t.name}
                   </button>
                 ))}
               </div>
@@ -996,7 +1004,7 @@ export default function WelcomePage() {
           className="scroll-mt-20 bg-landing-plum px-4 py-16 md:px-6 md:py-24 lg:px-8"
         >
           <div className="mx-auto max-w-7xl">
-            <SectionTitle top="Что говорят" accent="наши ученицы" dark />
+            <SectionTitle top={content.texts.reviewsTop} accent={content.texts.reviewsAccent} dark />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {content.reviews.map((r, i) => (
                 <Reveal key={i} delay={(i % 3) * 100}>
@@ -1020,9 +1028,9 @@ export default function WelcomePage() {
         <section id="faq" className="scroll-mt-20 bg-landing-cream px-4 py-16 md:px-6 md:py-24 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[1fr_1.5fr] lg:gap-10">
             <SectionTitle
-              top="Вопрос /"
-              accent="ответ"
-              lead="Не нашли ответ? Напишите нам — контакты внизу страницы."
+              top={content.texts.faqTop}
+              accent={content.texts.faqAccent}
+              lead={content.texts.faqLead}
             />
             <div>
               {content.faq.map((item, i) => (
@@ -1053,7 +1061,7 @@ export default function WelcomePage() {
           }`}
           style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
         >
-          <CtaLink cta={stickyCta} short className={`${pinkButtonCls} w-full`} />
+          {stickyCta && <CtaLink cta={stickyCta} short className={`${pinkButtonCls} w-full`} />}
         </div>
       )}
     </>

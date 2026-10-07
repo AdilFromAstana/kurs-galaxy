@@ -21,6 +21,8 @@ export interface LandingLayout {
   brow: BlockState[];
   permanent: BlockState[];
   firstTab: CourseTabId;
+  /** Какой курс продаётся во вкладке «Бровист»; '' — найти по слову «бров» в названии */
+  browCourseId: string;
   hideReviews: boolean;
   hideFaq: boolean;
 }
@@ -44,9 +46,42 @@ export const DEFAULT_LAYOUT: LandingLayout = {
   brow: TAB_BLOCKS.brow.map((id) => ({ id, hidden: false })),
   permanent: TAB_BLOCKS.permanent.map((id) => ({ id, hidden: false })),
   firstTab: 'brow',
+  browCourseId: '',
   hideReviews: false,
   hideFaq: false,
 };
+
+// ─── Тексты сайта, которые автор меняет сама ────────────────────────────────
+// Заголовки — в две строки: первая тёмная, вторая розовая.
+export const DEFAULT_TEXTS = {
+  tabBrow: 'Бровист с 0',
+  tabPermanent: 'Натуральный перманент',
+  chooseCourse: 'Выберите курс',
+  myWorksTop: 'Мои',
+  myWorksAccent: 'работы',
+  studentWorksTop: 'Работы',
+  studentWorksAccent: 'учениц',
+  modulesTop: 'Что входит',
+  modulesAccent: 'в обучение',
+  factsTop: 'Почему',
+  factsAccent: 'натуральный перманент',
+  stepsTop: 'Как проходит',
+  stepsAccent: 'обучение',
+  reviewsTop: 'Что говорят',
+  reviewsAccent: 'наши ученицы',
+  faqTop: 'Вопрос /',
+  faqAccent: 'ответ',
+  faqLead: 'Не нашли ответ? Напишите нам — контакты внизу страницы.',
+  browBuy: 'Купить и начать обучение',
+  browPriceNote: 'Доступ к урокам открывается сразу после оплаты',
+  permanentPriceLabel: 'Цена обучения',
+  permanentNoPrice: 'Уточняйте при записи',
+  permanentButton: 'Написать в WhatsApp',
+  permanentGreeting: 'Здравствуйте! Хочу записаться на обучение «Натуральный перманент»',
+  siteGreeting: 'Здравствуйте! Пишу с сайта KursGalaxy.kz',
+};
+export type LandingTexts = typeof DEFAULT_TEXTS;
+export type TextKey = keyof LandingTexts;
 
 export const DEFAULT_STEPS_LEAD = '10 дней: неделя онлайн-подготовки и 3 дня практики на моделях';
 export const DEFAULT_STEPS: Step[] = [
@@ -106,6 +141,7 @@ export interface LandingContentData {
   steps: Step[];
   stepsLead: string;
   layout: LandingLayout;
+  texts: LandingTexts;
 }
 
 // Начальное наполнение при первом открытии: реальные фото работ и базовый FAQ.
@@ -140,6 +176,7 @@ const DEFAULTS: LandingContentData = {
   steps: DEFAULT_STEPS,
   stepsLead: DEFAULT_STEPS_LEAD,
   layout: DEFAULT_LAYOUT,
+  texts: DEFAULT_TEXTS,
   faq: [
     {
       q: 'Подойдёт ли мне курс, если я обучаюсь с 0?',
@@ -253,7 +290,19 @@ export function sanitizeLandingContent(input: unknown): LandingContentData {
             .filter((x) => x.title || x.points.length),
     stepsLead: b.stepsLead == null ? DEFAULT_STEPS_LEAD : str(b.stepsLead, LIMITS.text),
     layout: sanitizeLayout(b.layout),
+    texts: sanitizeTexts(b.texts),
   };
+}
+
+/** Пустое поле — значит «как было»: подставляем текст по умолчанию, чтобы на сайте не было дыр. */
+function sanitizeTexts(v: unknown): LandingTexts {
+  const t = obj(v);
+  const out = { ...DEFAULT_TEXTS };
+  for (const key of Object.keys(DEFAULT_TEXTS) as TextKey[]) {
+    const val = str(t[key], key.endsWith('Greeting') || key === 'faqLead' || key === 'browPriceNote' ? LIMITS.text : LIMITS.short);
+    if (val) out[key] = val;
+  }
+  return out;
 }
 
 /** Каждый блок вкладки ровно один раз; неизвестные выкидываем, новые (после обновления сайта) — в конец. */
@@ -276,6 +325,7 @@ function sanitizeLayout(v: unknown): LandingLayout {
     brow: blocks(l.brow, TAB_BLOCKS.brow),
     permanent: blocks(l.permanent, TAB_BLOCKS.permanent),
     firstTab: l.firstTab === 'permanent' ? 'permanent' : 'brow',
+    browCourseId: str(l.browCourseId, 60),
     hideReviews: l.hideReviews === true,
     hideFaq: l.hideFaq === true,
   };
@@ -289,6 +339,7 @@ function toDb(data: LandingContentData) {
     ...data,
     steps: data.steps as unknown as Prisma.InputJsonArray,
     layout: data.layout as unknown as Prisma.InputJsonObject,
+    texts: data.texts as unknown as Prisma.InputJsonObject,
   };
 }
 

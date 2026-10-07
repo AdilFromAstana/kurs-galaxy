@@ -60,6 +60,14 @@ export function sectionFromHref(href: string): OptionalSection | null {
     : null;
 }
 
+/** Пункт меню «/#brow» / «/#permanent» называется так, как автор назвала вкладку в админке. */
+export function navLabel(c: LandingContentData | null, href: string, fallback: string): string {
+  if (!c) return fallback;
+  if (href.endsWith('#brow')) return c.texts.tabBrow;
+  if (href.endsWith('#permanent')) return c.texts.tabPermanent;
+  return fallback;
+}
+
 /** Вкладки курсов на главной: /#brow и /#permanent открывают нужную. */
 export type CourseTab = 'brow' | 'permanent';
 export const COURSE_TABS: { id: CourseTab; name: string }[] = [

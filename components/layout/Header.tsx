@@ -13,7 +13,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { hasSection, sectionFromHref, useLandingContent } from "@/hooks/useLandingContent";
+import { hasSection, navLabel, sectionFromHref, useLandingContent } from "@/hooks/useLandingContent";
 import SideDrawer from "./SideDrawer";
 
 export default function Header() {
@@ -56,10 +56,12 @@ export default function Header() {
         { name: "Натуральный перманент", href: "/#permanent" },
         { name: "Отзывы", href: "/#reviews" },
         { name: "Вопросы", href: "/#faq" },
-      ].filter((l) => {
-        const section = sectionFromHref(l.href);
-        return !section || hasSection(landing, section);
-      });
+      ]
+        .filter((l) => {
+          const section = sectionFromHref(l.href);
+          return !section || hasSection(landing, section);
+        })
+        .map((l) => ({ ...l, name: navLabel(landing, l.href, l.name) }));
 
   const initial = (user?.name || user?.email || "?").trim().charAt(0).toUpperCase();
 

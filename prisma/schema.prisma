@@ -386,5 +386,6 @@ model LandingContent {
   steps           Json?   // план «Как проходит обучение»: [{ days, format, title, points[] }]; null — по умолчанию
   stepsLead       String? // подзаголовок над планом
   layout          Json    @default("{}") // порядок/видимость блоков вкладок, первая вкладка, скрыть отзывы/FAQ
+  texts           Json    @default("{}") // тексты сайта (названия вкладок, заголовки, кнопки); пусто — по умолчанию
   updatedAt   DateTime @updatedAt
 }
