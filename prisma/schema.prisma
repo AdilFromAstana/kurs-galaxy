@@ -84,6 +84,7 @@ model Course {
   purchases    Purchase[]
   progress     Progress[]
   lastLessons  LastLesson[]
+  accessLinks  AccessLink[]
 }
 
 model Module {
@@ -222,11 +223,34 @@ model Purchase {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  plan   PricingPlan @relation(fields: [planId], references: [id])
+  // Доступ выдан по ссылке-приглашению (см. AccessLink) — чтобы в админке было видно, кто по какой
+  accessLinkId String?
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course     Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  plan       PricingPlan @relation(fields: [planId], references: [id])
+  accessLink AccessLink? @relation(fields: [accessLinkId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([courseId])
+}
+
+// Ссылка-приглашение на курс: автор отправляет её человеку, тот входит или
+// регистрируется и получает доступ только к этому курсу.
+model AccessLink {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  courseId   String
+  note       String? // для кого: «Айгерим, оплатила на Каспи»
+  accessDays Int? // сколько дней доступ после активации; null — бессрочно
+  maxUses    Int      @default(1) // сколько человек может активировать; 0 — без ограничения
+  usedCount  Int      @default(0)
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  purchases Purchase[]
+
   @@index([courseId])
 }
 
@@ -363,29 +387,29 @@ model Lead {
 // Редактируемый из админки контент главной страницы (одна запись id="default").
 // Списки хранятся JSON-массивами — их форма описана в lib/landingContent.ts.
 model LandingContent {
-  id          String   @id @default("default")
-  authorName  String?
-  authorRole  String?
-  authorPhoto String?
-  authorBio   String?
-  authorFacts Json     @default("[]") // [{ title, text }]
-  authorWorks Json     @default("[]") // работы самого автора: [{ src, alt }]
-  works       Json     @default("[]") // [{ src, alt }]
-  results     Json     @default("[]") // [{ photo, tag, before: string[], after: string[] }]
-  reviews     Json     @default("[]") // [{ text, name }]
-  faq         Json     @default("[]") // [{ q, a }]
+  id              String   @id @default("default")
+  authorName      String?
+  authorRole      String?
+  authorPhoto     String?
+  authorBio       String?
+  authorFacts     Json     @default("[]") // [{ title, text }]
+  authorWorks     Json     @default("[]") // работы самого автора: [{ src, alt }]
+  works           Json     @default("[]") // [{ src, alt }]
+  results         Json     @default("[]") // [{ photo, tag, before: string[], after: string[] }]
+  reviews         Json     @default("[]") // [{ text, name }]
+  faq             Json     @default("[]") // [{ q, a }]
   // Главная разделена на два курса: «Бровист с 0» (онлайн, покупка на сайте)
   // и «Натуральный перманент» (запись через WhatsApp). authorWorks/works —
   // работы перманента, brow* — работы бровиста.
-  browAuthorWorks Json    @default("[]") // [{ src, alt }]
-  browWorks       Json    @default("[]") // [{ src, alt }]
+  browAuthorWorks Json     @default("[]") // [{ src, alt }]
+  browWorks       Json     @default("[]") // [{ src, alt }]
   browPrice       String? // цена текстом, если у курса нет тарифов
   permanentPrice  String? // «Цена обучения» перманента, текстом
   permanentNote   String? // пояснение под ценой (что входит, рассрочка…)
   whatsapp        String? // номер для записи на перманент
-  steps           Json?   // план «Как проходит обучение»: [{ days, format, title, points[] }]; null — по умолчанию
+  steps           Json? // план «Как проходит обучение»: [{ days, format, title, points[] }]; null — по умолчанию
   stepsLead       String? // подзаголовок над планом
-  layout          Json    @default("{}") // порядок/видимость блоков вкладок, первая вкладка, скрыть отзывы/FAQ
-  texts           Json    @default("{}") // тексты сайта (названия вкладок, заголовки, кнопки); пусто — по умолчанию
-  updatedAt   DateTime @updatedAt
+  layout          Json     @default("{}") // порядок/видимость блоков вкладок, первая вкладка, скрыть отзывы/FAQ
+  texts           Json     @default("{}") // тексты сайта (названия вкладок, заголовки, кнопки); пусто — по умолчанию
+  updatedAt       DateTime @updatedAt
 }

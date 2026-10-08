@@ -1,6 +1,7 @@
 'use client';
 
 import { PREVIEW_DRAFT_COURSE_ID, usePreviewDraft, type CoursePreviewDraft } from '@/lib/preview';
+import { useSession } from './SessionProvider';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 export type CourseMaterial = { id: string; title: string; url: string; type: 'PDF' | 'LINK' | 'PRODUCT' };
@@ -103,9 +104,17 @@ export function CoursesProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
+  // Содержимое платных уроков сервер отдаёт только при доступе — поэтому перезагружаем
+  // курсы, когда меняется вход или набор открытых курсов (вход, выход, покупка, доступ по ссылке)
+  const session = useSession();
+  const accessKey = `${session.user?.id ?? ''}|${session.purchases
+    .map((p) => `${p.courseId}:${p.status}:${p.expiresAt ?? ''}`)
+    .sort()
+    .join(',')}`;
+  // Гость: один запрос при открытии. Ученица: ещё один, когда подтянулась её сессия.
   useEffect(() => {
     refresh();
-  }, [refresh]);
+  }, [refresh, accessKey]);
 
   const getCourseById = useCallback(
     (idOrSlug: string) => courses.find((c) => c.id === idOrSlug || c.slug === idOrSlug),

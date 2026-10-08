@@ -11,6 +11,7 @@ import {
   Settings,
   Inbox,
   LayoutTemplate,
+  KeyRound,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,6 +28,7 @@ const menuItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Главная" },
   { href: "/admin/courses", icon: BookOpen, label: "Курсы" },
   { href: "/admin/students", icon: Users, label: "Студенты" },
+  { href: "/admin/access", icon: KeyRound, label: "Доступ по ссылке" },
   { href: "/admin/leads", icon: Inbox, label: "Заявки" },
   { href: "/admin/content", icon: LayoutTemplate, label: "Контент сайта" },
   { href: "/admin/certificate", icon: Award, label: "Сертификат" },

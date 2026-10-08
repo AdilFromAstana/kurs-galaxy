@@ -54,3 +54,23 @@ ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "steps"     JSONB;
 ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "stepsLead" TEXT;
 ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "layout"    JSONB NOT NULL DEFAULT '{}';
 ALTER TABLE "LandingContent" ADD COLUMN IF NOT EXISTS "texts"     JSONB NOT NULL DEFAULT '{}';
+
+-- 2026-10: ссылки-приглашения на курс (доступ по ссылке).
+CREATE TABLE IF NOT EXISTS "AccessLink" (
+  "id"         TEXT PRIMARY KEY,
+  "token"      TEXT NOT NULL,
+  "courseId"   TEXT NOT NULL REFERENCES "Course"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+  "note"       TEXT,
+  "accessDays" INTEGER,
+  "maxUses"    INTEGER NOT NULL DEFAULT 1,
+  "usedCount"  INTEGER NOT NULL DEFAULT 0,
+  "active"     BOOLEAN NOT NULL DEFAULT true,
+  "createdAt"  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "AccessLink_token_key" ON "AccessLink"("token");
+CREATE INDEX IF NOT EXISTS "AccessLink_courseId_idx" ON "AccessLink"("courseId");
+ALTER TABLE "Purchase" ADD COLUMN IF NOT EXISTS "accessLinkId" TEXT;
+DO $$ BEGIN
+  ALTER TABLE "Purchase" ADD CONSTRAINT "Purchase_accessLinkId_fkey"
+    FOREIGN KEY ("accessLinkId") REFERENCES "AccessLink"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;

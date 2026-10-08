@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Award, ArrowLeft, AlertCircle } from "lucide-react";
 import { useSession } from "@/components/providers/SessionProvider";
+import { readNext } from "@/lib/safeNext";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,6 +13,9 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // ?next= — вернуть туда, откуда пришли (например, на ссылку-доступ к курсу)
+  const [next, setNext] = useState<string | null>(null);
+  useEffect(() => setNext(readNext()), []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -21,7 +25,7 @@ export default function LoginPage() {
     setSubmitting(false);
     if (r.ok) {
       if (r.redirect) window.location.href = r.redirect;
-      else router.push("/dashboard");
+      else router.push(next ?? "/dashboard");
     } else {
       setError(r.error);
     }
@@ -102,7 +106,7 @@ export default function LoginPage() {
           <div className="mt-2 text-center text-sm md:text-base">
             <span className="text-dark-600">Нет аккаунта? </span>
             <Link
-              href="/auth/register"
+              href={next ? `/auth/register?next=${encodeURIComponent(next)}` : "/auth/register"}
               className="text-primary-600 font-semibold hover:text-primary-700"
             >
               Зарегистрироваться
