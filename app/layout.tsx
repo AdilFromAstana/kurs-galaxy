@@ -7,8 +7,9 @@ import { DEFAULT_TEXTS, loadLandingContent } from "@/lib/landingContent";
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 // Название вкладки браузера и описание для поиска — из админки («Тексты и кнопки» → «Сайт целиком»).
-// Страницы пересобираются раз в 5 минут, так что правка доходит до них без деплоя.
-export const revalidate = 300;
+// Страницы собираются при запросе: так правка видна сразу. Пересборка по таймеру (ISR) не годится —
+// на сервере папка приложения только для чтения, и Next не может сохранить обновлённую страницу.
+export const dynamic = 'force-dynamic';
 
 // Адрес сайта — чтобы картинка превью ссылки была полным URL (Instagram, WhatsApp, Telegram)
 function siteUrl(): URL | undefined {
