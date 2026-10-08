@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BookOpen, Users, Award, Globe, Settings, Inbox, LayoutTemplate } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Users, Award, Globe, Settings, Inbox, LayoutTemplate, KeyRound } from 'lucide-react';
 
 const NAV = [
   { name: 'Главная', href: '/admin', icon: LayoutDashboard },
   { name: 'Курсы', href: '/admin/courses', icon: BookOpen },
   { name: 'Студенты', href: '/admin/students', icon: Users },
+  { name: 'Доступ по ссылке', href: '/admin/access', icon: KeyRound },
   { name: 'Заявки', href: '/admin/leads', icon: Inbox },
   { name: 'Контент сайта', href: '/admin/content', icon: LayoutTemplate },
   { name: 'Сертификат', href: '/admin/certificate', icon: Award },

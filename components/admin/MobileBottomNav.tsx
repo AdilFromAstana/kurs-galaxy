@@ -2,13 +2,14 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, BookOpen, Users, Award, Settings } from "lucide-react";
+import { LayoutDashboard, BookOpen, Users, KeyRound, Settings } from "lucide-react";
 
 const navItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Главная" },
   { href: "/admin/courses", icon: BookOpen, label: "Курсы" },
   { href: "/admin/students", icon: Users, label: "Студенты" },
-  { href: "/admin/certificate", icon: Award, label: "Сертификат" },
+  // Сертификат настраивают раз и навсегда — он в боковом меню; доступ по ссылке нужен часто
+  { href: "/admin/access", icon: KeyRound, label: "Доступ" },
   { href: "/admin/settings", icon: Settings, label: "Настройки" },
 ];
 
