@@ -27,6 +27,7 @@ import { useCourses, type CourseModule } from "@/components/providers/CoursesPro
 import Header from "@/components/layout/Header";
 import LandingFooter from "@/components/landing/LandingFooter";
 import PurchaseModal from "@/components/modals/PurchaseModal";
+import { onlinePaymentsEnabled } from "@/lib/payments";
 import {
   focusRing,
   formatPrice,
@@ -95,7 +96,8 @@ export default function CoursePage() {
   const [openModules, setOpenModules] = useState<Set<string> | null>(null);
 
   const handlePurchaseClick = () => {
-    if (!isAuthenticated) {
+    // Покупка через WhatsApp регистрации не требует; онлайн-оплата — требует
+    if (onlinePaymentsEnabled && !isAuthenticated) {
       window.location.href = `/auth/register?course=${courseId}`;
       return;
     }

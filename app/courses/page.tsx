@@ -11,6 +11,7 @@ import { useCourses, type CourseDTO } from '@/components/providers/CoursesProvid
 import Header from '@/components/layout/Header';
 import LandingFooter from '@/components/landing/LandingFooter';
 import PurchaseModal from '@/components/modals/PurchaseModal';
+import { onlinePaymentsEnabled } from '@/lib/payments';
 import { focusRing, formatPrice, manrope, pinkButtonCls, plural } from '@/components/landing/shared';
 import { PREVIEW_DRAFT_COURSE_ID } from '@/lib/preview';
 
@@ -33,7 +34,8 @@ export default function CoursesPage() {
   );
 
   const handlePurchaseClick = (courseId: string) => {
-    if (!isAuthenticated) {
+    // Покупка через WhatsApp регистрации не требует; онлайн-оплата — требует
+    if (onlinePaymentsEnabled && !isAuthenticated) {
       window.location.href = `/auth/register?course=${courseId}`;
       return;
     }

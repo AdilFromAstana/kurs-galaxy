@@ -108,13 +108,18 @@ export const DEFAULT_TEXTS = {
   linksBrowNote: 'Онлайн-курс · доступ к урокам сразу после оплаты',
   linksPermanentNote: 'Онлайн-подготовка и практика на моделях',
   linksWhatsapp: 'Написать мне в WhatsApp',
+  // Покупка курса (пока оплата на сайте не подключена — через WhatsApp)
+  buyTitle: 'Как купить курс',
+  buyNote: 'Оплата — через WhatsApp. После оплаты пришлём ссылку, по которой курс откроется в вашем кабинете.',
+  buyButton: 'Написать в WhatsApp для оплаты',
+  buyGreeting: 'Здравствуйте! Хочу купить курс «{курс}»{тариф}',
 };
 
 /** Длинные тексты (описания, подписи) — до 600 символов, остальное — до 120. */
 const LONG_TEXTS: TextKey[] = [
   'faqLead', 'browPriceNote', 'permanentGreeting', 'siteGreeting', 'seoDescription',
   'footerFormLead', 'footerSuccessText', 'catalogLead', 'courseNoPriceText',
-  'linksBrowNote', 'linksPermanentNote',
+  'linksBrowNote', 'linksPermanentNote', 'buyNote', 'buyGreeting',
 ];
 export type LandingTexts = typeof DEFAULT_TEXTS;
 export type TextKey = keyof LandingTexts;

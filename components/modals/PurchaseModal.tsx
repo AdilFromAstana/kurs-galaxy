@@ -6,6 +6,10 @@ import { X, CheckCircle2, Sparkles, Check, Play, BookOpen, Clock } from "lucide-
 import toast from "react-hot-toast";
 import { usePurchase } from "@/hooks/usePurchase";
 import { useCourses, type CourseDTO } from "@/components/providers/CoursesProvider";
+import { useLandingContent } from "@/hooks/useLandingContent";
+import { DEFAULT_TEXTS } from "@/lib/landingContentShared";
+import { onlinePaymentsEnabled } from "@/lib/payments";
+import WhatsAppIcon from "@/components/icons/WhatsAppIcon";
 
 const ACCESS_LABEL: Record<string, string> = {
   ONE_MONTH: "1 месяц",
@@ -32,6 +36,8 @@ export default function PurchaseModal({
   const router = useRouter();
   const { purchase } = usePurchase(courseId);
   const { getCourseById, getAllLessons } = useCourses();
+  const landing = useLandingContent();
+  const t = landing?.texts ?? DEFAULT_TEXTS;
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [course, setCourse] = useState<CourseDTO | null>(null);
   const [purchaseState, setPurchaseState] = useState<
@@ -109,6 +115,15 @@ export default function PurchaseModal({
 
   const selectedPlanData =
     course?.pricingPlans?.find((p) => p.id === selectedPlan) ?? null;
+
+  // Без онлайн-оплаты: «Купить» = написать автору в WhatsApp с готовым текстом
+  const chosen = selectedPlanData ?? (course?.pricingPlans?.length === 1 ? course.pricingPlans[0] : null);
+  const buyText = t.buyGreeting
+    .replace("{курс}", course?.title ?? "")
+    .replace("{тариф}", chosen ? `, тариф «${chosen.name}» (${chosen.price.toLocaleString("ru-RU")} ${chosen.currency})` : "");
+  const buyHref = landing?.whatsapp
+    ? `https://wa.me/${landing.whatsapp}?text=${encodeURIComponent(buyText)}`
+    : "/#contacts";
 
   const features = [
     "Доступ ко всем урокам курса",
@@ -199,10 +214,14 @@ export default function PurchaseModal({
             <Sparkles className="w-6 h-6 md:w-9 md:h-9 text-white" />
           </div>
           <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-dark-900 mb-1 md:mb-2">
-            Выберите тарифный план
+            {onlinePaymentsEnabled ? "Выберите тарифный план" : t.buyTitle}
           </h2>
           <p className="text-sm md:text-base lg:text-lg text-dark-600 leading-snug">
-            Получите доступ к курсу на удобный для вас период
+            {onlinePaymentsEnabled
+              ? "Получите доступ к курсу на удобный для вас период"
+              : course?.pricingPlans?.length
+                ? `«${course.title}» — выберите тариф и напишите нам`
+                : `«${course?.title ?? ""}»`}
           </p>
         </div>
 
@@ -292,6 +311,21 @@ export default function PurchaseModal({
 
         {/* CTA Buttons - Sticky на мобилке */}
         <div className="sticky bottom-0 left-0 right-0 bg-white pt-3 pb-2 -mx-4 px-4 md:static md:mx-0 md:px-0 md:pt-0 md:pb-0 border-t md:border-t-0 border-gray-100">
+          {!onlinePaymentsEnabled ? (
+            <>
+              <a
+                href={buyHref}
+                target={landing?.whatsapp ? "_blank" : undefined}
+                rel="noopener noreferrer"
+                onClick={() => !landing?.whatsapp && onClose()}
+                className="btn w-full inline-flex items-center justify-center gap-2 !bg-[#25D366] !text-white hover:!bg-[#1ebe5b] text-sm md:text-base lg:text-lg !py-2.5 md:!py-3 lg:!py-4"
+              >
+                {landing?.whatsapp && <WhatsAppIcon className="h-5 w-5" />}
+                {landing?.whatsapp ? t.buyButton : "Оставить заявку"}
+              </a>
+              <p className="mt-2 text-center text-xs md:text-sm text-dark-500">{t.buyNote}</p>
+            </>
+          ) : (
           <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
             <button
               onClick={handlePurchase}
@@ -309,10 +343,13 @@ export default function PurchaseModal({
             </button>
           </div>
 
-          {/* Demo notice — пока платёжный шлюз не подключён */}
-          <div className="mt-2 text-center text-xs text-dark-400">
-            Демо-режим: оплата эмулируется
-          </div>
+          )}
+          {/* Demo notice — имитация оплаты работает только в разработке */}
+          {onlinePaymentsEnabled && process.env.NODE_ENV !== "production" && (
+            <div className="mt-2 text-center text-xs text-dark-400">
+              Демо-режим: оплата эмулируется
+            </div>
+          )}
         </div>
         </>
         )}
