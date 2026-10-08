@@ -20,7 +20,7 @@ export function AdminDesktopNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="flex items-center gap-1">
+    <nav className="flex flex-wrap items-center gap-1">
       {NAV.map((item) => {
         const active = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
         return (
