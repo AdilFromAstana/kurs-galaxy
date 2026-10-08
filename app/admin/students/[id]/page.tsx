@@ -108,7 +108,8 @@ export default function StudentDetailPage() {
   const [loading, setLoading] = useState(true);
   const [coursesAvail, setCoursesAvail] = useState<CoursePlan[]>([]);
   const [showGrant, setShowGrant] = useState(false);
-  const [grantPlanId, setGrantPlanId] = useState('');
+  const [grantCourseId, setGrantCourseId] = useState('');
+  const [grantDays, setGrantDays] = useState('');
   const [grantBusy, setGrantBusy] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -143,9 +144,10 @@ export default function StudentDetailPage() {
     };
   }, []);
 
+  // Выдать курс бесплатно (после оплаты на Каспи, подарок) — без тарифа, только этот курс
   const handleGrant = async () => {
-    if (!grantPlanId) {
-      toast.error('Выберите тариф');
+    if (!grantCourseId) {
+      toast.error('Выберите курс');
       return;
     }
     setGrantBusy(true);
@@ -153,7 +155,11 @@ export default function StudentDetailPage() {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: id, planId: grantPlanId }),
+      body: JSON.stringify({
+        userId: id,
+        courseId: grantCourseId,
+        accessDays: grantDays ? Number(grantDays) : null,
+      }),
     });
     setGrantBusy(false);
     const r = await res.json().catch(() => ({}));
@@ -163,7 +169,8 @@ export default function StudentDetailPage() {
     }
     toast.success('Доступ выдан');
     setShowGrant(false);
-    setGrantPlanId('');
+    setGrantCourseId('');
+    setGrantDays('');
     await refresh();
   };
 
@@ -257,12 +264,7 @@ export default function StudentDetailPage() {
       .filter((p) => getEffectiveStatus(p) === 'ACTIVE')
       .map((p) => p.course.id),
   );
-  const grantableCourses = coursesAvail
-    .map((c) => ({
-      ...c,
-      pricingPlans: (c.pricingPlans ?? []).filter((p) => p.isActive),
-    }))
-    .filter((c) => c.pricingPlans.length > 0);
+  const grantableCourses = coursesAvail;
 
   return (
     <div className="space-y-6 animate-fade-in pb-8 max-w-6xl">
@@ -322,7 +324,7 @@ export default function StudentDetailPage() {
         {/* Выдача доступа */}
         <div className="flex items-center justify-between gap-3 pt-4 border-t border-gray-100 flex-wrap">
           <p className="text-sm text-gray-600">
-            Выдать доступ вручную — например, после оплаты на Каспи или для подарка / промо
+            Открыть курс бесплатно — после оплаты на Каспи, в подарок. Откроется только выбранный курс
           </p>
           {!showGrant && (
             <button
@@ -338,28 +340,36 @@ export default function StudentDetailPage() {
         {showGrant && (
           <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 space-y-3">
             <select
-              value={grantPlanId}
-              onChange={(e) => setGrantPlanId(e.target.value)}
+              value={grantCourseId}
+              onChange={(e) => setGrantCourseId(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white"
+              aria-label="Курс"
             >
-              <option value="">Выберите курс и тариф...</option>
+              <option value="">Выберите курс...</option>
               {grantableCourses.map((c) => (
-                <optgroup key={c.id} label={c.title}>
-                  {c.pricingPlans.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} —{' '}
-                      {ACCESS_LABEL[p.accessPeriod] ?? p.accessPeriod} —{' '}
-                      {p.price.toLocaleString()} {p.currency}
-                      {purchasedActive.has(c.id) ? ' (уже куплен)' : ''}
-                    </option>
-                  ))}
-                </optgroup>
+                <option key={c.id} value={c.id} disabled={purchasedActive.has(c.id)}>
+                  {c.title}
+                  {purchasedActive.has(c.id) ? ' — доступ уже есть' : ''}
+                </option>
               ))}
+            </select>
+            <select
+              value={grantDays}
+              onChange={(e) => setGrantDays(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white"
+              aria-label="Срок доступа"
+            >
+              <option value="">Бессрочно</option>
+              <option value="30">1 месяц</option>
+              <option value="60">2 месяца</option>
+              <option value="90">3 месяца</option>
+              <option value="180">6 месяцев</option>
+              <option value="365">1 год</option>
             </select>
             <div className="flex gap-2">
               <button
                 onClick={handleGrant}
-                disabled={grantBusy || !grantPlanId}
+                disabled={grantBusy || !grantCourseId}
                 className="flex-1 px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg font-medium disabled:opacity-50"
               >
                 {grantBusy ? 'Выдача...' : 'Выдать доступ'}
@@ -367,7 +377,7 @@ export default function StudentDetailPage() {
               <button
                 onClick={() => {
                   setShowGrant(false);
-                  setGrantPlanId('');
+                  setGrantCourseId('');
                 }}
                 className="px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg font-medium"
               >

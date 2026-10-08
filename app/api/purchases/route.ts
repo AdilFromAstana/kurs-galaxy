@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getUserSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/db';
 import { purchaseReceiptEmail, sendEmail } from '@/lib/email';
+import { onlinePaymentsEnabled } from '@/lib/payments';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,6 +69,17 @@ export async function POST(req: Request) {
   const session = await getUserSession();
   if (!session)
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+
+  // Без платёжного шлюза ученица не может открыть себе курс сама — только через автора
+  if (!onlinePaymentsEnabled) {
+    return NextResponse.json(
+      {
+        error: 'payments_disabled',
+        message: 'Оплата на сайте пока не подключена. Напишите автору — после оплаты вам откроют доступ.',
+      },
+      { status: 403 },
+    );
+  }
 
   const { planId } = await req.json().catch(() => ({}));
   if (!planId)

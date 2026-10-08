@@ -17,6 +17,7 @@ import { useCourses } from "@/components/providers/CoursesProvider";
 import Header from "@/components/layout/Header";
 import LessonVideoPlaylist from "@/components/lesson/LessonVideoPlaylist";
 import PurchaseModal from "@/components/modals/PurchaseModal";
+import { onlinePaymentsEnabled } from "@/lib/payments";
 import LessonMobileNav from "@/components/lesson/LessonMobileNav";
 import { LessonContentCard, LessonPhotosCard, LessonTitle } from "@/components/lesson/LessonParts";
 import { resolveLessonCover } from "@/lib/lessonCover";
@@ -92,11 +93,11 @@ export default function LessonPage() {
               </div>
               <h1 className="mb-4">Урок заблокирован</h1>
               <p className="text-lg text-dark-600 mb-8">
-                {isAuthenticated
+                {isAuthenticated || !onlinePaymentsEnabled
                   ? 'Этот урок доступен только после покупки полного курса'
                   : 'Зарегистрируйтесь, чтобы купить курс и получить доступ ко всем урокам'}
               </p>
-              {isAuthenticated ? (
+              {isAuthenticated || !onlinePaymentsEnabled ? (
                 <button
                   onClick={() => setShowPurchaseModal(true)}
                   className="btn btn-primary"
@@ -114,7 +115,7 @@ export default function LessonPage() {
             </div>
           </div>
         </main>
-        {isAuthenticated && (
+        {(isAuthenticated || !onlinePaymentsEnabled) && (
           <PurchaseModal
             isOpen={showPurchaseModal}
             onClose={() => setShowPurchaseModal(false)}

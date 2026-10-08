@@ -4,10 +4,10 @@ import { prisma } from '@/lib/db';
 // Доступ к курсу по ссылке-приглашению. Технически это обычная «покупка» (Purchase),
 // поэтому доступ к урокам, срок, продление и отмена работают как у оплаченного курса.
 
-/** Служебный тариф курса для выдачи по ссылке: скрыт (isActive=false) и в продаже не виден. */
+/** Служебный тариф курса для бесплатной выдачи (по ссылке или вручную): скрыт (isActive=false) и в продаже не виден. */
 export const LINK_PLAN_NAME = 'Доступ по ссылке';
 
-async function ensureLinkPlan(courseId: string) {
+export async function ensureLinkPlan(courseId: string) {
   const existing = await prisma.pricingPlan.findFirst({
     where: { courseId, name: LINK_PLAN_NAME, isActive: false },
   });
