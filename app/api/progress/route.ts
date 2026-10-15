@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getUserSession } from '@/lib/auth/session';
 import { prisma } from '@/lib/db';
+import { issueCertificateIfCompleted, siteBaseUrl } from '@/lib/certificateIssue';
 
 export async function GET(req: Request) {
   const session = await getUserSession();
@@ -64,5 +65,16 @@ export async function POST(req: Request) {
     update: { lessonId },
   });
 
-  return NextResponse.json({ progress: item });
+  // Последний непройденный урок — курс пройден: сразу выдаём сертификат
+  const cert = await issueCertificateIfCompleted(session.userId, lesson.module.courseId, siteBaseUrl(req), req).catch(
+    (e) => {
+      console.error('[progress] certificate issue failed:', e);
+      return null;
+    },
+  );
+  return NextResponse.json({
+    progress: item,
+    courseCompleted: !!cert?.ok,
+    certificate: cert?.ok ? { id: cert.certificateId, isNew: cert.isNew, courseId: lesson.module.courseId } : null,
+  });
 }

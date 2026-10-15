@@ -335,3 +335,46 @@ export function expiryWarningEmail({
     text,
   };
 }
+
+export function certificateReadyEmail({
+  recipientName,
+  courseTitle,
+  certificateId,
+  downloadUrl,
+  verifyUrl,
+  brandName = 'KursGalaxy.kz',
+}: {
+  recipientName: string;
+  courseTitle: string;
+  certificateId: string;
+  downloadUrl: string;
+  verifyUrl: string;
+  brandName?: string;
+}): EmailMessage {
+  const safeName = recipientName || 'Студент';
+  const html = emailLayout({
+    title: 'Курс пройден!',
+    emoji: '🎓',
+    bodyHtml: `
+      <p style="margin:0 0 16px 0;">Здравствуйте, <strong>${escapeHtml(safeName)}</strong>!</p>
+      <p style="margin:0 0 16px 0;">Поздравляем — вы прошли курс «${escapeHtml(courseTitle)}» полностью. Ваш именной сертификат готов.</p>
+      <p style="margin:0 0 24px 0;color:#71717a;font-size:13px;">Номер сертификата: <strong style="color:#27272a;">${escapeHtml(certificateId)}</strong></p>
+      <p style="margin:0 0 16px 0;text-align:center;">
+        <a href="${downloadUrl}" style="display:inline-block;background:#db2777;color:#ffffff;text-decoration:none;padding:14px 32px;border-radius:12px;font-weight:600;font-size:15px;">Скачать сертификат</a>
+      </p>
+      <p style="margin:0 0 32px 0;text-align:center;font-size:13px;">
+        <a href="${verifyUrl}" style="color:#db2777;">Проверить подлинность</a>
+      </p>
+      <p style="margin:0;color:#71717a;font-size:13px;">Сертификат всегда можно скачать снова в личном кабинете, в разделе «Профиль».</p>
+    `,
+    brandName,
+  });
+  const text = `Здравствуйте, ${safeName}!
+
+Поздравляем — вы прошли курс «${courseTitle}» полностью. Ваш именной сертификат готов.
+Номер сертификата: ${certificateId}
+
+Скачать: ${downloadUrl}
+Проверить подлинность: ${verifyUrl}`;
+  return { to: '', subject: `Ваш сертификат: «${courseTitle}»`, html, text };
+}
