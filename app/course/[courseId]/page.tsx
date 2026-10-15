@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   ArrowLeft,
   ArrowRight,
+  Award,
   BookOpen,
   CheckCircle2,
   ChevronDown,
@@ -361,6 +362,16 @@ export default function CoursePage() {
                         ? "Продолжить"
                         : "Начать обучение"}
                   </Link>
+                  {/* Курс пройден — сертификат уже выдан, скачать можно здесь */}
+                  {isAuthenticated && total > 0 && completed >= total && (
+                    <a
+                      href={`/api/courses/${courseId}/certificate`}
+                      className={`${outlineButtonCls} mt-3 w-full`}
+                    >
+                      <Award className="h-5 w-5" aria-hidden />
+                      {t.certButton}
+                    </a>
+                  )}
                 </>
               ) : cheapest ? (
                 <>

@@ -10,6 +10,11 @@ import {
   type ReactNode,
 } from 'react';
 
+export type CompletionResult = {
+  courseCompleted: boolean;
+  certificate: { id: string; isNew: boolean; courseId: string } | null;
+};
+
 export type SessionUser = {
   id: string;
   email: string;
@@ -72,7 +77,8 @@ type SessionContextValue = SessionState & {
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
   logout: () => Promise<void>;
   buy: (planId: string) => Promise<{ ok: true } | { ok: false; error: string }>;
-  markCompleted: (lessonId: string) => Promise<void>;
+  /** Отметить урок; если этим курс пройден — сервер сразу выдаёт сертификат */
+  markCompleted: (lessonId: string) => Promise<CompletionResult>;
   isPurchaseActive: (courseId: string) => boolean;
   getActivePurchase: (courseId: string) => SessionPurchase | null;
   getProgressForCourse: (courseId: string) => string[];
@@ -171,12 +177,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   );
 
   const markCompleted = useCallback(
-    async (lessonId: string) => {
-      await jsonFetch('/api/progress', {
+    async (lessonId: string): Promise<CompletionResult> => {
+      const { data } = await jsonFetch('/api/progress', {
         method: 'POST',
         body: JSON.stringify({ lessonId }),
       });
       await refresh();
+      return {
+        courseCompleted: !!data?.courseCompleted,
+        certificate: data?.certificate ?? null,
+      };
     },
     [refresh]
   );

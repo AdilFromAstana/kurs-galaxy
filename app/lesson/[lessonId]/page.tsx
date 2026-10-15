@@ -17,6 +17,8 @@ import { useCourses } from "@/components/providers/CoursesProvider";
 import Header from "@/components/layout/Header";
 import LessonVideoPlaylist from "@/components/lesson/LessonVideoPlaylist";
 import PurchaseModal from "@/components/modals/PurchaseModal";
+import CertificateReadyModal from "@/components/certificate/CertificateReadyModal";
+import toast from "react-hot-toast";
 import { onlinePaymentsEnabled } from "@/lib/payments";
 import LessonMobileNav from "@/components/lesson/LessonMobileNav";
 import { LessonContentCard, LessonPhotosCard, LessonTitle } from "@/components/lesson/LessonParts";
@@ -43,6 +45,8 @@ export default function LessonPage() {
   const { hasAccess, isFree: courseIsFree } = usePurchase(courseId);
 
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  // Курс пройден — сертификат выдан сервером, показываем поздравление
+  const [certReady, setCertReady] = useState<{ id: string; courseId: string } | null>(null);
 
   const completed = lesson ? isLessonCompleted(lesson.id) : false;
   const cover = lesson ? resolveLessonCover(lesson) : null;
@@ -126,11 +130,15 @@ export default function LessonPage() {
     );
   }
 
-  const markAsCompleted = () => {
-    if (!isAuthenticated) return; // гостям прогресс не сохраняем
-    if (!completed) {
-      addLesson(lessonId);
+  /** Отметить урок пройденным. true — этим курс завершён и показано поздравление (дальше не переходим). */
+  const markAsCompleted = async (): Promise<boolean> => {
+    if (!isAuthenticated || completed) return false; // гостям прогресс не сохраняем
+    const r = await addLesson(lessonId);
+    if (r.certificate?.isNew) {
+      setCertReady({ id: r.certificate.id, courseId: r.certificate.courseId });
+      return true;
     }
+    return false;
   };
 
   const handleCompleteLesson = async () => {
@@ -141,8 +149,9 @@ export default function LessonPage() {
     }
 
     if (nextLesson) {
-      // Не последний урок — отмечаем и идём дальше
-      markAsCompleted();
+      // Не последний урок — отмечаем и идём дальше (если уроки шли не по порядку и этим
+      // курс завершён — сначала поздравление с сертификатом)
+      if (await markAsCompleted()) return;
       if (!hasAccess(nextLesson.isFree)) {
         setShowPurchaseModal(true);
       } else {
@@ -151,14 +160,22 @@ export default function LessonPage() {
       return;
     }
 
-    // Последний урок: ждём сохранения прогресса в БД,
-    // потом открываем сертификат в новой вкладке.
-    if (!completed) {
-      await addLesson(lessonId);
+    // Последний урок: сохраняем (повторное нажатие безопасно) — сервер выдаёт сертификат,
+    // если пройдены все уроки. Раньше PDF открывался новой вкладкой после ожидания,
+    // и телефоны её блокировали; теперь — окно с кнопкой «Скачать».
+    const r = await addLesson(lessonId);
+    if (r.certificate) {
+      setCertReady({ id: r.certificate.id, courseId: r.certificate.courseId });
+      return;
     }
-    if (courseId) {
-      window.open(`/api/courses/${courseId}/certificate`, '_blank');
-    }
+    const left = allLessons.filter((l) => !isLessonCompleted(l.id) && l.id !== lessonId);
+    toast(
+      left.length
+        ? `Чтобы получить сертификат, пройдите ещё ${left.length} ${left.length === 1 ? "урок" : left.length < 5 ? "урока" : "уроков"}`
+        : "Урок отмечен пройденным",
+    );
+    const first = left[0];
+    if (first) router.push(`/lesson/${first.id}`);
   };
 
   // Прогресс по курсу для sidebar
@@ -202,14 +219,17 @@ export default function LessonPage() {
                 completed={completed}
               />
 
-              {/* Video Player */}
-              <div className="animate-slide-up">
-                <LessonVideoPlaylist
-                  lessonId={lesson.id}
-                  videos={lesson.videos ?? []}
-                  legacyVideoUrl={lesson.videoUrl}
-                />
-              </div>
+              {/* Video Player — только если у урока есть видео (иначе плеер запрашивал
+                  несуществующее видео и показывал пустой блок) */}
+              {((lesson.videos?.length ?? 0) > 0 || !!lesson.videoUrl) && (
+                <div className="animate-slide-up">
+                  <LessonVideoPlaylist
+                    lessonId={lesson.id}
+                    videos={lesson.videos ?? []}
+                    legacyVideoUrl={lesson.videoUrl}
+                  />
+                </div>
+              )}
 
               {/* Конспект и фото урока — блоки скрыты, если не заполнены */}
               <LessonContentCard content={lesson.content} />
@@ -427,6 +447,16 @@ export default function LessonPage() {
         onClose={() => setShowPurchaseModal(false)}
         courseId={courseId}
       />
+
+      {certReady && course && (
+        <CertificateReadyModal
+          open
+          onClose={() => setCertReady(null)}
+          courseId={certReady.courseId}
+          courseTitle={course.title}
+          certificateId={certReady.id}
+        />
+      )}
 
       <LessonMobileNav
         previousLesson={previousLesson}

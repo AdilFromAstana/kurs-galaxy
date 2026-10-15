@@ -3,6 +3,7 @@ import fontkit from '@pdf-lib/fontkit';
 import QRCode from 'qrcode';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { renderClassicPink } from './certificateTemplates/classic-pink';
 import { renderMinimal } from './certificateTemplates/minimal';
 import { renderGoldElegant } from './certificateTemplates/gold-elegant';
@@ -174,16 +175,21 @@ export async function renderCertificatePdf(
  * Стабильный человекочитаемый ID сертификата.
  * Дата + 6 символов хеша из (userId+courseId).
  */
+/**
+ * Номер сертификата: ГГГГММДД-XXXXXX. Хвост случайный — раньше он брался из конца
+ * строки userId+courseId, то есть из ID курса, и у всех прошедших один курс в один
+ * день номер совпадал: второй сертификат не создавался. Номер хранится в БД
+ * и при повторном скачивании не меняется. Без 0/O/1/I — чтобы не путать при вводе.
+ */
+const ID_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export function buildCertificateId(input: {
   userId: string;
   courseId: string;
   completedAt: Date;
 }): string {
   const stamp = input.completedAt.toISOString().slice(0, 10).replace(/-/g, '');
-  const tail = (input.userId + input.courseId)
-    .replace(/[^a-zA-Z0-9]/g, '')
-    .slice(-6)
-    .toUpperCase();
+  const bytes = crypto.randomBytes(6);
+  const tail = Array.from(bytes, (b) => ID_ALPHABET[b % ID_ALPHABET.length]).join('');
   return `${stamp}-${tail}`;
 }
 

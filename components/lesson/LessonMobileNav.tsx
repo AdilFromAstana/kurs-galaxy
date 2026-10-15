@@ -10,7 +10,8 @@ interface LessonMobileNavProps {
   currentLessonId: string;
   hasAccess: (isFree: boolean) => boolean;
   onLocked: () => void;
-  onCompleteLesson?: () => void;
+  /** Отметить урок; true — курс завершён и показано поздравление, переходить не нужно */
+  onCompleteLesson?: () => void | Promise<boolean>;
 }
 
 export default function LessonMobileNav({
@@ -29,7 +30,7 @@ export default function LessonMobileNav({
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!nextLesson) return;
 
     if (!hasAccess(nextLesson.isFree)) {
@@ -38,9 +39,7 @@ export default function LessonMobileNav({
     }
 
     // Отмечаем текущий урок как пройденный при переходе к следующему
-    if (onCompleteLesson) {
-      onCompleteLesson();
-    }
+    if (onCompleteLesson && (await onCompleteLesson())) return;
 
     router.push(`/lesson/${nextLesson.id}`);
   };
